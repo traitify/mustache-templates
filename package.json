@@ -1,0 +1,13 @@
+{
+  "name": "front-end",
+  "description": "Basic Application",
+  "author": "Carson Wright <carsonnwright@gmail.com>",
+  "dependencies": {
+    "coffee-script": ">= 1.9.1",
+    "gulp":">= 3.8.11",
+    "gulp-riot": ">= 0.2.12",
+    "gulp-webserver": ">= 0.9.0",
+    "gulp-watch": ">= 4.1.1"
+  },
+  "engine": "node 0.4.1"
+}
