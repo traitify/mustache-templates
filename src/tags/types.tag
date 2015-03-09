@@ -1,5 +1,5 @@
 <tf-personality-types>
-  <div class="tf-perosnality-types-scroller">
+  <div class="tf-personality-types-scroller">
     <div class="tf-personality-types-container">
       <div class="tf-personality-types">
         <div each={type in this.types} class="tf-personality-type" onclick={parent.handleClick}>
@@ -29,7 +29,8 @@
     }
     .tf-personality-types-scroller{
       overflow-y: hidden;
-      overflow-x: auto;   
+      overflow-x: auto;
+      height: 220px;   
       width: 100%;   
     }
     .tf-personality-types-container{
@@ -37,7 +38,7 @@
       background-color: #022946;
       font-family: "Source Sans Pro";
       color: #fff;
-      width: auto;
+      width: 910px;
     }
     tf-personality-types .tf-arrow{
       text-align: center;
