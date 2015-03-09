@@ -1,9 +1,9 @@
 <blend>
-  <div class="badges">
-    <div class="badge"  style="border-color: {this.type1.border}; background-color: rgba({this.type1.bg.r},{this.type1.bg.g},{this.type1.bg.b}, .3)">
+  <div class="tf-badges">
+    <div class="tf-badge"  style="border-color: {this.type1.border}; background-color: rgba({this.type1.bg.r},{this.type1.bg.g},{this.type1.bg.b}, .3)">
       <img src="{this.type1.badge.image_medium}" />
     </div>
-    <div class="badge"  style="border-color: {this.type2.border};background-color: rgba({this.type2.bg.r},{this.type2.bg.g},{this.type2.bg.b}, .3)">
+    <div class="tf-badge"  style="border-color: {this.type2.border};background-color: rgba({this.type2.bg.r},{this.type2.bg.g},{this.type2.bg.b}, .3)">
       <img src="{this.type2.badge.image_medium}" />
     </div>
   </div>
@@ -17,19 +17,6 @@
     font-style: normal;
     font-weight: 400;
     src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
-  }
-  @font-face{
-    font-family: "Adelle Sans Bold"; 
-    font-style: bold;
-    font-weight: 800;
-    src: local("Adelle Sans Bold"), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/adelle-sans-bold.woff") format("woff");
-  }
-
-  @font-face{
-    font-family: "Adelle Sans"; 
-    font-style: normal;
-    font-weight: 400;
-    src: local("Adelle Sans"), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/adelle-sans.woff") format("woff");
   }
   blend{
     width: 100%;
@@ -46,28 +33,30 @@
       box-sizing: content-box;
       width: 100%;
   }
-  blend  .badge{
-    width: 23%;
+  blend  .tf-badge{
+    width: 22%;
     padding:12%;
     position: relative;
     border-radius: 50%;
     border: 3px solid;
     display: inline-block;
   }
-  blend .badge:first-child{
-    margin-right: -6%;
+  blend .tf-badge:first-child{
+    margin-right: -4%;
   }
-  blend .badge:last-child{
-    margin-right: -3%;
+  blend .tf-badge:last-child{
+    margin-left: -4%;
   }
-  blend .badges{
+  blend .tf-badges{
     width: 100%;
-    max-width: 400px;
+    max-width: 330px;
     margin: 0px auto;
+    text-align:center;
   }
   blend h2{
     text-align: center;
-    font-size: 30px;
+    font-size: 25px;
+    font-weight: 400;
   }
   .description{
     max-width: 800px;
@@ -78,10 +67,7 @@
 <script>
   @assessmentId = @root.getAttribute("assessment-id")
   that = @
-  Traitify.setPublicKey(@root.getAttribute("public-key"))
-  Traitify.setHost(@root.getAttribute("host") || "api-sandbox.traitify.com")
-  Traitify.setVersion("v1")
-  Traitify.getPersonalityTypes(@assessmentId).then((results)->
+  window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
     that.type1 = results.personality_blend.personality_type_1
     that.type2 = results.personality_blend.personality_type_2
     hexToRgb = (hex)->
@@ -91,6 +77,8 @@
           g: parseInt(result[2], 16),
           b: parseInt(result[3], 16)
       } else null
+
+
 
     bgColor1 = that.type1.badge.color_1
     that.type1.bg = hexToRgb(bgColor1)
