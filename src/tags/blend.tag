@@ -1,4 +1,4 @@
-<blend>
+<tf-blend>
   <div class="tf-badges">
     <div class="tf-badge"  style="border-color: {this.type1.border}; background-color: rgba({this.type1.bg.r},{this.type1.bg.g},{this.type1.bg.b}, .3)">
       <img src="{this.type1.badge.image_medium}" />
@@ -18,22 +18,22 @@
     font-weight: 400;
     src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
   }
-  blend{
+  tf-blend{
     width: 100%;
   }
-  blend{
+  tf-blend{
     font-family: "Source Sans Pro";
     padding: 10px;
   }
-  blend.ie{
+  tf-blend.ie{
     font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif";
   }
 
-  blend div, img{
+  tf-blend div, img{
       box-sizing: content-box;
       width: 100%;
   }
-  blend  .tf-badge{
+  tf-blend  .tf-badge{
     width: 22%;
     padding:12%;
     position: relative;
@@ -41,19 +41,19 @@
     border: 3px solid;
     display: inline-block;
   }
-  blend .tf-badge:first-child{
+  tf-blend .tf-badge:first-child{
     margin-right: -4%;
   }
-  blend .tf-badge:last-child{
+  tf-blend .tf-badge:last-child{
     margin-left: -4%;
   }
-  blend .tf-badges{
+  tf-blend .tf-badges{
     width: 100%;
     max-width: 330px;
     margin: 0px auto;
     text-align:center;
   }
-  blend h2{
+  tf-blend h2{
     text-align: center;
     font-size: 25px;
     font-weight: 400;
@@ -92,4 +92,4 @@
     that.update()
   )
 </script>
-</blend>
+</tf-blend>

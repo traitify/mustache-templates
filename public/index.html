@@ -5,6 +5,7 @@
 	<script src="/js/tags/blend.js"></script>
 	<script src="/js/tags/types.js"></script>
 	<script src="/js/tags/traits.js"></script>
+	<script src="/js/tags/bundler_form.js"></script>
 	<script>
 	  Traitify.setPublicKey("625gflokgcvacu0ofjnv8kunf");
 	  Traitify.setHost("api.traitify.com");
@@ -19,15 +20,10 @@
 	</style>
 </head>
 <body>
-	<h1>What is your personality?</h3>
-	<blend assessment-id="01d331f2-0686-4465-a065-03c9852107b8">
-	</blend>
-	<h1>Your Types</h3>
-	<tf-personality-types assessment-id="01d331f2-0686-4465-a065-03c9852107b8">
-	</tf-personality-types>
-	<h1>Your Traits</h3>
-	<tf-traits assessment-id="01d331f2-0686-4465-a065-03c9852107b8">
-	</tf-traits>
+	<h2>Create Your Bundle!</h2>
+	<bundler-form>
+	</bundler-form>
+
 	<script>
 	riot.mount("*")
 	</script>
