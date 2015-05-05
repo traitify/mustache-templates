@@ -4,6 +4,7 @@ webserver = require('gulp-webserver');
 fs = require("fs")
 minify = require("minify")
 path = require('path')
+traitify = require('traitify')
 
 gulp.task 'riot', ->
   gulp.src './src/**/*.tag'
@@ -28,7 +29,6 @@ gulp.task('watch', ->
   )
 )
 
-
 gulp.task('bundles', ->
   express = require('express')
   app = express()
@@ -42,9 +42,9 @@ gulp.task('bundles', ->
       filesContent.push(fs.readFileSync("./public/js/tags/#{file}.js", "utf8"))
       filesContent.push("; ")
     writePath = (type)->
-      "./public/js/bundles/#{req.query.packages.replace(/,/g, "_")}#{type}.js" 
+      "./public/js/bundles/#{req.query.packages.replace(/,/g, "_")}#{type}.js"
     fs.writeFileSync(writePath("_raw"), filesContent.join(""))
-    
+
     minify(writePath("_raw"), (error, minified)->
       fs.writeFileSync(writePath(".min"), minified)
       res.redirect(writePath(".min").replace("./public", ""))
@@ -54,4 +54,24 @@ gulp.task('bundles', ->
   app.listen(3000)
 )
 
-gulp.task('default', ['riot', 'webserver', 'watch'])
+gulp.task("traitify-server", (req, res)->
+  express = require("express")
+  cors = require("cors")
+  app = express()
+  app.use(cors())
+  app.post("/assessments", (req, res)->
+    traitify.setHost(process.env.TF_HOST)
+    traitify.setVersion("v1")
+    traitify.setSecretKey(process.env.TF_SECRET_KEY)
+    traitify.createAssessment(req.query.deck, (assessment)->
+      res.send(assessment)
+    )
+  )
+  app.post("/credentials", (req, res)->
+    res.send({publicKey: process.env.TF_PUBLIC_KEY, host: process.env.TF_HOST})
+  )
+  app.listen(1376)
+)
+
+
+gulp.task('default', ['riot', 'webserver', 'watch', 'traitify-server'])

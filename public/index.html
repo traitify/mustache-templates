@@ -1,5 +1,6 @@
 <html>
 <head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script src="https://cdn.traitify.com/lib/v1.js"></script>
 	<script src="/support/riot.min.js"></script>
 	<script src="/js/tags/blend.js"></script>
@@ -25,7 +26,18 @@
 	</bundler-form>
 
 	<script>
-	riot.mount("*")
+	$.post("http://localhost:1376/credentials").then(function(credentials){
+		$.post("http://localhost:1376/assessments?deck=career-deck").then(function(assessment){
+			Traitify.setHost(credentials.host);
+			Traitify.setVersion("v1");
+			Traitify.setPublicKey(credentials.publicKey);
+
+			riot.mount("*")
+			Traitify.getSlides(assessment.id).then(function(slides){
+				console.log(slides)
+			})
+		})
+	})
 	</script>
 </body>
 </html>

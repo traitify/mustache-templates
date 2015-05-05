@@ -9,7 +9,10 @@
     "gulp-webserver": ">= 0.9.0",
     "gulp-watch": ">= 4.1.1",
     "express": "latest",
-    "minify": "latest"
+    "minify": "latest",
+    "traitify":"latest",
+    "cors":"latest",
+    "express":"latest"
   },
   "engine": "node 0.4.1"
 }
