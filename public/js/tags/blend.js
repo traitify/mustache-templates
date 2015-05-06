@@ -4,31 +4,33 @@ this.assessmentId = this.root.getAttribute("assessment-id");
 
 that = this;
 
-window.Traitify.getPersonalityTypes(this.assessmentId).then(function(results) {
-  var bgColor1, bgColor2, hexToRgb;
-  that.type1 = results.personality_blend.personality_type_1;
-  that.type2 = results.personality_blend.personality_type_2;
-  hexToRgb = function(hex) {
-    var result;
-    result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (result) {
-      return {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      };
-    } else {
-      return null;
-    }
-  };
-  bgColor1 = that.type1.badge.color_1;
-  that.type1.bg = hexToRgb(bgColor1);
-  that.type1.border = that.type1.badge.color_1;
-  bgColor2 = that.type2.badge.color_1;
-  that.type2.bg = hexToRgb(bgColor2);
-  that.type2.border = that.type2.badge.color_1;
-  that.description = results.personality_blend.description;
-  return that.update();
-});
+if (this.assessmentId) {
+  window.Traitify.getPersonalityTypes(this.assessmentId).then(function(results) {
+    var bgColor1, bgColor2, hexToRgb;
+    that.type1 = results.personality_blend.personality_type_1;
+    that.type2 = results.personality_blend.personality_type_2;
+    hexToRgb = function(hex) {
+      var result;
+      result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (result) {
+        return {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        };
+      } else {
+        return null;
+      }
+    };
+    bgColor1 = that.type1.badge.color_1;
+    that.type1.bg = hexToRgb(bgColor1);
+    that.type1.border = that.type1.badge.color_1;
+    bgColor2 = that.type2.badge.color_1;
+    that.type2.bg = hexToRgb(bgColor2);
+    that.type2.border = that.type2.badge.color_1;
+    that.description = results.personality_blend.description;
+    return that.update();
+  });
+}
 
 });

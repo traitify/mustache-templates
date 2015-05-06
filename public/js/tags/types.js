@@ -4,36 +4,38 @@ this.assessmentId = this.root.getAttribute("assessment-id");
 
 that = this;
 
-window.Traitify.getPersonalityTypes(this.assessmentId).then(function(results) {
-  var hexToRgb;
-  hexToRgb = function(hex) {
-    var result;
-    result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (result) {
-      return {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      };
-    } else {
-      return null;
-    }
-  };
-  that.types = results.personality_types.map(function(i) {
-    var score;
-    score = Math.round(i.score);
-    i = i.personality_type;
-    i.score = score;
-    return i;
+if (this.assessmentId) {
+  window.Traitify.getPersonalityTypes(this.assessmentId).then(function(results) {
+    var hexToRgb;
+    hexToRgb = function(hex) {
+      var result;
+      result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      if (result) {
+        return {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        };
+      } else {
+        return null;
+      }
+    };
+    that.types = results.personality_types.map(function(i) {
+      var score;
+      score = Math.round(i.score);
+      i = i.personality_type;
+      i.score = score;
+      return i;
+    });
+    that.description = that.types[0].description;
+    that.handleClick = function() {
+      that.description = this.type.description;
+      that.arrow = "position-" + (that.types.indexOf(this.type));
+      return that.update();
+    };
+    that.update();
+    return console.log(that.handleClick);
   });
-  that.description = that.types[0].description;
-  that.handleClick = function() {
-    that.description = this.type.description;
-    that.arrow = "position-" + (that.types.indexOf(this.type));
-    return that.update();
-  };
-  that.update();
-  return console.log(that.handleClick);
-});
+}
 
 });

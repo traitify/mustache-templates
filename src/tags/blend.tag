@@ -67,29 +67,30 @@
 <script>
   @assessmentId = @root.getAttribute("assessment-id")
   that = @
-  window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
-    that.type1 = results.personality_blend.personality_type_1
-    that.type2 = results.personality_blend.personality_type_2
-    hexToRgb = (hex)->
-      result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-      return if result then {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-      } else null
+  if @assessmentId
+    window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
+      that.type1 = results.personality_blend.personality_type_1
+      that.type2 = results.personality_blend.personality_type_2
+      hexToRgb = (hex)->
+        result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+        return if result then {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } else null
 
 
 
-    bgColor1 = that.type1.badge.color_1
-    that.type1.bg = hexToRgb(bgColor1)
-    that.type1.border = that.type1.badge.color_1
+      bgColor1 = that.type1.badge.color_1
+      that.type1.bg = hexToRgb(bgColor1)
+      that.type1.border = that.type1.badge.color_1
 
-    bgColor2 = that.type2.badge.color_1
-    that.type2.bg = hexToRgb(bgColor2)
-    that.type2.border = that.type2.badge.color_1
+      bgColor2 = that.type2.badge.color_1
+      that.type2.bg = hexToRgb(bgColor2)
+      that.type2.border = that.type2.badge.color_1
 
-    that.description = results.personality_blend.description
-    that.update()
-  )
+      that.description = results.personality_blend.description
+      that.update()
+    )
 </script>
 </tf-blend>

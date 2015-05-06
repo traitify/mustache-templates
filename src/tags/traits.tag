@@ -12,7 +12,7 @@
     }
     tf-traits div, tf-traits img{
       box-sizing: content-box;
-    } 
+    }
     tf-traits .your-top-traits{
       font-size: 24px;
       margin: 20px;
@@ -82,14 +82,15 @@
   </style>
 <script>
   @assessmentId = @root.getAttribute("assessment-id")
-  that = @
-  window.Traitify.getPersonalityTraits(@assessmentId).then((results)->
-    that.traits = results.slice(0, 8).map((trait)-> 
-      tf = trait.personality_trait 
-      tf.badge = tf.personality_type.badge
-      tf
+  if @assessmentId
+    that = @
+    window.Traitify.getPersonalityTraits(@assessmentId).then((results)->
+      that.traits = results.slice(0, 8).map((trait)->
+        tf = trait.personality_trait
+        tf.badge = tf.personality_type.badge
+        tf
+      )
+      that.update()
     )
-    that.update()
-  )
 </script>
 </tf-traits>

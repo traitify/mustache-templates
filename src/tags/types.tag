@@ -30,8 +30,8 @@
     .tf-types-scroller{
       overflow-y: hidden;
       overflow-x: auto;
-      height: 220px;   
-      width: 100%;   
+      height: 220px;
+      width: 100%;
     }
     .tf-types-container{
       position: relative;
@@ -106,27 +106,28 @@
   <script>
     @assessmentId = @root.getAttribute("assessment-id")
     that = @
-    window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
-      hexToRgb = (hex)->
-        result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-        return if result then {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } else null
-      that.types = results.personality_types.map((i)-> 
-        score = Math.round(i.score)
-        i = i.personality_type
-        i.score = score
-        return i
-      )
-      that.description = that.types[0].description
-      that.handleClick = ->
-        that.description = this.type.description
-        that.arrow = "position-#{that.types.indexOf(this.type)}"
+    if @assessmentId
+      window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
+        hexToRgb = (hex)->
+          result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+          return if result then {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16)
+          } else null
+        that.types = results.personality_types.map((i)->
+          score = Math.round(i.score)
+          i = i.personality_type
+          i.score = score
+          return i
+        )
+        that.description = that.types[0].description
+        that.handleClick = ->
+          that.description = this.type.description
+          that.arrow = "position-#{that.types.indexOf(this.type)}"
+          that.update()
         that.update()
-      that.update()
-      console.log(that.handleClick)
-    )
+        console.log(that.handleClick)
+      )
   </script>
 </tf-types>

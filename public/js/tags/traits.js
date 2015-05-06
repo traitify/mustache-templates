@@ -2,16 +2,17 @@ riot.tag('tf-traits', '<div class="tf-personality-traits"> <div each="{trait in 
 
 this.assessmentId = this.root.getAttribute("assessment-id");
 
-that = this;
-
-window.Traitify.getPersonalityTraits(this.assessmentId).then(function(results) {
-  that.traits = results.slice(0, 8).map(function(trait) {
-    var tf;
-    tf = trait.personality_trait;
-    tf.badge = tf.personality_type.badge;
-    return tf;
+if (this.assessmentId) {
+  that = this;
+  window.Traitify.getPersonalityTraits(this.assessmentId).then(function(results) {
+    that.traits = results.slice(0, 8).map(function(trait) {
+      var tf;
+      tf = trait.personality_trait;
+      tf.badge = tf.personality_type.badge;
+      return tf;
+    });
+    return that.update();
   });
-  return that.update();
-});
+}
 
 });
