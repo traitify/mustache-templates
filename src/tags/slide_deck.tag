@@ -14,7 +14,8 @@
       <div class="tf-response">
         <div class="tf-me-not-me">
           <div class="tf-loading {this.loadingVisible}">
-            <a class="tf-refresh {this.refreshVisible}">
+            <div class="tf-spinner {this.spinnerVisible}"></div>
+            <a href="#" class="tf-refresh {this.refreshVisible}" onclick={handleRefresh}>
               Click To Refresh
             </a>
             <span class="tf-loading-animation {this.hideLoading}">Loading...</span>
@@ -170,6 +171,7 @@
       width: 100%;
       color: #fff;
       display: none;
+      text-decoration: none;
     }
     .tf-loading{
       background-color: #4488cc;
@@ -180,6 +182,44 @@
       display: none;
       color: #fff;
     }
+
+
+    @keyframes spinner {
+      to {transform: rotate(360deg);}
+    }
+
+    @-webkit-keyframes spinner {
+      to {-webkit-transform: rotate(360deg);}
+    }
+
+    .tf-spinner {
+      display: none;
+      min-width: 24px;
+      min-height: 24px;
+    }
+
+    .tf-spinner:before {
+      content: 'Loading…';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 16px;
+      height: 16px;
+      margin-top: -10px;
+      margin-left: -10px;
+    }
+
+    .tf-spinner:not(:required):before {
+      content: '';
+      border-radius: 50%;
+      border: 1px solid #058FC4;
+      border-top-color: #058FC4;
+      border-right-color: #FF5E5E;
+      border-bottom-color: #FF5E5E;
+      animation: spinner .6s linear infinite;
+      -webkit-animation: spinner .6s linear infinite;
+    }
+
     .tf-visible{
       display: block;
     }
@@ -230,6 +270,7 @@
         opacity:1
       }
     }
+
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId
@@ -296,7 +337,7 @@
         Traitify.addSlides(@assessmentId, slides).then((response)->
           console.log(response)
         )
-
+        @spinnerVisible = "tf-visible"
         @progressBar = ((@index + 1) / @slides.length) * 100
 
     @handleMe = ->
@@ -305,6 +346,12 @@
     @handleNotMe = ->
       if !@touchDevice
         @processSlide(false)
+
+    @handleRefresh = ->
+      @refreshVisible = ""
+      @loadingVisible = "tf-visible"
+      @imageTries[@index + 1] = 0
+      @loadImage(@index + 1)
 
     @panelOne.class = "current"
     @panelTwo.class = "next"
@@ -360,7 +407,7 @@
       )
       @imageTries = Object()
       @images = Object()
-      loadImage = (i)->
+      @loadImage = (i)->
         if images[i]
           that.imageTries[i] ?= 0
           that.images[i] = new Image()
@@ -369,7 +416,7 @@
             that.imageTries[i]++
             if that.imageTries[i] < 30
               setTimeout(->
-                loadImage(i)
+                that.loadImage(i)
               , 1000)
             else
               that.refreshVisible = "tf-visible"
@@ -379,9 +426,9 @@
           that.images[i].onload = ->
             that.loadingVisible = ""
             that.update()
-            loadImage(i + 1)
+            that.loadImage(i + 1)
 
-      loadImage(0)
+      @loadImage(0)
 
       @touch(document.querySelector(".tf-me"), ->
         that.processSlide(true)
