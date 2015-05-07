@@ -9,10 +9,17 @@
       </div>
       <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" style="background-image: url('{this.panelOne.picture}'); background-position:{this.panelOne.x}% {this.panelOne.y}%;">
       </div>
-      <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" style="background-image: url('{this.panelTwo.picture}'); background-position:{this.panelOne.x}% {this.panelOne.y}%;">
+      <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" style="background-image: url('{this.panelTwo.picture}'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;">
       </div>
       <div class="tf-response">
         <div class="tf-me-not-me">
+          <div class="tf-loading {this.loadingVisible}">
+            <a class="tf-refresh {this.refreshVisible}">
+              Click To Refresh
+            </a>
+            <span class="tf-loading-animation {this.hideLoading}">Loading...</span>
+          </div>
+
           <a href="#" class="tf-me" onclick={handleMe}>
             ME
           </a>
@@ -82,7 +89,7 @@
       left: 0%;
     }
     .caption{
-      padding: 0px 0px 5px;
+      padding: 3px 0px 8px;
       color: #fff;
       font-size: 28px;
       display: block;
@@ -108,9 +115,9 @@
     .tf-me-not-me{
       width: 260px;
       height: 46px;
+      position: relative;
       line-height:43px;
       font-size: 24px;
-      left: 50%;
       padding: 0px;
       overflow: hidden;
       border-radius: 25px;
@@ -149,13 +156,79 @@
     }
     .progress-bar-inner{
       position: absolute;
-      background-color: rgba(120, 120, 120, .5);
+      background-color: rgba(19, 194, 76, .5);
       height: 100%;
       width: 0%;
       -webkit-transition: width .4s ease-in-out;
       -moz-transition: width .4s ease-in-out;
       -o-transition: width .4s ease-in-out;
       transition: width .4s ease-in-out;
+    }
+    .tf-refresh{
+      background-color: #4488cc;
+      height: 100%;
+      width: 100%;
+      color: #fff;
+      display: none;
+    }
+    .tf-loading{
+      background-color: #4488cc;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      z-index: 1;
+      display: none;
+      color: #fff;
+    }
+    .tf-visible{
+      display: block;
+    }
+    .tf-loading-animation{
+      -webkit-animation-name: fadeInOut;
+      -webkit-animation-duration: 3s;
+      -webkit-animation-iteration-count: infinite;
+
+      animation-name: fadeInOut;
+      animation-duration: 3s;
+      animation-iteration-count: infinite;
+    }
+    .tf-invisible{
+      display: none;
+    }
+
+    @keyframes fadeInOut {
+      0% {
+        opacity:1;
+      }
+      45% {
+        opacity:1;
+      }
+      55% {
+        opacity:0;
+      }
+      80% {
+        opacity:0;
+      }
+      100%{
+        opacity:1
+      }
+    }
+    @-webkit-keyframes fadeInOut {
+      0% {
+        opacity:1;
+      }
+      45% {
+        opacity:1;
+      }
+      55% {
+        opacity:0;
+      }
+      80% {
+        opacity:0;
+      }
+      100%{
+        opacity:1
+      }
     }
   </style>
   <script>
@@ -164,23 +237,67 @@
     @progressBar = "0"
     @panelOne = Object()
     @panelTwo = Object()
+    Cookie = Object()
+    Cookie.set = (cname, cvalue, exdays) ->
+      d = new Date
+      d.setTime d.getTime() + exdays * 24 * 60 * 60 * 1000
+      expires = 'expires=' + d.toUTCString()
+      document.cookie = cname + '=' + cvalue + '; ' + expires
+      return
+
+    Cookie.get = (cname) ->
+      name = cname + '='
+      ca = document.cookie.split(';')
+      i = 0
+      while i < ca.length
+        c = ca[i]
+        while c.charAt(0) == ' '
+          c = c.substring(1)
+        if c.indexOf(name) == 0
+          return c.substring(name.length, c.length)
+        i++
+      return ""
+
+    @slideData = Object()
 
     @touchDevice = false
-
+    slideTime = new Date()
     @processSlide = (value)->
-      if @images[@index + 2]
-        console.log("slides")
+      duration = new Date() - slideTime
+      slideTime = new Date()
+      @slideData[@index] = {
+        id: @slides[@index].id,
+        time_taken: duration,
+        response: value
+      }
+
+      if @images[@index + 2] || (@index == @slides.length - 2 && @images[@index + 1])
         if @whichTransitionEvent
           @animateSlide()
           @onFinishedTransition = ->
             @panelOne.picture = @panelTwo.picture
-            @panelTwo.class = "next"
-            @panelOne.class = "current"
-            @index++
-            @setSlide()
+            @panelOne.x = @panelTwo.x
+            @panelOne.y = @panelTwo.y
+            @update()
+            that.panelTwo.class = "next"
+            that.panelOne.class = "current"
+            that.index++
+            that.setSlide()
         else
           @index++
           @setSlide()
+      else
+        @loadingVisible = "tf-visible"
+
+      if @index == @slides.length - 1
+        slides = Object.keys(@slideData).map((id)->
+          that.slideData[id]
+        )
+        Traitify.addSlides(@assessmentId, slides).then((response)->
+          console.log(response)
+        )
+
+        @progressBar = ((@index + 1) / @slides.length) * 100
 
     @handleMe = ->
       if !@touchDevice
@@ -197,15 +314,20 @@
       @panelTwo.class = "current"
 
     @setSlide = ->
-      @panelOne.caption = @slides[@index].caption
-      @panelOne.picture = @slides[@index].image_desktop_retina
-      @panelOne.x = @slides[@index].focus_x
-      @panelOne.y = @slides[@index].focus_y
-      @panelTwo.caption = @slides[@index + 1].caption
-      @panelTwo.picture = @slides[@index + 1].image_desktop_retina
-      @panelTwo.x = @slides[@index + 1].fucus_x
-      @panelTwo.y = @slides[@index + 1].focus_y
+      slideOne = @slides[@index]
+      @panelOne.caption = slideOne.caption
+      @panelOne.picture = slideOne.image_desktop_retina
+      @panelOne.x = slideOne.focus_x
+      @panelOne.y = slideOne.focus_y
+
+      if @slides[@index + 1]
+        slideTwo = @slides[@index + 1]
+        @panelTwo.caption = slideTwo.caption
+        @panelTwo.picture = slideTwo.image_desktop_retina
+        @panelTwo.y = slideTwo.focus_y
+        @panelTwo.x = slideTwo.focus_x
       @update()
+
 
     @whichTransitionEvent = ->
         el = document.createElement('fakeelement')
@@ -249,9 +371,16 @@
               setTimeout(->
                 loadImage(i)
               , 1000)
+            else
+              that.refreshVisible = "tf-visible"
+              that.hiddenRefresh = "tf-invisible"
+              that.update()
 
           that.images[i].onload = ->
+            that.loadingVisible = ""
+            that.update()
             loadImage(i + 1)
+
       loadImage(0)
 
       @touch(document.querySelector(".tf-me"), ->

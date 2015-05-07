@@ -1,4 +1,4 @@
-riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(0,0,0, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 0px 0px 5px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 260px; height: 46px; line-height:43px; font-size: 24px; left: 50%; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #058FC4; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #FF5E5E; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(120, 120, 120, .5); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; }', function(opts) {var that;
+riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a class="tf-refresh {this.refreshVisible}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(0,0,0, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 260px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #058FC4; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #FF5E5E; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(19, 194, 76, .5); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var Cookie, slideTime, that;
 
 this.assessmentId = this.root.getAttribute("assessment-id") || opts.assessmentId;
 
@@ -10,24 +10,77 @@ this.panelOne = Object();
 
 this.panelTwo = Object();
 
+Cookie = Object();
+
+Cookie.set = function(cname, cvalue, exdays) {
+  var d, expires;
+  d = new Date;
+  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
+  expires = 'expires=' + d.toUTCString();
+  document.cookie = cname + '=' + cvalue + '; ' + expires;
+};
+
+Cookie.get = function(cname) {
+  var c, ca, i, name;
+  name = cname + '=';
+  ca = document.cookie.split(';');
+  i = 0;
+  while (i < ca.length) {
+    c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+    i++;
+  }
+  return "";
+};
+
+this.slideData = Object();
+
 this.touchDevice = false;
 
+slideTime = new Date();
+
 this.processSlide = function(value) {
-  if (this.images[this.index + 2]) {
-    console.log("slides");
+  var duration, slides;
+  duration = new Date() - slideTime;
+  slideTime = new Date();
+  this.slideData[this.index] = {
+    id: this.slides[this.index].id,
+    time_taken: duration,
+    response: value
+  };
+  if (this.images[this.index + 2] || (this.index === this.slides.length - 2 && this.images[this.index + 1])) {
     if (this.whichTransitionEvent) {
       this.animateSlide();
-      return this.onFinishedTransition = function() {
+      this.onFinishedTransition = function() {
         this.panelOne.picture = this.panelTwo.picture;
-        this.panelTwo["class"] = "next";
-        this.panelOne["class"] = "current";
-        this.index++;
-        return this.setSlide();
+        this.panelOne.x = this.panelTwo.x;
+        this.panelOne.y = this.panelTwo.y;
+        this.update();
+        that.panelTwo["class"] = "next";
+        that.panelOne["class"] = "current";
+        that.index++;
+        return that.setSlide();
       };
     } else {
       this.index++;
-      return this.setSlide();
+      this.setSlide();
     }
+  } else {
+    this.loadingVisible = "tf-visible";
+  }
+  if (this.index === this.slides.length - 1) {
+    slides = Object.keys(this.slideData).map(function(id) {
+      return that.slideData[id];
+    });
+    Traitify.addSlides(this.assessmentId, slides).then(function(response) {
+      return console.log(response);
+    });
+    return this.progressBar = ((this.index + 1) / this.slides.length) * 100;
   }
 };
 
@@ -53,14 +106,19 @@ this.animateSlide = function() {
 };
 
 this.setSlide = function() {
-  this.panelOne.caption = this.slides[this.index].caption;
-  this.panelOne.picture = this.slides[this.index].image_desktop_retina;
-  this.panelOne.x = this.slides[this.index].focus_x;
-  this.panelOne.y = this.slides[this.index].focus_y;
-  this.panelTwo.caption = this.slides[this.index + 1].caption;
-  this.panelTwo.picture = this.slides[this.index + 1].image_desktop_retina;
-  this.panelTwo.x = this.slides[this.index + 1].fucus_x;
-  this.panelTwo.y = this.slides[this.index + 1].focus_y;
+  var slideOne, slideTwo;
+  slideOne = this.slides[this.index];
+  this.panelOne.caption = slideOne.caption;
+  this.panelOne.picture = slideOne.image_desktop_retina;
+  this.panelOne.x = slideOne.focus_x;
+  this.panelOne.y = slideOne.focus_y;
+  if (this.slides[this.index + 1]) {
+    slideTwo = this.slides[this.index + 1];
+    this.panelTwo.caption = slideTwo.caption;
+    this.panelTwo.picture = slideTwo.image_desktop_retina;
+    this.panelTwo.y = slideTwo.focus_y;
+    this.panelTwo.x = slideTwo.focus_x;
+  }
   return this.update();
 };
 
@@ -112,9 +170,15 @@ this.initialize = function() {
           return setTimeout(function() {
             return loadImage(i);
           }, 1000);
+        } else {
+          that.refreshVisible = "tf-visible";
+          that.hiddenRefresh = "tf-invisible";
+          return that.update();
         }
       };
       return that.images[i].onload = function() {
+        that.loadingVisible = "";
+        that.update();
         return loadImage(i + 1);
       };
     }
