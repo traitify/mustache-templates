@@ -1,7 +1,7 @@
 <tf-slide-deck>
-  <div class="tf-slide-deck-container">
+  <div class="tf-slide-deck-container {this.finished}">
     <div class="tf-slides" style="max-height: {this.maxHeight}px">
-      <div class="tf-info">
+      <div class="tf-info {this.infoVisible}">
         <div class="tf-progress-and-caption">
             <div class="progress-bar-inner" style="width:{this.progressBar}%"></div>
           <div class="caption">{this.panelOne.caption}</div>
@@ -14,7 +14,6 @@
       <div class="tf-response">
         <div class="tf-me-not-me">
           <div class="tf-loading {this.loadingVisible}">
-            <div class="tf-spinner {this.spinnerVisible}"></div>
             <a href="#" class="tf-refresh {this.refreshVisible}" onclick={handleRefresh}>
               Click To Refresh
             </a>
@@ -61,8 +60,10 @@
       font-family: "Source Sans Pro";
       text-align: center;
       margin: 0px auto;
+      background-color: #4488cc;
     }
     .tf-slide{
+      background-color: #;
       -webkit-transition: left .4s ease-in-out;
       -moz-transition: left .4s ease-in-out;
       -o-transition: left .4s ease-in-out;
@@ -124,6 +125,15 @@
       border-radius: 25px;
       margin: 0px auto;
     }
+    .tf-finished .tf-loading{
+      background-color: #315F9B;
+      color: #fff;
+      -webkit-transition: all .4s ease-in-out;
+      -moz-transition: all .4s ease-in-out;
+      -o-transition: all .4s ease-in-out;
+      transition: all .4s ease-in-out;
+    }
+
     .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{
       box-sizing: initial;
       float:left;
@@ -182,42 +192,13 @@
       display: none;
       color: #fff;
     }
-
-
-    @keyframes spinner {
-      to {transform: rotate(360deg);}
-    }
-
-    @-webkit-keyframes spinner {
-      to {-webkit-transform: rotate(360deg);}
-    }
-
-    .tf-spinner {
-      display: none;
-      min-width: 24px;
-      min-height: 24px;
-    }
-
-    .tf-spinner:before {
-      content: 'Loading…';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 16px;
-      height: 16px;
-      margin-top: -10px;
-      margin-left: -10px;
-    }
-
-    .tf-spinner:not(:required):before {
-      content: '';
-      border-radius: 50%;
-      border: 1px solid #058FC4;
-      border-top-color: #058FC4;
-      border-right-color: #FF5E5E;
-      border-bottom-color: #FF5E5E;
-      animation: spinner .6s linear infinite;
-      -webkit-animation: spinner .6s linear infinite;
+    .tf-finished .tf-response{
+      bottom: 50%;
+      margin-bottom: -22px;
+      -webkit-transition: bottom .4s ease-in-out;
+      -moz-transition: bottom .4s ease-in-out;
+      -o-transition: bottom .4s ease-in-out;
+      transition: bottom .4s ease-in-out;
     }
 
     .tf-visible{
@@ -337,7 +318,9 @@
         Traitify.addSlides(@assessmentId, slides).then((response)->
           console.log(response)
         )
-        @spinnerVisible = "tf-visible"
+        @infoVisible = "tf-invisible"
+        @finished = "tf-finished"
+        @panelOne.picture = ""
         @progressBar = ((@index + 1) / @slides.length) * 100
 
     @handleMe = ->

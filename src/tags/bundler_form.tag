@@ -11,7 +11,7 @@
       <input type="checkbox" id="blend" value={this.values.blend} onclick={ this.toggle } />
       <label for="blend">Blends?</label>
     </h2>
-    <tf-blend results=true assessment-id="fc9bb117-7691-4482-afec-0ccfc31d3477">
+    <tf-blend results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
     </tf-blend>
     <br />
 
@@ -19,20 +19,21 @@
       <input type="checkbox" id="types" value={this.values.types} onclick={ this.toggle } />
       <label for="types">Types?</label>
     </h2>
-    <tf-types results=true assessment-id="fc9bb117-7691-4482-afec-0ccfc31d3477">
+    <tf-types results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
     </tf-types>
     <br />
     <h2>
       <input type="checkbox" id="traits" value={this.values.traits} onclick={ this.toggle } />
       <label for="traits">Traits?</label>
     </h2>
-    <tf-traits results=true assessment-id="fc9bb117-7691-4482-afec-0ccfc31d3477">
+    <tf-traits results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
     </tf-traits>
     <br />
     <input type="submit" value="Build!" class="btn btn-primary" />
   </form>
   <style>
     h2{
+      margin-top: 48px;
       text-align: center;
       font-family: "Source Sans Pro";
     }

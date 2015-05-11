@@ -24,7 +24,7 @@
 	<script>
 		$(function(){
 			$.post("http://localhost:1376/credentials").then(function(credentials){
-				$.post("http://localhost:1376/assessments?deck=career-deck").then(function(assessment){
+				$.post(" http://localhost:1376/assessments?deck=career-deck").then(function(assessment){
 					Traitify.setHost(credentials.host);
 					Traitify.setVersion("v1");
 					Traitify.setPublicKey(credentials.publicKey);
