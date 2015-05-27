@@ -1,4 +1,4 @@
-<tf-blend>
+<tf-personality-blend>
   <div class="tf-blends-container">
     <div class="tf-badges">
       <div class="tf-badge"  style="border-color: {this.type1.border};">
@@ -39,7 +39,6 @@
   .tf-blends-container.ie{
     font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif";
   }
-
   .tf-blends-container div, img{
       box-sizing: content-box;
       width: 100%;
@@ -49,7 +48,7 @@
     padding:12%;
     position: relative;
     border-radius: 50%;
-    border: 3px solid;
+    border: 2px solid;
     display: inline-block;
     overflow: hidden;
   }
@@ -78,21 +77,27 @@
   }
 </style>
 <script>
-  @assessmentId = @root.getAttribute("assessment-id")
+  @assessmentId =  opts.assessmentId || @root.getAttribute("assessment-id")
   that = @
-  if @assessmentId
+  @initialize = ->
+    that.type1 = that.personality_blend.personality_type_1
+    that.type2 = that.personality_blend.personality_type_2
+
+    that.type1.bg = that.type1.badge.color_1
+    that.type1.border = that.type1.badge.color_1
+
+    that.type2.bg = that.type2.badge.color_1
+    that.type2.border = that.type2.badge.color_1
+
+    that.description = that.personality_blend.description
+    that.update()
+  if opts.personality_blend
+    that.personality_blend = opts.personality_blend
+    that.initialize()
+  else if @assessmentId
     window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
-      that.type1 = results.personality_blend.personality_type_1
-      that.type2 = results.personality_blend.personality_type_2
-
-      that.type1.bg = that.type1.badge.color_1
-      that.type1.border = that.type1.badge.color_1
-
-      that.type2.bg = that.type2.badge.color_1
-      that.type2.border = that.type2.badge.color_1
-
-      that.description = results.personality_blend.description
-      that.update()
+      that.personality_blend = results.personality_blend
+      that.initialize()
     )
 </script>
-</tf-blend>
+</tf-personality-blend>

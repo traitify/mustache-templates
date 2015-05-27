@@ -14,7 +14,6 @@
     <tf-blend results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
     </tf-blend>
     <br />
-
     <h2>
       <input type="checkbox" id="types" value={this.values.types} onclick={ this.toggle } />
       <label for="types">Types?</label>
@@ -28,6 +27,13 @@
     </h2>
     <tf-traits results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
     </tf-traits>
+    <br />
+    <h2>
+      <input type="checkbox" id="traits" value={this.values.famousPeople} onclick={ this.toggle } />
+      <label for="traits">Famous People?</label>
+    </h2>
+    <tf-famous-people results=true assessment-id="2ba49aa9-35a7-4f38-8e99-2523f2704a22">
+    </tf-famous-people>
     <br />
     <input type="submit" value="Build!" class="btn btn-primary" />
   </form>
@@ -69,6 +75,7 @@
     this.values.blend = false
     this.values.traits = false
     this.values.types = false
+    this.values.famousPeople = false
 
     this.update()
   </script>

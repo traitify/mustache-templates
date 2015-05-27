@@ -46,10 +46,21 @@
       margin: 15px auto;
       max-width: 450px;
       width: 90%;
-      background-color: rgba(0,0,0, .8);
+      background-color: rgba(15,84,34, .8);
       border-radius: 28px;
       overflow: hidden;
       position: relative;
+    }
+    .tf-slide-deck-container{
+      -webkit-transition: all .4s ease-in-out;
+      -moz-transition: all .4s ease-in-out;
+      -o-transition: all .4s ease-in-out;
+      transition: all .4s ease-in-out;
+    }
+    .tf-slide-deck-container.tf-finished{
+      height: 0px;
+      overflow: hidden;
+      opacity: 0;
     }
     .tf-slides{
       width:100%;
@@ -115,7 +126,7 @@
       width: 100%;
     }
     .tf-me-not-me{
-      width: 260px;
+      width: 320px;
       height: 46px;
       position: relative;
       line-height:43px;
@@ -140,7 +151,7 @@
     }
     .tf-me-not-me .tf-me{
       position: relative;
-      background-color: #058FC4;
+      background-color: #1dafec;
       width: 50%;
       display: inline-block;
       height: 100%;
@@ -151,7 +162,7 @@
     }
     .tf-me-not-me .tf-not-me{
       position: relative;
-      background-color: #FF5E5E;
+      background-color: #fc5f62;
       width: 50%;
       display: inline-block;
       height: 100%;
@@ -167,7 +178,7 @@
     }
     .progress-bar-inner{
       position: absolute;
-      background-color: rgba(19, 194, 76, .5);
+      background-color: rgba(39,235,95, .8);
       height: 100%;
       width: 0%;
       -webkit-transition: width .4s ease-in-out;
@@ -255,6 +266,7 @@
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId
+    
     that = this
     @progressBar = "0"
     @panelOne = Object()
@@ -281,7 +293,7 @@
       return ""
 
     @slideData = Object()
-
+    @onFinished = opts.onFinished
     @touchDevice = false
     slideTime = new Date()
     @processSlide = (value)->
@@ -315,8 +327,8 @@
         slides = Object.keys(@slideData).map((id)->
           that.slideData[id]
         )
-        Traitify.addSlides(@assessmentId, slides).then((response)->
-          console.log(response)
+        Traitify.addSlides(that.assessmentId, slides).then((response)->
+          that.onFinished(that)
         )
         @infoVisible = "tf-invisible"
         @finished = "tf-finished"
@@ -379,11 +391,21 @@
     @index = 0
     @initialize = ->
       @setSlide()
-      el = document.getElementsByClassName("tf-panel-two")[0]
 
-      @transitionEvent && el.addEventListener(@transitionEvent, ->
-        that.onFinishedTransition()
+      @on("mount", ->
+        el = document.getElementsByClassName("tf-panel-two")[0]
+
+        @transitionEvent && el.addEventListener(@transitionEvent, ->
+          that.onFinishedTransition()
+        )
+        @touch(document.querySelector(".tf-me"), ->
+          that.processSlide(true)
+        )
+        @touch(document.querySelector(".tf-not-me"), ->
+          that.processSlide(false)
+        )
       )
+
 
       images = @slides.map((slide)->
         slide.image_desktop_retina
@@ -413,22 +435,16 @@
 
       @loadImage(0)
 
-      @touch(document.querySelector(".tf-me"), ->
-        that.processSlide(true)
-      )
 
-      @touch(document.querySelector(".tf-not-me"), ->
-        that.processSlide(false)
-      )
 
     if opts.slides
       @slides = opts.slides
       @initialize()
     else if @assessmentId
-      window.Traitify.getSlides(@assessmentId).then((slides)->
-        that.slides = slides
-        that.initialize()
-      )
+        window.Traitify.getSlides(@assessmentId).then((slides)->
+          that.slides = slides
+          that.initialize()
+        )
     @maxHeight = window.innerHeight
     document.addEventListener("orientationchange", ->
       that.maxHeight = window.innerHeight

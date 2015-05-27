@@ -1,4 +1,4 @@
-<tf-traits>
+<tf-personality-traits>
   <div class="tf-personality-traits">
     <div each={trait in this.traits} class="tf-trait" style="border-color:#{trait.badge.color_1}">
       <div class="tf-background-color" style="background-color: #{trait.badge.color_1}"></div>
@@ -56,7 +56,7 @@
       margin-bottom: 0px;
       display: inline-block;
       font-weight: 600;
-      text-align: left;
+      text-align: center;
     }
     .tf-personality-traits .tf-trait .tf-definition{
       padding: 0px 20px;
@@ -85,16 +85,23 @@
     }
   </style>
 <script>
-  @assessmentId = @root.getAttribute("assessment-id")
-  if @assessmentId
-    that = @
+  @assessmentId =  opts.assessmentId || @root.getAttribute("assessment-id")
+
+  that = @
+  @initialize = ->
+    that.traits = that.traits.slice(0, 8).map((trait)->
+      tf = trait.personality_trait
+      tf.badge = tf.personality_type.badge
+      tf
+    )
+    that.update()
+  if opts.personality_traits
+    that.traits = opts.personality_traits
+    that.initialize()
+  else if @assessmentId
     window.Traitify.getPersonalityTraits(@assessmentId).then((results)->
-      that.traits = results.slice(0, 8).map((trait)->
-        tf = trait.personality_trait
-        tf.badge = tf.personality_type.badge
-        tf
-      )
-      that.update()
+      that.traits = results.personality_traits
+      that.initialize()
     )
 </script>
-</tf-traits>
+</tf-personality-traits>

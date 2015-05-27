@@ -5,6 +5,15 @@ fs = require("fs")
 minify = require("minify")
 path = require('path')
 traitify = require('traitify')
+coffee = require('gulp-coffee')
+gutil = require('gulp-util')
+
+gulp.task('coffee', ->
+  gulp.src('./src/lib/*.coffee')
+    .pipe(coffee({bare: true}).on('error', gutil.log))
+    .pipe(gulp.dest('./public/js'))
+)
+
 
 gulp.task 'riot', ->
   gulp.src './src/**/*.tag'
@@ -26,6 +35,9 @@ watch = require('gulp-watch');
 gulp.task('watch', ->
   gulp.watch('./src/tags/*.tag', {}, ->
     gulp.start('riot')
+  )
+  gulp.watch('./src/lib/*.coffee', {}, ->
+    gulp.start('coffee')
   )
 )
 
@@ -74,4 +86,4 @@ gulp.task("traitify-server", (req, res)->
 )
 
 
-gulp.task('default', ['riot', 'webserver', 'watch', 'traitify-server'])
+gulp.task('default', ['riot', 'webserver', 'watch', 'traitify-server', 'coffee'])
