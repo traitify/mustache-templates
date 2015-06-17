@@ -1,0 +1,3 @@
+[submodule "traitify-js-client"]
+	path = traitify-js-client
+	url = git@github.com:traitify/traitify-js-client

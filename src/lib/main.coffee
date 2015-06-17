@@ -3,38 +3,37 @@ Traitify.ui = {
     options.slideDeck ?= Object()
     options.slideDeck.target ?= ".tf-slide-deck"
     options.slideDeck.tag ?= "tf-slide-deck"
-    options.slideDeck.options ?= Object()
-    options.results ?= ["personality-blend", "personality-types", "personality-traits", "famous-people"].map((item)->
-      {
-        target: ".tf-#{item}"
-        tag: "tf-#{item}"
-        dataName: item.replace(/-/g, "_")
-      }
-    )
+    options.slideDeck = riot.mount(options.slideDeck.target, options.slideDeck.tag)
+    for item in ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"]
+      dataName = item.replace(/-([a-z])/g, (g)-> g[1].toUpperCase())
+      options[item] ?= Object()
+      options[item].tag ?= "tf-#{item}"
+      options[item].target ?= ".tf-#{item}"
+      options[dataName] = riot.mount(".tf-#{item}", options[item].tag)
+
     options.load = ->
       that = this
-      scopes = "slides,blend,types,traits"
+
+      scopes = "slides,blend,types,traits,career_matches"
       args = "image_pack=linear&data=#{scopes}"
-      options.slideDeck.options.assessmentId = options.assessmentId
+      options.slideDeck.assessmentId = options.assessmentId
       Traitify.get("/assessments/#{options.assessmentId}?#{args}").then((assessment)->
         if assessment.completed_at == undefined
-          options.slideDeck.options.slides = assessment.slides
-          options.slideDeck.options.onFinished ?= (widget)->
-            that.load()
-          riot.mount(that.slideDeck.target, that.slideDeck.tag, that.slideDeck.options)
+          for deck in options.slideDeck
+            deck.slides = assessment.slides
+            deck.on("finish", ->
+              that.load()
+            )
+            deck.initialize()
         else
           for widget in that.results
-            widget.options ?= Object()
             for key in Object.keys(assessment)
-              widget.options[key] = assessment[key]
-            riot.mount(widget.target, widget.tag, widget.options)
+              widget[key] = assessment[key]
+              widget.assessmentId = assessment.id
+              widget.initialize()
       )
+      return this
     return options
-  load: (assessmentId, slideDeck, options)->
-    options.assessmentId = assessmentId
-    widgets = @init(options)
-    for widget in widgets.slideDeck
-        widget.target = slideDeck
-      widget.assessmentId = assessmentId
-    widgets.load()
+  on: (event, callback)->
+
 }

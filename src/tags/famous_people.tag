@@ -64,7 +64,6 @@
         for famousPerson in personalityType.personality_type.famous_people
           famousPeople.push(famousPerson)
       that.famousPeople = famousPeople[0..4].sort(-> 0.5 - Math.random())
-      console.log(that.famousPeople)
     if opts.personality_types
       @personality_types = opts.personality_types
       @personality_blend = opts.personality_blend

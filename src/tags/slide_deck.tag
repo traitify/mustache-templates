@@ -30,12 +30,23 @@
       </div>
     </div>
   </div>
+  <div class="tf-cover {this.tfCover}"></div>
   <style>
     @font-face {
       font-family: "Source Sans Pro";
       font-style: normal;
       font-weight: 400;
       src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
+    }
+    .tf-cover{
+      background-color: #fff;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      right: 0px;
+      bottom: 0px;
+      z-index: 2;
+
     }
     .tf-info{
       position: absolute;
@@ -74,7 +85,6 @@
       background-color: #4488cc;
     }
     .tf-slide{
-      background-color: #;
       -webkit-transition: left .4s ease-in-out;
       -moz-transition: left .4s ease-in-out;
       -o-transition: left .4s ease-in-out;
@@ -211,7 +221,12 @@
       -o-transition: bottom .4s ease-in-out;
       transition: bottom .4s ease-in-out;
     }
-
+    .tf-slide-deck .tf-me:active{
+      background-color: #2684AB;
+    }
+    .tf-slide-deck .tf-not-me:active{
+      background-color: #D74648;
+    }
     .tf-visible{
       display: block;
     }
@@ -266,9 +281,8 @@
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId
-    
+
     that = this
-    @progressBar = "0"
     @panelOne = Object()
     @panelTwo = Object()
     Cookie = Object()
@@ -276,7 +290,8 @@
       d = new Date
       d.setTime d.getTime() + exdays * 24 * 60 * 60 * 1000
       expires = 'expires=' + d.toUTCString()
-      document.cookie = cname + '=' + cvalue + '; ' + expires
+
+      document.cookie = cname + '=' + JSON.stringify(cvalue) + '; ' + expires
       return
 
     Cookie.get = (cname) ->
@@ -288,23 +303,24 @@
         while c.charAt(0) == ' '
           c = c.substring(1)
         if c.indexOf(name) == 0
-          return c.substring(name.length, c.length)
+          return JSON.parse(c.substring(name.length, c.length))
         i++
-      return ""
+      return undefined
 
-    @slideData = Object()
-    @onFinished = opts.onFinished
     @touchDevice = false
     slideTime = new Date()
     @processSlide = (value)->
+      that.trigger("addSlide")
       duration = new Date() - slideTime
       slideTime = new Date()
-      @slideData[@index] = {
+
+      @slideData[@slides[@index].id] = {
         id: @slides[@index].id,
         time_taken: duration,
         response: value
       }
 
+      Cookie.set("slideData", @slideData)
       if @images[@index + 2] || (@index == @slides.length - 2 && @images[@index + 1])
         if @whichTransitionEvent
           @animateSlide()
@@ -327,13 +343,25 @@
         slides = Object.keys(@slideData).map((id)->
           that.slideData[id]
         )
-        Traitify.addSlides(that.assessmentId, slides).then((response)->
-          that.onFinished(that)
+        slideIds = allSlides.map((slide)-> slide.id)
+        sendSlides = Array()
+        customSlides = Array()
+        for slide in slides
+          if slideIds.indexOf(slide.id) == -1
+            sendSlides.push(slide)
+          else
+            that.customSlideValues.push(slide)
+        that.trigger("customSlideValues", that.customSlideValues)
+        Traitify.addSlides(that.assessmentId, sendSlides).then((response)->
+          that.trigger("finish", that)
         )
         @infoVisible = "tf-invisible"
         @finished = "tf-finished"
         @panelOne.picture = ""
-        @progressBar = ((@index + 1) / @slides.length) * 100
+        @progress
+      @setProgressBar()
+    @setProgressBar = ->
+      @progressBar = (Object.keys(@slideData).length / @allSlides.length) * 100
 
     @handleMe = ->
       if !@touchDevice
@@ -352,7 +380,7 @@
     @panelTwo.class = "next"
 
     @animateSlide = ->
-      @progressBar = ((@index + 1) / @slides.length) * 100
+      @progressBar = (@slideData.length / @allSlides.length) * 100
       @panelTwo.class = "current"
 
     @setSlide = ->
@@ -370,7 +398,6 @@
         @panelTwo.x = slideTwo.focus_x
       @update()
 
-
     @whichTransitionEvent = ->
         el = document.createElement('fakeelement')
         transitions = {
@@ -384,32 +411,59 @@
             if el.style[t] != undefined
                 return transitions[t]
 
-
-
     @transitionEvent = @whichTransitionEvent()
 
-    @index = 0
+    @on("initialized", ->
+      el = document.getElementsByClassName("tf-panel-two")[0]
+
+      that.transitionEvent && el.addEventListener(that.transitionEvent, ->
+        that.onFinishedTransition()
+      )
+      that.touch(document.querySelector(".tf-me"), ->
+        that.processSlide(true)
+      )
+      that.touch(document.querySelector(".tf-not-me"), ->
+        that.processSlide(false)
+      )
+      that.tfCover = "tf-invisible"
+      that.update()
+      that.customSlides ?= Array()
+      for slide in that.customSlides
+        that.slides.splice(slide.position, slide)
+      that.update()
+    )
+    @on("mount", ->
+      that.mounted = true
+      if that.initialized == true
+        that.trigger("initialized")
+    )
+
     @initialize = ->
-      @setSlide()
+      @index = 0
 
-      @on("mount", ->
-        el = document.getElementsByClassName("tf-panel-two")[0]
+      @slideData = Cookie.get("slideData")
+      unless @slideData
+        @slideData = Object()
 
-        @transitionEvent && el.addEventListener(@transitionEvent, ->
-          that.onFinishedTransition()
-        )
-        @touch(document.querySelector(".tf-me"), ->
-          that.processSlide(true)
-        )
-        @touch(document.querySelector(".tf-not-me"), ->
-          that.processSlide(false)
-        )
+      # Clone Slide array
+      @allSlides = @slides.map((slide)->
+        return slide
       )
 
+      playedSlideIds = Object.keys(@slideData).map((slideName)->
+        that.slideData[slideName].id
+      )
 
+      @slides = @slides.filter((slide)->
+        playedSlideIds.indexOf(slide.id) == -1
+      )
+
+      @setSlide()
+      @setProgressBar()
       images = @slides.map((slide)->
         slide.image_desktop_retina
       )
+
       @imageTries = Object()
       @images = Object()
       @loadImage = (i)->
@@ -434,7 +488,9 @@
             that.loadImage(i + 1)
 
       @loadImage(0)
-
+      that.initialized = true
+      if that.mounted == true
+        that.trigger("initialized")
 
 
     if opts.slides
@@ -450,7 +506,8 @@
       that.maxHeight = window.innerHeight
       that.update()
     )
-
+    @setCustomSlides = (slides)->
+      @customSlides = slides
     @touch = (target, callback)->
       do ->
         touchClick = false

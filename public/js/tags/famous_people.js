@@ -16,10 +16,9 @@ this.initialize = function() {
       famousPeople.push(famousPerson);
     }
   }
-  that.famousPeople = famousPeople.slice(0, 5).sort(function() {
+  return that.famousPeople = famousPeople.slice(0, 5).sort(function() {
     return 0.5 - Math.random();
   });
-  return console.log(that.famousPeople);
 };
 
 if (opts.personality_types) {

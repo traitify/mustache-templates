@@ -1,0 +1,53 @@
+<html>
+<head>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script src="https://cdn.traitify.com/js/widgets/edge.js"></script>
+	<script src="/support/riot.min.js"></script>
+	<script src="/js/tags/slide_deck.js"></script>
+	<script src="/js/tags/blend.js"></script>
+	<script src="/js/tags/types.js"></script>
+	<script src="/js/tags/traits.js"></script>
+	<script src="/js/tags/famous_people.js"></script>
+	<script src="/js/tags/bundler_form.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		h1{
+			text-align: center;
+			font-family: 'Helvetica Neue', "Helvetica";
+			font-weight: 100;
+		}
+	</style>
+</head>
+<body>
+	<h2>Create Your Bundle!</h2>
+	<bundler-form>
+	</bundler-form>
+	<script>
+		$(function(){
+			$.post("http://localhost:1376/credentials").then(function(credentials){
+				$.post("http://localhost:1376/assessments?deck=career-deck").then(function(assessment){
+					Traitify.setHost(credentials.host);
+					Traitify.setVersion("v1");
+					Traitify.setPublicKey(credentials.publicKey);
+					riot.mount("bundler-form")
+					Traitify.get("/assessments/"+assessment.id+"?data=slides").then(function(assessmentResponse){
+						unfinishedSlides = Array()
+						slideDeck = $("<div class='slide-deck'>")
+
+						$("tf-slide-deck").after(slideDeck)
+						$("tf-slide-deck").remove()
+						for(index = 0; index < assessmentResponse.slides.length; index++ ){
+							if(assessmentResponse.slides[index].response == null){
+								unfinishedSlides.push(assessmentResponse.slides[index])
+							}
+						}
+						if(unfinishedSlides.length == assessmentResponse.slides.length){
+							riot.mountTo(".slide-deck", "tf-slide-deck", {assessmentId: assessment.id})
+						}
+					})
+				})
+			})
+		})
+	</script>
+</body>
+</html>

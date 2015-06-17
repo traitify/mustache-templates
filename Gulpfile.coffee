@@ -7,9 +7,18 @@ path = require('path')
 traitify = require('traitify')
 coffee = require('gulp-coffee')
 gutil = require('gulp-util')
+qunit = require('gulp-qunit')
+concat = require('gulp-concat')
+runSequence = require('gulp-run-sequence')
+yaml = require("js-yaml")
+uglify = require('gulp-uglify')
+rename = require("gulp-rename")
+gzip = require('gulp-gzip')
+notify = require("gulp-notify")
+process.setMaxListeners(50)
 
 gulp.task('coffee', ->
-  gulp.src('./src/lib/*.coffee')
+  gulp.src('./src/**/*.coffee')
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(gulp.dest('./public/js'))
 )
@@ -21,7 +30,7 @@ gulp.task 'riot', ->
     .pipe gulp.dest './public/js'
 
 gulp.task('webserver', ->
-  gulp.src('public')
+  gulp.src(['public', 'qunit'])
     .pipe(webserver({
       livereload: true,
       directoryListing: false,
@@ -36,9 +45,46 @@ gulp.task('watch', ->
   gulp.watch('./src/tags/*.tag', {}, ->
     gulp.start('riot')
   )
-  gulp.watch('./src/lib/*.coffee', {}, ->
+  gulp.watch('./src/**/*.coffee', {}, ->
     gulp.start('coffee')
   )
+  gulp.watch('./public/js/**/*.js', {}, ->
+    gulp.start("bundle:concat")
+  )
+  gulp.watch('./public/bundles/*.debug.js', {}, (event)->
+    gulp.start("bundle:minify")
+    gulp.start("bundle:compress")
+    gulp.start('test')
+  )
+)
+gulp.task('bundle:concat', (done)->
+  bundles = yaml.safeLoad(fs.readFileSync('./bundles.yml', 'utf8'))
+  bundleNames = Object.keys(bundles)
+  for bundleName in bundleNames
+    gulp.src(bundles[bundleName].map((name)-> "./#{name}.js"))
+      .pipe(concat("#{bundleName}.debug.js"))
+      .pipe(gulp.dest('./public/bundles/'))
+      if bundleNames.indexOf(bundleName) == bundleNames.length - 1
+        done()
+)
+
+gulp.task('bundle:minify', ->
+  return gulp.src('./public/bundles/*.debug.js')
+    .pipe(uglify())
+    .pipe(rename((path)->
+      path.basename = path.basename.replace(".debug", ".min")
+    ))
+    .pipe(gulp.dest('./public/bundles/'))
+)
+
+gulp.task('bundle:compress', ->
+    gulp.src('./public/bundles/*.min.js')
+    .pipe(gzip())
+    .pipe(gulp.dest('./public/bundles'))
+)
+
+gulp.task('bundle', ->
+  runSequence('coffee', 'riot', "bundle:concat", "bundle:minify", "bundle:compress")
 )
 
 gulp.task('bundles', ->
@@ -85,5 +131,14 @@ gulp.task("traitify-server", (req, res)->
   app.listen(1376)
 )
 
+gulp.task("test", ->
+  gulp.src('./qunit/tests.html').pipe(qunit())
+  .on("gulp-qunit.finished", (answer)->
+    response = if answer.passed then "Tests Have Passed! :)" else "Tests Have Failed! :("
+    gulp.src('./qunit/tests.html')
+      .pipe(notify(response))
+  )
+)
 
-gulp.task('default', ['riot', 'webserver', 'watch', 'traitify-server', 'coffee'])
+
+gulp.task('default', ['coffee', 'webserver', 'watch', 'traitify-server'])
