@@ -26,7 +26,7 @@ gulp.task('coffee', ->
 
 gulp.task 'riot', ->
   gulp.src './src/**/*.tag'
-    .pipe riot({type: "coffee-script"})
+    .pipe riot({type: "coffeescript"})
     .pipe gulp.dest './public/js'
 
 gulp.task('webserver', ->
