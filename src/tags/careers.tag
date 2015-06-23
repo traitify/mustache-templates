@@ -7,7 +7,6 @@
       <div class="tf-experience-filter {this.levels.indexOf('all') != -1 ? 'tf-highlight-filter' : ''}" onclick={this.setAll}>
         All
       </div><div class="tf-experience-filter  {this.parent.levels.indexOf(level) != -1 ? 'tf-highlight-filter' : ''} " onclick={this.parent.toggleLevel} each={level in this.levelSets}>{level + 1}</div>
-
     </div>
     <div class="tf-career-details tf-show-details" each={this.careers} onclick={this.parent.careerClick}>
       <img src="{this.career.picture}" class="tf-image" />
@@ -67,9 +66,10 @@
     .tf-filter-header{
       margin-right: 10px;
     }
-    @media screen (max-width: 380px) {
+    @media screen and (max-width: 380px) {
       .tf-filter-header {
         width: 100%;
+				display: block;
 				margin-bottom: 5px;
       }
 		}
@@ -94,39 +94,12 @@
       display: inline-block;
       vertical-align: top;
     }
-    .tf-careers .tf-columns-1{ width: 100%; }
-    .tf-careers .tf-columns-2{ width: 50%; }
-    .tf-careers .tf-columns-3{ width: 33%; }
-    .tf-careers .tf-columns-4{ width: 25%; }
-    .tf-careers .tf-columns-5{ width: 20%; }
-    .tf-careers .tf-columns-6{ width: 16%; }
-    .tf-careers .tf-columns-7{ width: 14%; }
-    .tf-careers .tf-columns-8{ width: 12.5%; }
-    .tf-careers .tf-columns-9{ width: 11%; }
-    .tf-careers .tf-columns-10{ width: 10%; }
-    .tf-careers .tf-columns-11{ width: 9%; }
-    .tf-careers .tf-columns-12{ width: 8%; }
-    @media screen and (min-width: 300px) and (max-width: 380px) {
-      .tf-careers .tf-column{
-        width: 100%;
-      }
-		}
-    @media screen and (min-width: 381px) and (max-width: 800px) {
-      .tf-careers .tf-column{
-        width: 50%;
-      }
-    }
-    @media screen and (min-width: 801px) and (max-width: 900px) {
-      .tf-careers .tf-column{
-        width: 25%;
-      }
-    }
     .tf-career-details {
       border: 1px solid;
       border-color: #e2e2e2;
-      display: inline-block;
-      width: 100%;
-      margin: 10px 0;
+      display: block;
+      width: 90%;
+      margin: 10px 5%;
       vertical-align: top;
       background-color: #fff;
       position: relative;
@@ -134,12 +107,26 @@
       font-size: 13px;
       text-align: left;
     }
-    .tf-career-details  hr{
-      border: none;
-      border-top: 2px solid;
-      border-color: #e2e2e2;
-      margin: 10px 0 5px 0;
-    }
+		@media screen and (min-width: 568px) {
+			.tf-career-details {
+				float: left;
+				width: 46%;
+				margin: 10px;
+			}
+		}
+		@media screen and (min-width: 768px) {
+			.tf-career-details {
+				float: left;
+				width: 31%;
+				margin: 10px 1%;
+			}
+		}
+		@media screen and (min-width: 900px) {
+			.tf-career-details {
+				float: left;
+				width: 22.7%;
+			}
+		}
     .tf-career-details  .tf-image{
       width: 100%;
       top: 10px;
