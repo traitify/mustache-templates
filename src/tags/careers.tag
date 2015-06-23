@@ -50,6 +50,7 @@
       text-align: center;
       max-width: 900px;
       margin: 0px auto;
+			box-sizing: border-box;
     }
     .tf-experience-filters{
       text-align: right;
@@ -84,15 +85,6 @@
       -moz-box-shadow:    inset 1px 1px 5px #184f71;
       -webkit-box-shadow: inset 1px 1px 5px #184f71;
       box-shadow:         inset 1px 1px 5px #184f71;
-    }
-    .tf-careers div, .tf-careers img{
-      box-sizing: content-box;
-    }
-    .tf-careers .tf-column{
-      box-sizing: border-box;
-      padding: 0 10px;
-      display: inline-block;
-      vertical-align: top;
     }
     .tf-career-details {
       border: 1px solid;
