@@ -1,4 +1,16 @@
 var ApiClient,SimplePromise,Traitify,console;Array.prototype.map||(Array.prototype.map=function(t,e){var r,n,o,i,s,a,u;if(o=void 0,r=void 0,i=void 0,"undefined"==typeof this||null===this)throw new TypeError(" this is null or not defined");if(n=Object(this),a=n.length>>>0,"function"!=typeof t)throw new TypeError(t+" is not a function");for(e&&(o=e),r=new Array(a),i=0;a>i;)s=void 0,u=void 0,i in n&&(s=n[i],u=t.call(o,s,i,n),r[i]=u),i++;return r}),Array.prototype.filter||(Array.prototype.filter=function(t){"use strict";var e,r,n,o,i,s;if(void 0===this||null===this)throw new TypeError;if(o=Object(this),r=o.length>>>0,"function"!=typeof t)throw new TypeError;for(n=[],i=arguments[1],e=0;r>e;)e in o&&(s=o[e],t.call(i,s,e,o)&&n.push(s)),e++;return n}),Array.prototype.indexOf||(Array.prototype.indexOf=function(t){var e,r;for(r=this.length>>>0,e=Number(arguments[1])||0,e=0>e?Math.ceil(e):Math.floor(e),0>e&&(e+=r);r>e;){if(e in this&&this[e]===t)return e;e++}return-1}),console||(console={log:function(){}}),Object.keys||(Object.keys=function(){"use strict";var t,e,r,n;return n=Object.prototype.hasOwnProperty,r=!{toString:null}.propertyIsEnumerable("toString"),t=["toString","toLocaleString","valueOf","hasOwnProperty","isPrototypeOf","propertyIsEnumerable","constructor"],e=t.length,function(o){var i,s,a;if("object"!=typeof o&&("function"!=typeof o||null===o))throw new TypeError("Object.keys called on non-object");a=[],s=void 0,i=void 0;for(s in o)n.call(o,s)&&a.push(s);if(r)for(i=0;e>i;)n.call(o,t[i])&&a.push(t[i]),i++;return a}}()),SimplePromise=function(t){var e;return e=Object(),e.then=function(t){return e.thenCallback=t,e.resolved&&e.thenCallback(e.data),e},e.resolved=!1,e.resolve=function(t){return e.data=t,e.thenCallback?e.thenCallback(t):e.resolved=!0,e},e["catch"]=function(t){return e.rejected?t(e.error):e.rejectCallback=t,e},e.rejected=!1,e.reject=function(t){return e.error=t,e.rejectCallback?e.rejectCallback(t):e.rejected=!0,e},t(e.resolve,e.reject),e},ApiClient=function(){function t(){this.host="https://api.traitify.com",this.version="v1",this.oldIE="undefined"!=typeof XDomainRequest?!0:!1,this.beautify=!1,this.XHR=XMLHttpRequest}return t.prototype.online=function(){return navigator.onLine},t.prototype.setBeautify=function(t){return this.beautify=t,this},t.prototype.setHost=function(t){return t.match(/http/)||(t="https://"+t),this.oldIE&&(t=t.replace("https://","").replace("http://",""),t=location.protocol+"//"+t),this.host=t,this},t.prototype.setPublicKey=function(t){return this.publicKey=t,this},t.prototype.setVersion=function(t){return this.version=t,this},t.prototype.ajax=function(t,e,r,n){var o,i,s,a,u,c,p,l;if(o=this.beautify,p=this.host+"/"+this.version+e,l=new this.XHR,"withCredentials"in l&&!this.oldIE)l.open(t,p,!0);else{if("undefined"==typeof XDomainRequest)return new SimplePromise(function(t,e){return e("CORS is Not Supported By This Browser")});this.oldIE&&(c=(new Date).getTime(),p+=-1===p.indexOf("?")?"?authorization="+this.publicKey+"&reset_cache="+c:"&authorization="+this.publicKey+"&reset_cache="+c),l=new XDomainRequest,l.open(t,p)}return l&&!this.oldIE&&(l.setRequestHeader("Authorization","Basic "+btoa(this.publicKey+":x")),l.setRequestHeader("Content-type","application/json"),l.setRequestHeader("Accept","application/json")),u=this,s=this.online(),i=this.oldIE,a=new SimplePromise(function(t,e){var a;if(u.reject=e,!s)return u.reject();try{return l.onload=function(){var e;return 404===l.status?u.reject(l.response):(e=i?l.responseText:l.response,o&&(e=e.replace(/_([a-z])/g,function(t,e){return e.toUpperCase()}).replace(/_/g,"")),e=JSON.parse(e),r&&r(e),u.resolve=t,u.resolve(e))},l.onprogress=function(){},l.ontimeout=function(){},l.onerror=function(){},window.setTimeout(function(){var t;try{return l.send(JSON.stringify(n))}catch(e){return t=e,u.reject(t)}},0),l}catch(c){return a=c,u.reject(a)}})},t.prototype.put=function(t,e,r){return this.oldIE?this.ajax("POST",t,r,e):this.ajax("PUT",t,r,e)},t.prototype.get=function(t,e){return this.ajax("GET",t,e,"")},t.prototype.getDecks=function(t){return this.get("/decks",t)},t.prototype.getSlides=function(t,e){return this.get("/assessments/"+t+"/slides",e)},t.prototype.addSlide=function(t,e,r,n,o){return this.put("/assessments/"+t+"/slides/"+e,{response:r,time_taken:n},o)},t.prototype.addSlides=function(t,e,r){return this.put("/assessments/"+t+"/slides",e,r)},t.prototype.getPersonalityTypes=function(t,e,r){var n,o,i,s,a;for(null==e&&(e=Object()),null==e.image_pack&&(e.image_pack="linear"),s=Array(),a=Object.keys(e),n=0,i=a.length;i>n;n++)o=a[n],s.push(o+"="+e[o]);return this.get("/assessments/"+t+"/personality_types?"+s.join("&"),r)},t.prototype.getPersonalityTraits=function(t,e,r){return this.get("/assessments/"+t+"/personality_traits/raw",r)},t.prototype.getCareers=function(t,e,r){var n,o,i,s,a;for(null==e&&(e=Object()),null==e.number_of_matches&&(e.number_of_matches=8),s=Array(),a=Object.keys(e),n=0,i=a.length;i>n;n++)o=a[n],s.push(o+"="+e[o]);return this.get("/assessments/"+t+"/matches/careers?"+s.join("&"),r)},t}(),Traitify=new ApiClient;
+Traitify.host = "https://api-sandbox.traitify.com";
+
+Traitify.setProduction = function(value) {
+  if (value) {
+    return this.host = "https://api.traitify.com";
+  } else {
+    return "https://api-sandbox.traitify.com";
+  }
+};
+
+Traitify.version = "v1";
+
 /* Riot v2.0.12, @license MIT, (c) 2015 Muut Inc. + contributors */
 
 ;(function() {
@@ -877,10 +889,11 @@ riot.mountTo = riot.mount
 
 Traitify.ui = {
   init: function(options) {
-    var base, base1, base2, base3, dataName, i, item, len, ref;
+    var base, base1, base2, base3, base4, dataName, i, item, len, ref;
     if (options == null) {
       options = Object();
     }
+    riot.observable(options);
     if (options.slideDeck == null) {
       options.slideDeck = Object();
     }
@@ -890,63 +903,63 @@ Traitify.ui = {
     if ((base1 = options.slideDeck).tag == null) {
       base1.tag = "tf-slide-deck";
     }
-    options.slideDeck = riot.mount(options.slideDeck.target, options.slideDeck.tag);
     ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
     for (i = 0, len = ref.length; i < len; i++) {
       item = ref[i];
       dataName = item.replace(/-([a-z])/g, function(g) {
         return g[1].toUpperCase();
       });
-      if (options[item] == null) {
-        options[item] = Object();
+      if (options == null) {
+        options = Object();
       }
-      if ((base2 = options[item]).tag == null) {
-        base2.tag = "tf-" + item;
+      if (options.results == null) {
+        options.results = Object();
       }
-      if ((base3 = options[item]).target == null) {
-        base3.target = ".tf-" + item;
+      if ((base2 = options.results)[dataName] == null) {
+        base2[dataName] = Object();
       }
-      options[dataName] = riot.mount(".tf-" + item, options[item].tag);
+      if ((base3 = options.results[dataName]).tag == null) {
+        base3.tag = "tf-" + item;
+      }
+      if ((base4 = options.results[dataName]).target == null) {
+        base4.target = ".tf-" + item;
+      }
     }
     options.load = function() {
-      var args, scopes, that;
+      var args, j, len1, ref1, scopes, slideDeck, that;
       that = this;
       scopes = "slides,blend,types,traits,career_matches";
       args = "image_pack=linear&data=" + scopes;
-      options.slideDeck.assessmentId = options.assessmentId;
+      ref1 = options.slideDeck;
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        slideDeck = ref1[j];
+        slideDeck.assessmentId = options.assessmentId;
+      }
       Traitify.get("/assessments/" + options.assessmentId + "?" + args).then(function(assessment) {
-        var deck, j, k, key, len1, len2, ref1, ref2, results, results1, widget;
+        var k, key, l, len2, len3, ref2, ref3, resultName, results, widget;
         if (assessment.completed_at === void 0) {
-          ref1 = options.slideDeck;
+          options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0];
+          options.slideDeck.mount.slides = assessment.slides;
+          options.on("slideDeck.finish", function() {
+            return that.load();
+          });
+          return options.slideDeck.mount.initialize();
+        } else {
+          ref2 = Object.keys(that.results);
           results = [];
-          for (j = 0, len1 = ref1.length; j < len1; j++) {
-            deck = ref1[j];
-            deck.slides = assessment.slides;
-            deck.on("finish", function() {
-              return that.load();
-            });
-            results.push(deck.initialize());
+          for (k = 0, len2 = ref2.length; k < len2; k++) {
+            resultName = ref2[k];
+            widget = that.results[resultName];
+            that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0];
+            that.results[resultName].mount.assessmentId = that.assessmentId;
+            ref3 = Object.keys(assessment);
+            for (l = 0, len3 = ref3.length; l < len3; l++) {
+              key = ref3[l];
+              that.results[resultName].mount[key] = assessment[key];
+            }
+            results.push(that.results[resultName].mount.initialize());
           }
           return results;
-        } else {
-          ref2 = that.results;
-          results1 = [];
-          for (k = 0, len2 = ref2.length; k < len2; k++) {
-            widget = ref2[k];
-            results1.push((function() {
-              var l, len3, ref3, results2;
-              ref3 = Object.keys(assessment);
-              results2 = [];
-              for (l = 0, len3 = ref3.length; l < len3; l++) {
-                key = ref3[l];
-                widget[key] = assessment[key];
-                widget.assessmentId = assessment.id;
-                results2.push(widget.initialize());
-              }
-              return results2;
-            })());
-          }
-          return results1;
         }
       });
       return this;
@@ -956,7 +969,7 @@ Traitify.ui = {
   on: function(event, callback) {}
 };
 
-riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div> <div class="tf-cover {this.tfCover}"></div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(15,84,34, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slide-deck-container{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(39,235,95, .8); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var Cookie, slideTime, that;
+riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(15,84,34, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slide-deck-container{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(39,235,95, .8); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var Cookie, slideTime, that;
 
 this.assessmentId = this.root.getAttribute("assessment-id") || opts.assessmentId;
 
@@ -973,12 +986,12 @@ Cookie.set = function(cname, cvalue, exdays) {
   d = new Date;
   d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
   expires = 'expires=' + d.toUTCString();
-  document.cookie = cname + '=' + JSON.stringify(cvalue) + '; ' + expires;
+  document.cookie = ("tf" + that.assessmentId + cname + "=") + JSON.stringify(cvalue) + '; ' + expires;
 };
 
 Cookie.get = function(cname) {
   var c, ca, i, name;
-  name = cname + '=';
+  name = "tf" + that.assessmentId + cname + "=";
   ca = document.cookie.split(';');
   i = 0;
   while (i < ca.length) {
@@ -1010,9 +1023,10 @@ this.processSlide = function(value) {
   };
   Cookie.set("slideData", this.slideData);
   if (this.images[this.index + 2] || (this.index === this.slides.length - 2 && this.images[this.index + 1])) {
-    if (this.whichTransitionEvent) {
+    if (this.transitionEvent) {
       this.animateSlide();
       this.onFinishedTransition = function() {
+        that.trigger("transitionEnd");
         this.panelOne.picture = this.panelTwo.picture;
         this.panelOne.x = this.panelTwo.x;
         this.panelOne.y = this.panelTwo.y;
@@ -1033,22 +1047,25 @@ this.processSlide = function(value) {
     slides = Object.keys(this.slideData).map(function(id) {
       return that.slideData[id];
     });
-    slideIds = allSlides.map(function(slide) {
+    slideIds = this.allSlides.map(function(slide) {
       return slide.id;
     });
     sendSlides = Array();
     customSlides = Array();
     for (j = 0, len = slides.length; j < len; j++) {
       slide = slides[j];
-      if (slideIds.indexOf(slide.id) === -1) {
+      if (slideIds.indexOf(slide.id) !== -1) {
         sendSlides.push(slide);
       } else {
+        if (that.customSlideValues == null) {
+          that.customSlideValues = Array();
+        }
         that.customSlideValues.push(slide);
       }
     }
     that.trigger("customSlideValues", that.customSlideValues);
     Traitify.addSlides(that.assessmentId, sendSlides).then(function(response) {
-      return that.trigger("finish", that);
+      return opts.trigger("slideDeck.finish", that);
     });
     this.infoVisible = "tf-invisible";
     this.finished = "tf-finished";
@@ -1127,7 +1144,7 @@ this.whichTransitionEvent = function() {
 
 this.transitionEvent = this.whichTransitionEvent();
 
-this.on("initialized", function() {
+opts.on("slideDeck.initialized", function() {
   var el, j, len, ref, slide;
   el = document.getElementsByClassName("tf-panel-two")[0];
   that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
@@ -1139,8 +1156,6 @@ this.on("initialized", function() {
   that.touch(document.querySelector(".tf-not-me"), function() {
     return that.processSlide(false);
   });
-  that.tfCover = "tf-invisible";
-  that.update();
   if (that.customSlides == null) {
     that.customSlides = Array();
   }
@@ -1149,19 +1164,22 @@ this.on("initialized", function() {
     slide = ref[j];
     that.slides.splice(slide.position, slide);
   }
-  return that.update();
+  that.update();
+  return opts.on("slideDeck.initialized");
 });
 
 this.on("mount", function() {
   that.mounted = true;
   if (that.initialized === true) {
-    return that.trigger("initialized");
+    return opts.trigger("slideDeck.initialized");
   }
 });
 
 this.initialize = function() {
   var images, playedSlideIds;
   this.index = 0;
+  this.visible = true;
+  this.update();
   this.slideData = Cookie.get("slideData");
   if (!this.slideData) {
     this.slideData = Object();
@@ -1212,19 +1230,9 @@ this.initialize = function() {
   this.loadImage(0);
   that.initialized = true;
   if (that.mounted === true) {
-    return that.trigger("initialized");
+    return opts.trigger("slideDeck.initialized");
   }
 };
-
-if (opts.slides) {
-  this.slides = opts.slides;
-  this.initialize();
-} else if (this.assessmentId) {
-  window.Traitify.getSlides(this.assessmentId).then(function(slides) {
-    that.slides = slides;
-    return that.initialize();
-  });
-}
 
 this.maxHeight = window.innerHeight;
 
@@ -1265,17 +1273,17 @@ this.touch = function(target, callback) {
 
 });
 
-riot.tag('tf-career', '<div class="tf-career-container"> <div class="tf-career-inner"> <div class="tf-career-body"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-details"> <div class="tf-title">{this.career.title}</div> <div class="tf-score"> <span class="tf-percent">{Math.round(this.score)}%</span> <span class="undefined">match</span> </div> <div class="tf-description">{this.career.description}</div> </div> <div class="tf-stats"> <div class="tf-mean tf-stat"> <div class="tf-stat-title">Salary Mean:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_mean} </div> </div> <div class="tf-future tf-stat"> <div class="tf-stat-title">Bright Future:</div> <div class="tf-stat-data"> <span if="{this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/sun.png" alt="Sun"> </span> <span if="{!this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-median tf-stat"> <div class="tf-stat-title">Salary Median:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_median} </div> </div> <div class="tf-green tf-stat"> <div class="tf-stat-title">Green Career:</div> <div class="tf-stat-data"> <span if="{this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/green.png" alt="Green"> </span> <span if="{!this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-growth tf-stat"> <div class="tf-stat-title">Job Growth:</div> <div class="tf-stat-data">{this.career.employment_projection.percent_growth_2022}%</div> </div> <div class="tf-onet tf-stat"> <div class="tf-stat-title">O\'Net Link:</div> <div class="tf-stat-data"> <a href="http://www.onetonline.org/link/summary/{this.career.id}" target="_blank">{this.career.id}</a> </div> </div> <div class="clearfix"></div> </div> <div class="tf-experience"> <div class="tf-experience-header"> <span class="tf-experience-header-text">Experience Level</span> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.career.experience_level.id > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> </div> <div class="tf-experience-body"> {this.career.experience_level.experience} </div> </div> <div class="tf-education"> <div class="tf-education-header"> <span class="tf-education-header-text">Education</span> </div> <div class="tf-education-body"> <div class="tf-education-title">{this.career.experience_level.degree}</div> <div class="tf-education-description">{this.career.experience_level.education}</div> </div> </div> <div class="tf-majors"> <div class="tf-majors-header"> <span class="tf-majors-header-text">Majors</span> </div> <div class="tf-majors-body"> <div class="tf-major" each="{this.career.majors}"> <div class="tf-major-title">{this.title}</div> <div class="tf-major-description">{this.description}</div> </div> </div> </div> </div> </div>', '.tf-career-container{ font-family: "Source Sans Pro"; font-size: 18px; line-height: 1.5; margin: 20px; } .tf-career-container .tf-invisible{ visibility: hidden; } .tf-career-container.ie{ font-family: arial; } .tf-career-container a{ color: black; text-decoration: underline; } .tf-career-container div, .tf-career-container img{ box-sizing: content-box; } .tf-career-container .tf-career-inner{ max-width: 800px; margin: 0px auto; } .tf-popout-open { overflow: hidden; } .tf-popout-open body { overflow: hidden; } .tf-popout-career { position: fixed; overflow-y: scroll; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0); background-color: rgba(0,0,0,0.5); } .tf-popout-career .tf-career-inner { background-color: white; } .tf-career-container .tf-header-inner{ color: white; padding: 10px 25px; background-color: #058fc4; } .tf-career-container .tf-header-close{ float: right; cursor: pointer; } .tf-career-container .tf-career-body{ padding: 20px; } .tf-career-container .tf-image{ width: 25%; display: inline-block; } .tf-career-container .tf-details{ position: relative; width: 70%; padding: 0 20px; display: inline-block; box-sizing: border-box; vertical-align: top; } @media (max-width: 768px) { .tf-career-container .tf-details{ margin-top: 10px; } } .tf-career-container .tf-details .tf-title{ font-weight: bold; display: inline-block; padding-right: 50px; } .tf-career-container .tf-details .tf-score{ position: absolute; top: 0; right: 0; padding: 5px; margin-top: -13px; text-align: center; font-size: 12px; line-height: 1; font-weight: bold; } .tf-career-container .tf-details .tf-score .tf-percent{ font-size: 18px; } .tf-career-container .tf-details .tf-score span{ display: block; } .tf-career-container .tf-stats, .tf-career-container .tf-experience, .tf-career-container .tf-education, .tf-career-container .tf-majors{ margin: 20px 0; } .tf-career-container .tf-majors{ margin-bottom: 0; } .tf-career-container .tf-stats .tf-stat { width: 50%; display: inline-block; float:left; box-sizing: border-box; margin-top: 10px; } @media (max-width: 768px) { .tf-career-container .tf-stats .tf-stat { width: 100%; } } .tf-career-container .tf-stats .tf-stat-title { width: 40%; float: left; text-align: right; font-weight: bold; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data { width: 60%; float: left; text-align: right; display: inline-block; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data-header, .tf-career-container .tf-stats .tf-stat-data-body { width: 50%; float: left; text-align: center; } .tf-career-container .tf-stats .tf-stat-data-body { text-align: right; } .tf-career-container .tf-stats .tf-stat-data-mean, .tf-career-container .tf-stats .tf-stat-data-median { width: 50%; display: inline-block; } .tf-career-container .tf-stats img { width: 23px; } .tf-career-container .tf-stats, .tf-career-container .tf-experience-header, .tf-career-container .tf-education-header, .tf-career-container .tf-majors-header{ padding: 10px 20px; } .tf-career-container .tf-experience-body, .tf-career-container .tf-education-body, .tf-career-container .tf-majors-body{ padding: 10px 20px; } .tf-career-container .tf-experience-boxes{ padding: 0px 10px; display: inline-block; } .tf-career-container .tf-experience-box{ width: 10px; height: 10px; margin-right: 2px; display: inline-block; background-color: #e2e2e2 } .tf-career-container .tf-experience-box.tf-highlighted-box{ background-color: #058fc4; } .tf-career-container .tf-education-title, .tf-career-container .tf-major-title{ font-weight: bold; } .tf-career-container .tf-major-description{ padding-bottom: 10px; } .clearfix{ clear:both; } @media (max-width: 768px) { .tf-career-container .tf-image, .tf-career-container .tf-details{ width: 100%; padding: 0; } }', function(opts) {var that;
+riot.tag('tf-career', '<div class="tf-career-container" if="{this.visible}"> <div class="tf-career-inner"> <div class="tf-career-body"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-details"> <div class="tf-title">{this.career.title}</div> <div class="tf-score"> <span class="tf-percent">{Math.round(this.score)}%</span> <span class="undefined">match</span> </div> <div class="tf-description">{this.career.description}</div> </div> <div class="tf-stats"> <div class="tf-mean tf-stat"> <div class="tf-stat-title">Salary Mean:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_mean} </div> </div> <div class="tf-future tf-stat"> <div class="tf-stat-title">Bright Future:</div> <div class="tf-stat-data"> <span if="{this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/sun.png" alt="Sun"> </span> <span if="{!this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-median tf-stat"> <div class="tf-stat-title">Salary Median:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_median} </div> </div> <div class="tf-green tf-stat"> <div class="tf-stat-title">Green Career:</div> <div class="tf-stat-data"> <span if="{this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/green.png" alt="Green"> </span> <span if="{!this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-growth tf-stat"> <div class="tf-stat-title">Job Growth:</div> <div class="tf-stat-data">{this.career.employment_projection.percent_growth_2022}%</div> </div> <div class="tf-onet tf-stat"> <div class="tf-stat-title">O\'Net Link:</div> <div class="tf-stat-data"> <a href="http://www.onetonline.org/link/summary/{this.career.id}" target="_blank">{this.career.id}</a> </div> </div> <div class="clearfix"></div> </div> <div class="tf-experience"> <div class="tf-experience-header"> <span class="tf-experience-header-text">Experience Level</span> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.career.experience_level.id > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> </div> <div class="tf-experience-body"> {this.career.experience_level.experience} </div> </div> <div class="tf-education"> <div class="tf-education-header"> <span class="tf-education-header-text">Education</span> </div> <div class="tf-education-body"> <div class="tf-education-title">{this.career.experience_level.degree}</div> <div class="tf-education-description">{this.career.experience_level.education}</div> </div> </div> <div class="tf-majors"> <div class="tf-majors-header"> <span class="tf-majors-header-text">Majors</span> </div> <div class="tf-majors-body"> <div class="tf-major" each="{this.career.majors}"> <div class="tf-major-title">{this.title}</div> <div class="tf-major-description">{this.description}</div> </div> </div> </div> </div> </div>', '.tf-career-container{ font-family: "Source Sans Pro"; font-size: 18px; line-height: 1.5; margin: 20px; } .tf-career-container .tf-invisible{ visibility: hidden; } .tf-career-container.ie{ font-family: arial; } .tf-career-container a{ color: black; text-decoration: underline; } .tf-career-container div, .tf-career-container img{ box-sizing: content-box; } .tf-career-container .tf-career-inner{ max-width: 800px; margin: 0px auto; } .tf-popout-open { overflow: hidden; } .tf-popout-open body { overflow: hidden; } .tf-popout-career { position: fixed; overflow-y: scroll; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0); background-color: rgba(0,0,0,0.5); } .tf-popout-career .tf-career-inner { background-color: white; } .tf-career-container .tf-header-inner{ color: white; padding: 10px 25px; background-color: #058fc4; } .tf-career-container .tf-header-close{ float: right; cursor: pointer; } .tf-career-container .tf-career-body{ padding: 20px; } .tf-career-container .tf-image{ width: 25%; display: inline-block; } .tf-career-container .tf-details{ position: relative; width: 70%; padding: 0 20px; display: inline-block; box-sizing: border-box; vertical-align: top; } @media (max-width: 768px) { .tf-career-container .tf-details{ margin-top: 10px; } } .tf-career-container .tf-details .tf-title{ font-weight: bold; display: inline-block; padding-right: 50px; } .tf-career-container .tf-details .tf-score{ position: absolute; top: 0; right: 0; padding: 5px; margin-top: -13px; text-align: center; font-size: 12px; line-height: 1; font-weight: bold; } .tf-career-container .tf-details .tf-score .tf-percent{ font-size: 18px; } .tf-career-container .tf-details .tf-score span{ display: block; } .tf-career-container .tf-stats, .tf-career-container .tf-experience, .tf-career-container .tf-education, .tf-career-container .tf-majors{ margin: 20px 0; } .tf-career-container .tf-majors{ margin-bottom: 0; } .tf-career-container .tf-stats .tf-stat { width: 50%; display: inline-block; float:left; box-sizing: border-box; margin-top: 10px; } @media (max-width: 768px) { .tf-career-container .tf-stats .tf-stat { width: 100%; } } .tf-career-container .tf-stats .tf-stat-title { width: 40%; float: left; text-align: right; font-weight: bold; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data { width: 60%; float: left; text-align: right; display: inline-block; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data-header, .tf-career-container .tf-stats .tf-stat-data-body { width: 50%; float: left; text-align: center; } .tf-career-container .tf-stats .tf-stat-data-body { text-align: right; } .tf-career-container .tf-stats .tf-stat-data-mean, .tf-career-container .tf-stats .tf-stat-data-median { width: 50%; display: inline-block; } .tf-career-container .tf-stats img { width: 23px; } .tf-career-container .tf-stats, .tf-career-container .tf-experience-header, .tf-career-container .tf-education-header, .tf-career-container .tf-majors-header{ padding: 10px 20px; } .tf-career-container .tf-experience-body, .tf-career-container .tf-education-body, .tf-career-container .tf-majors-body{ padding: 10px 20px; } .tf-career-container .tf-experience-boxes{ padding: 0px 10px; display: inline-block; } .tf-career-container .tf-experience-box{ width: 10px; height: 10px; margin-right: 2px; display: inline-block; background-color: #e2e2e2 } .tf-career-container .tf-experience-box.tf-highlighted-box{ background-color: #058fc4; } .tf-career-container .tf-education-title, .tf-career-container .tf-major-title{ font-weight: bold; } .tf-career-container .tf-major-description{ padding-bottom: 10px; } .clearfix{ clear:both; } @media (max-width: 768px) { .tf-career-container .tf-image, .tf-career-container .tf-details{ width: 100%; padding: 0; } }', function(opts) {var that;
 
 that = this;
 
 this.setCareer = function(career) {
+  this.visible = true;
   this.career = career.career;
   this.career.salary_projection.annual_salary_mean = this.career.salary_projection.annual_salary_mean.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
   this.career.salary_projection.annual_salary_median = this.career.salary_projection.annual_salary_median.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
   this.score = career.score;
-  this.update();
-  return console.log(this.career);
+  return this.update();
 };
 
 if (opts.career) {
@@ -1292,7 +1300,7 @@ if (opts.career) {
 
 });
 
-riot.tag('tf-careers', '<div class="tf-careers-container"> <div class="tf-experience-filters"> <div class="tf-filter-header"> Experience Level: </div> <div class="tf-experience-filter {this.levels.indexOf(\'all\') != -1 ? \'tf-highlight-filter\' : \'\'}" onclick="{this.setAll}"> All </div><div class="tf-experience-filter {this.parent.levels.indexOf(level) != -1 ? \'tf-highlight-filter\' : \'\'} " onclick="{this.parent.toggleLevel}" each="{level in this.levelSets}">{level + 1}</div> </div> <div class="tf-column-{index + 1} tf-column tf-columns-{this.parent.columns}" each="{careerSet, index in this.careerSet}"> <div class="tf-career-details tf-show-details" each="{careerSet.careers}" onclick="{this.parent.parent.careerClick}"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-title">{this.career.title}</div> <div class="tf-description tf-fade">{this.career.description}</div> <div class="tf-experience">Experience Level</div> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.exp > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> <span class="tf-education">Education </span> <div class="tf-education-text">{this.career.experience_level.degree}</div> <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div> <div class="tf-score"> <div class="tf-clearfix"></div> <div class="tf-score-bar"> <div class="tf-score-bar-inner" riot-style="width: {Math.round(this.score)}%"><div> </div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-careers-container{ font-family: "Source Sans Pro"; font-size: 24px; line-height: 1.5; margin: 20px; text-align: center; max-width: 900px; margin: 0px auto; } .tf-careers.ie{ font-family: arial; } .tf-score-bar{ margin-top: 3px; background-color: #e3e3e3; height:10px; display: block; } .tf-score-bar-inner{ background-color: #00aeef; height: 100%; } .tf-careers div, .tf-careers img{ box-sizing: content-box; } .tf-careers .tf-experience-filters{ text-align: right; border-radius: 3px; overflow: hidden; } .tf-careers .tf-experience-filters div{ display: inline-block; font-weight: 600; font-size: 14px; line-height: 18px; } .tf-careers .tf-experience-filters .tf-filter-header{ margin-right: 10px; } .tf-careers .tf-experience-filters .tf-experience-filter{ padding: 5px 12px; background-color: #00aeef; cursor: pointer; color: #fff; } .tf-careers .tf-experience-filters .tf-highlight-filter{ background-color: #0390cb; -moz-box-shadow: inset 1px 1px 5px #184f71; -webkit-box-shadow: inset 1px 1px 5px #184f71; box-shadow: inset 1px 1px 5px #184f71; } .tf-careers .tf-column{ box-sizing: border-box; padding: 0 5px; display: inline-block; vertical-align: top; } .tf-careers .tf-columns-1{ width: 100%; } .tf-careers .tf-columns-2{ width: 50%; } .tf-careers .tf-columns-3{ width: 33%; } .tf-careers .tf-columns-4{ width: 25%; } .tf-careers .tf-columns-5{ width: 20%; } .tf-careers .tf-columns-6{ width: 16%; } .tf-careers .tf-columns-7{ width: 14%; } .tf-careers .tf-columns-8{ width: 12.5%; } .tf-careers .tf-columns-9{ width: 11%; } .tf-careers .tf-columns-10{ width: 10%; } .tf-careers .tf-columns-11{ width: 9%; } .tf-careers .tf-columns-12{ width: 8%; } .tf-careers .tf-career-details { border: 1px solid; border-color: #e2e2e2; display: inline-block; width: 100%; margin: 5px 0; vertical-align: top; background-color: #fff; position: relative; line-height: 1.2em; font-size: 14px; text-align: left; } .tf-careers .tf-career-details hr{ border: none; border-top: 2px solid; border-color: #e2e2e2; margin: 10px 0 5px 0; } @media (max-width: 768px) { .tf-careers .tf-column{ width: 50%; } .tf-careers .tf-columns-1{ width: 100%; } } .tf-careers .tf-career-details .tf-image{ width: 100%; top: 10px; margin: 0px auto; } .tf-careers .tf-career-details .tf-title{ margin: 10px; margin-bottom: 0px; font-weight: 600; } .tf-careers .tf-career-details .tf-description{ margin-top: 5px; font-weight: 400; } .tf-careers .tf-career-details .tf-description, .tf-careers .tf-career-details .tf-experience-boxes{ padding: 0px 10px 5px; } .tf-careers .tf-career-details .tf-experience, .tf-careers .tf-career-details .tf-education, .tf-careers .tf-career-details .tf-match-rate{ display: block; color: #2e2e2e; font-weight: 400; font-size: 16px; margin: 10px; margin-bottom: 0px; } .tf-careers .tf-career-details .tf-score{ margin: 10px; } .tf-careers .tf-career-details .tf-match-rate .tf-percent{ display: inline-block; float: right; text-align:right; } .tf-careers .tf-career-details .tf-experience-box{ background-color: #e2e2e2; width: 10px; height: 10px; margin-right: 2px; display: inline-block; } .tf-careers .tf-career-details .tf-experience-box.tf-highlighted-box{ background-color: #00aeef; } .tf-careers .tf-career-details .tf-education-text{ margin: 5px 10px; font-size: 14px; color: #4e4e4e; font-weight: 300; } .tf-careers .tf-career-details .tf-fade{ position: relative; height: 4.3em; overflow: hidden; } .tf-careers .tf-career-details .tf-fade:after { content: ""; text-align: right; position: absolute; bottom: 0; right: 0; width: 70%; height: 1.2em; background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 70%); } .tf-careers .tf-career-details.tf-show-details:hover { cursor: pointer; } .tf-clearfix{ clear:both; }', function(opts) {var that;
+riot.tag('tf-careers', '<div class="tf-careers-container" if="{this.visible}"> <div class="tf-experience-filters"> <div class="tf-filter-header"> Experience Level: </div> <div class="tf-experience-filter {this.levels.indexOf(\'all\') != -1 ? \'tf-highlight-filter\' : \'\'}" onclick="{this.setAll}"> All </div><div class="tf-experience-filter {this.parent.levels.indexOf(level) != -1 ? \'tf-highlight-filter\' : \'\'} " onclick="{this.parent.toggleLevel}" each="{level in this.levelSets}">{level + 1}</div> </div> <div class="tf-column-{index + 1} tf-column tf-columns-{this.parent.columns}" each="{careerSet, index in this.careerSet}"> <div class="tf-career-details tf-show-details" each="{careerSet.careers}" onclick="{this.parent.parent.careerClick}"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-title">{this.career.title}</div> <div class="tf-description tf-fade">{this.career.description}</div> <div class="tf-experience">Experience Level</div> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.exp > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> <span class="tf-education">Education </span> <div class="tf-education-text">{this.career.experience_level.degree}</div> <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div> <div class="tf-score"> <div class="tf-clearfix"></div> <div class="tf-score-bar"> <div class="tf-score-bar-inner" riot-style="width: {Math.round(this.score)}%"><div> </div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-careers-container{ font-family: "Source Sans Pro"; font-size: 24px; line-height: 1.5; margin: 20px; text-align: center; max-width: 900px; margin: 0px auto; } .tf-careers.ie{ font-family: arial; } .tf-score-bar{ margin-top: 3px; background-color: #e3e3e3; height:10px; display: block; } .tf-score-bar-inner{ background-color: #00aeef; height: 100%; } .tf-careers div, .tf-careers img{ box-sizing: content-box; } .tf-careers .tf-experience-filters{ text-align: right; border-radius: 3px; overflow: hidden; } .tf-careers .tf-experience-filters div{ display: inline-block; font-weight: 600; font-size: 14px; line-height: 18px; } .tf-careers .tf-experience-filters .tf-filter-header{ margin-right: 10px; } .tf-careers .tf-experience-filters .tf-experience-filter{ padding: 5px 12px; background-color: #00aeef; cursor: pointer; color: #fff; } .tf-careers .tf-experience-filters .tf-highlight-filter{ background-color: #0390cb; -moz-box-shadow: inset 1px 1px 5px #184f71; -webkit-box-shadow: inset 1px 1px 5px #184f71; box-shadow: inset 1px 1px 5px #184f71; } .tf-careers .tf-column{ box-sizing: border-box; padding: 0 5px; display: inline-block; vertical-align: top; } .tf-careers .tf-columns-1{ width: 100%; } .tf-careers .tf-columns-2{ width: 50%; } .tf-careers .tf-columns-3{ width: 33%; } .tf-careers .tf-columns-4{ width: 25%; } .tf-careers .tf-columns-5{ width: 20%; } .tf-careers .tf-columns-6{ width: 16%; } .tf-careers .tf-columns-7{ width: 14%; } .tf-careers .tf-columns-8{ width: 12.5%; } .tf-careers .tf-columns-9{ width: 11%; } .tf-careers .tf-columns-10{ width: 10%; } .tf-careers .tf-columns-11{ width: 9%; } .tf-careers .tf-columns-12{ width: 8%; } .tf-careers .tf-career-details { border: 1px solid; border-color: #e2e2e2; display: inline-block; width: 100%; margin: 5px 0; vertical-align: top; background-color: #fff; position: relative; line-height: 1.2em; font-size: 14px; text-align: left; } .tf-careers .tf-career-details hr{ border: none; border-top: 2px solid; border-color: #e2e2e2; margin: 10px 0 5px 0; } @media (max-width: 768px) { .tf-careers .tf-column{ width: 50%; } .tf-careers .tf-columns-1{ width: 100%; } } .tf-careers .tf-career-details .tf-image{ width: 100%; top: 10px; margin: 0px auto; } .tf-careers .tf-career-details .tf-title{ margin: 10px; margin-bottom: 0px; font-weight: 600; } .tf-careers .tf-career-details .tf-description{ margin-top: 5px; font-weight: 400; } .tf-careers .tf-career-details .tf-description, .tf-careers .tf-career-details .tf-experience-boxes{ padding: 0px 10px 5px; } .tf-careers .tf-career-details .tf-experience, .tf-careers .tf-career-details .tf-education, .tf-careers .tf-career-details .tf-match-rate{ display: block; color: #2e2e2e; font-weight: 400; font-size: 16px; margin: 10px; margin-bottom: 0px; } .tf-careers .tf-career-details .tf-score{ margin: 10px; } .tf-careers .tf-career-details .tf-match-rate .tf-percent{ display: inline-block; float: right; text-align:right; } .tf-careers .tf-career-details .tf-experience-box{ background-color: #e2e2e2; width: 10px; height: 10px; margin-right: 2px; display: inline-block; } .tf-careers .tf-career-details .tf-experience-box.tf-highlighted-box{ background-color: #00aeef; } .tf-careers .tf-career-details .tf-education-text{ margin: 5px 10px; font-size: 14px; color: #4e4e4e; font-weight: 300; } .tf-careers .tf-career-details .tf-fade{ position: relative; height: 4.3em; overflow: hidden; } .tf-careers .tf-career-details .tf-fade:after { content: ""; text-align: right; position: absolute; bottom: 0; right: 0; width: 70%; height: 1.2em; background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 70%); } .tf-careers .tf-career-details.tf-show-details:hover { cursor: pointer; } .tf-clearfix{ clear:both; }', function(opts) {var that;
 
 this.assessmentId = this.root.getAttribute("assessment-id");
 
@@ -1354,7 +1362,7 @@ this.toggleLevel = function(level) {
 this.refreshColumns = function() {
   var levels;
   if (this.levels.indexOf("all") !== -1) {
-    this.careers = opts.career_matches;
+    this.careers = this.career_matches;
     return this.setColumns();
   } else {
     levels = that.levels.map(function(a) {
@@ -1394,16 +1402,17 @@ this.setColumns = function() {
 };
 
 this.initialize = function() {
+  if (this.career_matches) {
+    this.assessmentId = this.assessmentId;
+    this.careers = this.career_matches;
+  }
+  this.visible = true;
   this.columns = opts.columns || 4;
   this.setColumns();
   return this.mountDetails();
 };
 
-if (opts.career_matches) {
-  this.assessmentId = opts.assessmentId;
-  this.careers = opts.career_matches;
-  this.initialize();
-} else if (this.assessmentId) {
+if (this.assessmentId) {
   window.Traitify.getCareers(this.assessmentId).then(function(response) {
     that.careers = response.careers;
     return that.initialize();
@@ -1412,7 +1421,7 @@ if (opts.career_matches) {
 
 });
 
-riot.tag('tf-famous-people', '<div class="tf-famous-people-container"> <div class="tf-famous-people-scroller"> <div class="tf-famous-people-inner"> <div class="tf-famous-person" each="{famousPerson in this.famousPeople}"> <div class="tf-image"> <img riot-src="{famousPerson.picture}"> </div> <div class="tf-name">{famousPerson.name}</div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-famous-people-container{ font-family: "Source Sans Pro" } .tf-famous-people-inner{ width: 860px; margin: 0px auto } .tf-famous-people-scroller{ height: 230px; max-width: 860px; margin: 0px auto; overflow-y: hidden; overflow-x: auto; text-align: center; } .tf-famous-person{ font-family: "Source Sans Pro"; display: inline-block; padding: 10px 15px; text-align: center; color: #555; margin: 0px auto; vertical-align: top; } .tf-famous-person .tf-image{ width: 142px; height: 142px; border-radius: 50%; overflow: hidden; } .tf-name{ margin-top: 20px; width: 142px; line-height:1em; }', function(opts) {var that;
+riot.tag('tf-famous-people', '<div class="tf-famous-people-container" if="{this.visible}"> <div class="tf-famous-people-scroller"> <div class="tf-famous-people-inner"> <div class="tf-famous-person" each="{famousPerson in this.famousPeople}"> <div class="tf-image"> <img riot-src="{famousPerson.picture}"> </div> <div class="tf-name">{famousPerson.name}</div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-famous-people-container{ font-family: "Source Sans Pro" } .tf-famous-people-inner{ width: 860px; margin: 0px auto } .tf-famous-people-scroller{ height: 230px; max-width: 860px; margin: 0px auto; overflow-y: hidden; overflow-x: auto; text-align: center; } .tf-famous-person{ font-family: "Source Sans Pro"; display: inline-block; padding: 10px 15px; text-align: center; color: #555; margin: 0px auto; vertical-align: top; } .tf-famous-person .tf-image{ width: 142px; height: 142px; border-radius: 50%; overflow: hidden; } .tf-name{ margin-top: 20px; width: 142px; line-height:1em; }', function(opts) {var that;
 
 this.assessmentId = this.root.getAttribute("assessment-id");
 
@@ -1420,6 +1429,7 @@ that = this;
 
 this.initialize = function() {
   var famousPeople, famousPerson, i, j, len, len1, personalityType, ref, ref1;
+  that.visible = true;
   famousPeople = Array();
   ref = that.personality_types;
   for (i = 0, len = ref.length; i < len; i++) {
@@ -1430,9 +1440,10 @@ this.initialize = function() {
       famousPeople.push(famousPerson);
     }
   }
-  return that.famousPeople = famousPeople.slice(0, 5).sort(function() {
+  that.famousPeople = famousPeople.slice(0, 5).sort(function() {
     return 0.5 - Math.random();
   });
+  return that.update();
 };
 
 if (opts.personality_types) {
@@ -1448,13 +1459,17 @@ if (opts.personality_types) {
 
 });
 
-riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container"> <div each="{trait in this.traits}" class="tf-trait" riot-style="border-color:#{trait.badge.color_1}"> <div class="tf-background-color" riot-style="background-color: #{trait.badge.color_1}"></div> <div class="tf-name">{trait.name}</div> <div class="tf-definition">{trait.definition}</div> <div class="tf-background" riot-style="background-image:url({trait.badge.image_medium})"></div> </div> </div>', '.tf-personality-traits-container .tf-background-color{ opacity: .03; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; } .tf-personality-traits-container div, .tf-personality-traits-container img{ box-sizing: content-box; } .tf-personality-traits-container .your-top-traits{ font-size: 24px; margin: 20px; text-align: center; } .tf-personality-traits-container{ max-width:800px; margin:0px auto; text-align: center; font-family: "Source Sans Pro"; } .tf-personality-traits-container .tf-trait{ border-top: 6px solid; border-color: #99aaff; display: inline-block; width: 180px; margin: 5px; vertical-align:top; background-color:#fff; height: 180px; position:relative; line-height: 1.2em; text-align:center; } .tf-personality-traits-container.ie .tf-trait{ height:280px; } @media (max-width: 768px) { tf-traits .personality-traits .tf-trait{ width:45%; } } .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px 20px; margin-bottom: 0px; display: inline-block; font-weight: 600; text-align: center; } .tf-personality-traits-container .tf-trait .tf-definition{ padding: 0px 20px; margin-top: 10px; font-size:14px; font-weight: 400; text-align: left; } .tf-personality-traits-container .tf-trait .tf-background{ width: 52px; height: 52px; right: 20px; bottom: 20px; position:absolute; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: .15; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; } .tf-personality-traits-container .tf-trait:hover .tf-background{ opacity:.8; }', function(opts) {var that;
+riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container" if="{this.visible}"> <div each="{trait in this.traits}" class="tf-trait" riot-style="border-color:#{trait.badge.color_1}"> <div class="tf-background-color" riot-style="background-color: #{trait.badge.color_1}"></div> <div class="tf-name">{trait.name}</div> <div class="tf-definition">{trait.definition}</div> <div class="tf-background" riot-style="background-image:url({trait.badge.image_medium})"></div> </div> </div>', '.tf-personality-traits-container .tf-background-color{ opacity: .03; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; } .tf-personality-traits-container div, .tf-personality-traits-container img{ box-sizing: content-box; } .tf-personality-traits-container .your-top-traits{ font-size: 24px; margin: 20px; text-align: center; } .tf-personality-traits-container{ max-width:800px; margin:0px auto; text-align: center; font-family: "Source Sans Pro"; } .tf-personality-traits-container .tf-trait{ border-top: 6px solid; border-color: #99aaff; display: inline-block; width: 180px; margin: 5px; vertical-align:top; background-color:#fff; height: 180px; position:relative; line-height: 1.2em; text-align:center; } .tf-personality-traits-container.ie .tf-trait{ height:280px; } @media (max-width: 768px) { tf-traits .personality-traits .tf-trait{ width:45%; } } .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px 20px; margin-bottom: 0px; display: inline-block; font-weight: 600; text-align: center; } .tf-personality-traits-container .tf-trait .tf-definition{ padding: 0px 20px; margin-top: 10px; font-size:14px; font-weight: 400; text-align: left; } .tf-personality-traits-container .tf-trait .tf-background{ width: 52px; height: 52px; right: 20px; bottom: 20px; position:absolute; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: .15; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; } .tf-personality-traits-container .tf-trait:hover .tf-background{ opacity:.8; }', function(opts) {var that;
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 
 that = this;
 
 this.initialize = function() {
+  if (this.personality_traits) {
+    that.traits = this.personality_traits;
+  }
+  that.visible = true;
   that.traits = that.traits.slice(0, 8).map(function(trait) {
     var tf;
     tf = trait.personality_trait;
@@ -1464,8 +1479,7 @@ this.initialize = function() {
   return that.update();
 };
 
-if (opts.personality_traits) {
-  that.traits = opts.personality_traits;
+if (this.personality_traits) {
   that.initialize();
 } else if (this.assessmentId) {
   window.Traitify.getPersonalityTraits(this.assessmentId).then(function(results) {
@@ -1476,13 +1490,14 @@ if (opts.personality_traits) {
 
 });
 
-riot.tag('tf-personality-types', '<div class="tf-types-container"> <div class="tf-types-scroller"> <div class="tf-types"> <div each="{type in this.currentTypes}" class="tf-type {type.active}" onclick="{parent.handleClick}"> <div class="tf-name-small">{type.name}</div> <div class="tf-badge-score-container" riot-style="border-color: #{type.badge.color_1}"> <img class="tf-badge" riot-src="{type.badge.image_medium}"> </div> <div class="tf-percent"> {type.score} / 100 </div> </div> <div class="tf-pointer" riot-style="left: {this.pointerPosition}px; background-color: #{this.pointerColor}"></div> </div> </div> <div class="tf-description"> {this.description} </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-pointer{ margin-left: 20px; position: absolute; width: 86px; height: 10px; border-radius: 5px; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-types-scroller{ width: 100%; overflow-x: auto; overflow-y: hidden; margin-bottom: 35px; text-align: center; } .tf-types-container{ font-family: "Source Sans Pro"; } .tf-types-container .tf-score{ border-bottom: 1px solid #fff; font-size: 22px; } .tf-types-container .tf-name{ font-size: 28px; margin-top: 15px; text-align: center; } .tf-types-container .tf-types .tf-name-small{ font-size: 16px; margin-top: 0px; } .tf-types-container .tf-badge{ width: 100%; } .tf-badge-score-background{ width: 100%; position: relative; height: 100%; opacity: .1; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; } .tf-types-container .tf-badge-score-container{ border: 1px solid; width: 40px; height: 40px; position: relative; overflow: hidden; border-radius: 50%; padding: 22px; margin: 5px auto; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; -webkit-transform: translate3d(0, 0, 0); -moz-transform: translate3d(0, 0, 0) } .tf-types-container .tf-type .tf-badge{ opacity: .9; } .tf-types-container .tf-percent{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; position: relative; color: #bbb; } .tf-types-container .tf-badge-score-background{ width: 100%; height: 100%; opacity: .1; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)"; position: absolute; left: 0px; bottom: 0px; } .tf-types-container .tf-badge-score{ width: 100%; height: 0%; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"; position: absolute; left: 0px; bottom: 0px; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; opacity: .3; } .tf-types-container .tf-type.tf-active .tf-badge-score{ height: 100%; bottom: 0px } .tf-types-container .tf-type:hover .tf-percent{ width: 100%; color: #333; } .tf-types-container .tf-types{ margin: 0px auto; position: relative; display: inline-block; width:882px; margin-bottom: 10px; } .tf-types-container .tf-type{ text-align: center; cursor: pointer; display: inline-block; position: relative; display: inline-block; padding: 10px; margin: 0px 10px; } .tf-types-container .tf-description{ max-width: 600px; margin: 0px auto; text-align: justify; height: 130px; }', function(opts) {var that;
+riot.tag('tf-personality-types', '<div class="tf-types-container" if="{this.visible}"> <div class="tf-types-scroller"> <div class="tf-types"> <div each="{type in this.currentTypes}" class="tf-type {type.active}" onclick="{parent.handleClick}"> <div class="tf-name-small">{type.name}</div> <div class="tf-badge-score-container" riot-style="border-color: #{type.badge.color_1}"> <img class="tf-badge" riot-src="{type.badge.image_medium}"> </div> <div class="tf-percent"> {type.score} / 100 </div> </div> <div class="tf-pointer" riot-style="left: {this.pointerPosition}px; background-color: #{this.pointerColor}"></div> </div> </div> <div class="tf-description"> {this.description} </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-pointer{ margin-left: 20px; position: absolute; width: 86px; height: 10px; border-radius: 5px; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-types-scroller{ width: 100%; overflow-x: auto; overflow-y: hidden; margin-bottom: 35px; text-align: center; } .tf-types-container{ font-family: "Source Sans Pro"; } .tf-types-container .tf-score{ border-bottom: 1px solid #fff; font-size: 22px; } .tf-types-container .tf-name{ font-size: 28px; margin-top: 15px; text-align: center; } .tf-types-container .tf-types .tf-name-small{ font-size: 16px; margin-top: 0px; } .tf-types-container .tf-badge{ width: 100%; } .tf-badge-score-background{ width: 100%; position: relative; height: 100%; opacity: .1; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; } .tf-types-container .tf-badge-score-container{ border: 1px solid; width: 40px; height: 40px; position: relative; overflow: hidden; border-radius: 50%; padding: 22px; margin: 5px auto; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; -webkit-transform: translate3d(0, 0, 0); -moz-transform: translate3d(0, 0, 0) } .tf-types-container .tf-type .tf-badge{ opacity: .9; } .tf-types-container .tf-percent{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; position: relative; color: #bbb; } .tf-types-container .tf-badge-score-background{ width: 100%; height: 100%; opacity: .1; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)"; position: absolute; left: 0px; bottom: 0px; } .tf-types-container .tf-badge-score{ width: 100%; height: 0%; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"; position: absolute; left: 0px; bottom: 0px; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; opacity: .3; } .tf-types-container .tf-type.tf-active .tf-badge-score{ height: 100%; bottom: 0px } .tf-types-container .tf-type:hover .tf-percent{ width: 100%; color: #333; } .tf-types-container .tf-types{ margin: 0px auto; position: relative; display: inline-block; width:882px; margin-bottom: 10px; } .tf-types-container .tf-type{ text-align: center; cursor: pointer; display: inline-block; position: relative; display: inline-block; padding: 10px; margin: 0px 10px; } .tf-types-container .tf-description{ max-width: 600px; margin: 0px auto; text-align: justify; height: 130px; }', function(opts) {var that;
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 
 that = this;
 
 that.initialize = function() {
+  that.visible = true;
   that.types = that.personality_types.map(function(i, index) {
     var score;
     score = Math.round(i.score);
@@ -1525,5 +1540,25 @@ if (opts.personality_types) {
     return that.initialize();
   });
 }
+
+});
+
+riot.tag('tf-personality-blend', '<div class="tf-blends-container" if="{this.visible}"> <div class="tf-badges"> <div class="tf-badge" riot-style="border-color: {this.type1.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type1.badge.image_medium}"> </div> <div class="tf-badge" riot-style="border-color: {this.type2.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type2.badge.image_medium}"> </div> </div> <h2>{this.type1.name} / {this.type2.name}</h2> <div class="description">{this.description}</div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-blends-container .tf-badge-background{ width: 100%; height: 100%; position: absolute; opacity: .2; top: 0px; left: 0px; } .tf-blends-container{ width: 100%; } .tf-blends-container{ font-family: "Source Sans Pro"; padding: 10px; } .tf-blends-container.ie{ font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif"; } .tf-blends-container div, img{ box-sizing: content-box; width: 100%; } .tf-blends-container .tf-badge{ width: 22%; padding:12%; position: relative; border-radius: 50%; border: 2px solid; display: inline-block; overflow: hidden; } .tf-blends-container .tf-badge:first-child{ margin-right: -4%; z-index: 1; } .tf-blends-container .tf-badge:last-child{ margin-left: -4%; } .tf-blends-container .tf-badges{ width: 100%; max-width: 330px; margin: 0px auto; text-align:center; } .tf-blends-container h2{ text-align: center; font-size: 25px; font-weight: 400; } .tf-blends-container .description{ max-width: 800px; margin: 0px auto; text-align: justify; }', function(opts) {var that;
+
+this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
+
+that = this;
+
+this.initialize = function() {
+  that.visible = true;
+  that.type1 = that.personality_blend.personality_type_1;
+  that.type2 = that.personality_blend.personality_type_2;
+  that.type1.bg = that.type1.badge.color_1;
+  that.type1.border = that.type1.badge.color_1;
+  that.type2.bg = that.type2.badge.color_1;
+  that.type2.border = that.type2.badge.color_1;
+  that.description = that.personality_blend.description;
+  return that.update();
+};
 
 });

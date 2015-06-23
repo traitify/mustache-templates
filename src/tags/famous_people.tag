@@ -1,5 +1,5 @@
 <tf-famous-people>
-  <div class="tf-famous-people-container">
+  <div class="tf-famous-people-container" if={this.visible}>
     <div class="tf-famous-people-scroller">
       <div class="tf-famous-people-inner">
         <div class="tf-famous-person" each={famousPerson in this.famousPeople}>
@@ -59,11 +59,14 @@
     @assessmentId = @root.getAttribute("assessment-id")
     that = @
     @initialize = ->
+      that.visible = true
+
       famousPeople = Array()
       for personalityType in that.personality_types
         for famousPerson in personalityType.personality_type.famous_people
           famousPeople.push(famousPerson)
       that.famousPeople = famousPeople[0..4].sort(-> 0.5 - Math.random())
+      that.update()
     if opts.personality_types
       @personality_types = opts.personality_types
       @personality_blend = opts.personality_blend

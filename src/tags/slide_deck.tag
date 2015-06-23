@@ -1,5 +1,5 @@
 <tf-slide-deck>
-  <div class="tf-slide-deck-container {this.finished}">
+  <div class="tf-slide-deck-container {this.finished}" if={this.visible}>
     <div class="tf-slides" style="max-height: {this.maxHeight}px">
       <div class="tf-info {this.infoVisible}">
         <div class="tf-progress-and-caption">
@@ -30,7 +30,6 @@
       </div>
     </div>
   </div>
-  <div class="tf-cover {this.tfCover}"></div>
   <style>
     @font-face {
       font-family: "Source Sans Pro";
@@ -291,11 +290,11 @@
       d.setTime d.getTime() + exdays * 24 * 60 * 60 * 1000
       expires = 'expires=' + d.toUTCString()
 
-      document.cookie = cname + '=' + JSON.stringify(cvalue) + '; ' + expires
+      document.cookie = "tf#{that.assessmentId}#{cname}=" + JSON.stringify(cvalue) + '; ' + expires
       return
 
     Cookie.get = (cname) ->
-      name = cname + '='
+      name = "tf#{that.assessmentId}#{cname}="
       ca = document.cookie.split(';')
       i = 0
       while i < ca.length
@@ -313,7 +312,6 @@
       that.trigger("addSlide")
       duration = new Date() - slideTime
       slideTime = new Date()
-
       @slideData[@slides[@index].id] = {
         id: @slides[@index].id,
         time_taken: duration,
@@ -322,13 +320,15 @@
 
       Cookie.set("slideData", @slideData)
       if @images[@index + 2] || (@index == @slides.length - 2 && @images[@index + 1])
-        if @whichTransitionEvent
+        if @transitionEvent
           @animateSlide()
           @onFinishedTransition = ->
+            that.trigger("transitionEnd")
             @panelOne.picture = @panelTwo.picture
             @panelOne.x = @panelTwo.x
             @panelOne.y = @panelTwo.y
             @update()
+
             that.panelTwo.class = "next"
             that.panelOne.class = "current"
             that.index++
@@ -343,17 +343,18 @@
         slides = Object.keys(@slideData).map((id)->
           that.slideData[id]
         )
-        slideIds = allSlides.map((slide)-> slide.id)
+        slideIds = @allSlides.map((slide)-> slide.id)
         sendSlides = Array()
         customSlides = Array()
         for slide in slides
-          if slideIds.indexOf(slide.id) == -1
+          if slideIds.indexOf(slide.id) != -1
             sendSlides.push(slide)
           else
+            that.customSlideValues ?= Array()
             that.customSlideValues.push(slide)
         that.trigger("customSlideValues", that.customSlideValues)
         Traitify.addSlides(that.assessmentId, sendSlides).then((response)->
-          that.trigger("finish", that)
+          opts.trigger("slideDeck.finish", that)
         )
         @infoVisible = "tf-invisible"
         @finished = "tf-finished"
@@ -413,9 +414,8 @@
 
     @transitionEvent = @whichTransitionEvent()
 
-    @on("initialized", ->
+    opts.on("slideDeck.initialized", ->
       el = document.getElementsByClassName("tf-panel-two")[0]
-
       that.transitionEvent && el.addEventListener(that.transitionEvent, ->
         that.onFinishedTransition()
       )
@@ -425,21 +425,23 @@
       that.touch(document.querySelector(".tf-not-me"), ->
         that.processSlide(false)
       )
-      that.tfCover = "tf-invisible"
-      that.update()
+
       that.customSlides ?= Array()
       for slide in that.customSlides
         that.slides.splice(slide.position, slide)
       that.update()
+      opts.on("slideDeck.initialized")
     )
     @on("mount", ->
       that.mounted = true
       if that.initialized == true
-        that.trigger("initialized")
+        opts.trigger("slideDeck.initialized")
     )
 
     @initialize = ->
       @index = 0
+      @visible = true
+      @update()
 
       @slideData = Cookie.get("slideData")
       unless @slideData
@@ -490,17 +492,9 @@
       @loadImage(0)
       that.initialized = true
       if that.mounted == true
-        that.trigger("initialized")
+        opts.trigger("slideDeck.initialized")
 
 
-    if opts.slides
-      @slides = opts.slides
-      @initialize()
-    else if @assessmentId
-        window.Traitify.getSlides(@assessmentId).then((slides)->
-          that.slides = slides
-          that.initialize()
-        )
     @maxHeight = window.innerHeight
     document.addEventListener("orientationchange", ->
       that.maxHeight = window.innerHeight

@@ -1,5 +1,5 @@
 <tf-careers>
-  <div class="tf-careers-container">
+  <div class="tf-careers-container" if={this.visible}>
     <div class="tf-experience-filters">
       <div class="tf-filter-header">
         Experience Level:
@@ -250,7 +250,7 @@
       that.refreshColumns()
     @refreshColumns = ->
       if @levels.indexOf("all") != -1
-        @careers = opts.career_matches
+        @careers = @career_matches
         @setColumns()
       else
         levels = that.levels.map((a)-> a + 1 )
@@ -281,15 +281,15 @@
       @update()
 
     @initialize = ->
+      if @career_matches
+        @assessmentId = @assessmentId
+        @careers = @career_matches
+      @visible = true
       @columns = opts.columns || 4
       @setColumns()
       @mountDetails()
 
-    if opts.career_matches
-      @assessmentId = opts.assessmentId
-      @careers = opts.career_matches
-      @initialize()
-    else if @assessmentId
+    if @assessmentId
       window.Traitify.getCareers(@assessmentId).then((response)->
         that.careers = response.careers
 

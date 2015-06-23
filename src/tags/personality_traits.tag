@@ -1,5 +1,5 @@
 <tf-personality-traits>
-  <div class="tf-personality-traits-container">
+  <div class="tf-personality-traits-container" if={this.visible}>
     <div each={trait in this.traits} class="tf-trait" style="border-color:#{trait.badge.color_1}">
       <div class="tf-background-color" style="background-color: #{trait.badge.color_1}"></div>
       <div class="tf-name">{trait.name}</div>
@@ -89,14 +89,16 @@
 
   that = @
   @initialize = ->
+    that.traits = @personality_traits if @personality_traits
+    that.visible = true
+
     that.traits = that.traits.slice(0, 8).map((trait)->
       tf = trait.personality_trait
       tf.badge = tf.personality_type.badge
       tf
     )
     that.update()
-  if opts.personality_traits
-    that.traits = opts.personality_traits
+  if @personality_traits
     that.initialize()
   else if @assessmentId
     window.Traitify.getPersonalityTraits(@assessmentId).then((results)->

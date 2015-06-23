@@ -1,5 +1,5 @@
 <tf-career>
-  <div class="tf-career-container">
+  <div class="tf-career-container" if={this.visible}>
     <div class="tf-career-inner">
       <div class="tf-career-body">
         <img src="{this.career.picture}" class="tf-image">
@@ -289,12 +289,12 @@
   <script>
     that = this
     @setCareer = (career)->
+      @visible = true
       @career = career.career
       @career.salary_projection.annual_salary_mean = @career.salary_projection.annual_salary_mean.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
       @career.salary_projection.annual_salary_median = @career.salary_projection.annual_salary_median.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,")
       @score = career.score
       @update()
-      console.log(@career)
 
     if opts.career
       @setCareer(opts.career)

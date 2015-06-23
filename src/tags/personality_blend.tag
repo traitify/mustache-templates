@@ -1,5 +1,5 @@
 <tf-personality-blend>
-  <div class="tf-blends-container">
+  <div class="tf-blends-container" if={this.visible}>
     <div class="tf-badges">
       <div class="tf-badge"  style="border-color: {this.type1.border};">
         <div class="tf-badge-background"></div>
@@ -80,6 +80,8 @@
   @assessmentId =  opts.assessmentId || @root.getAttribute("assessment-id")
   that = @
   @initialize = ->
+    that.visible = true
+
     that.type1 = that.personality_blend.personality_type_1
     that.type2 = that.personality_blend.personality_type_2
 
@@ -91,13 +93,5 @@
 
     that.description = that.personality_blend.description
     that.update()
-  if opts.personality_blend
-    that.personality_blend = opts.personality_blend
-    that.initialize()
-  else if @assessmentId
-    window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
-      that.personality_blend = results.personality_blend
-      that.initialize()
-    )
 </script>
 </tf-personality-blend>

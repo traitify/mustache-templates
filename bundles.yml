@@ -1,5 +1,6 @@
 v2:
   - "traitify-js-client/compiled/bundles/v1"
+  - "public/js/lib/v2-client-patch"
   - "public/support/riot"
   - "public/js/lib/main"
   - "public/js/tags/slide_deck"
@@ -8,3 +9,4 @@ v2:
   - "public/js/tags/famous_people"
   - "public/js/tags/personality_traits"
   - "public/js/tags/personality_types"
+  - "public/js/tags/personality_blend"

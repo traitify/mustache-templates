@@ -1,5 +1,5 @@
 <tf-personality-types>
-    <div class="tf-types-container">
+    <div class="tf-types-container" if={this.visible}>
       <div class="tf-types-scroller">
         <div class="tf-types">
           <div each={type in this.currentTypes} class="tf-type {type.active}" onclick={parent.handleClick}>
@@ -154,6 +154,8 @@
     that = @
 
     that.initialize = ->
+      that.visible = true
+
       that.types = that.personality_types.map((i, index)->
         score = Math.round(i.score)
         i = i.personality_type
