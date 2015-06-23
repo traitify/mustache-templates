@@ -94,6 +94,7 @@ this.processSlide = function(value) {
     }
     that.trigger("customSlideValues", that.customSlideValues);
     Traitify.addSlides(that.assessmentId, sendSlides).then(function(response) {
+      console.log("mine mine");
       return opts.trigger("slideDeck.finish", that);
     });
     this.infoVisible = "tf-invisible";

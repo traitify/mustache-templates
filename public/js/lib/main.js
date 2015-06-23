@@ -56,6 +56,7 @@ Traitify.ui = {
           });
           return options.slideDeck.mount.initialize();
         } else {
+          console.log("hi");
           ref2 = Object.keys(that.results);
           results = [];
           for (k = 0, len2 = ref2.length; k < len2; k++) {

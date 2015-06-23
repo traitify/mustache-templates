@@ -21,20 +21,21 @@ Traitify.ui = {
         slideDeck.assessmentId = options.assessmentId
       Traitify.get("/assessments/#{options.assessmentId}?#{args}").then((assessment)->
         if assessment.completed_at == undefined
-            options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0]
-            options.slideDeck.mount.slides = assessment.slides
-            options.on("slideDeck.finish", ->
-              that.load()
-            )
-            options.slideDeck.mount.initialize()
+          options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0]
+          options.slideDeck.mount.slides = assessment.slides
+          options.on("slideDeck.finish", ->
+            that.load()
+          )
+          options.slideDeck.mount.initialize()
         else
-            for resultName in Object.keys(that.results)
-              widget = that.results[resultName]
-              that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0]
-              that.results[resultName].mount.assessmentId = that.assessmentId
-              for key in Object.keys(assessment)
-                that.results[resultName].mount[key] = assessment[key]
-              that.results[resultName].mount.initialize()
+          console.log("hi")
+          for resultName in Object.keys(that.results)
+            widget = that.results[resultName]
+            that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0]
+            that.results[resultName].mount.assessmentId = that.assessmentId
+            for key in Object.keys(assessment)
+              that.results[resultName].mount[key] = assessment[key]
+            that.results[resultName].mount.initialize()
 
       )
       return this

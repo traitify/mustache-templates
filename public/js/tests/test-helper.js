@@ -130,7 +130,20 @@ Mocks.results = {
                   color_1: "#aaa"
                 }
               }
-            }
+            },
+            career_matches: [
+              {
+                career: {
+                  name: "career",
+                  experience_level: "a",
+                  salary_projection: {
+                    annual_salary_mean: "a",
+                    annual_salary_median: "a"
+                  }
+                },
+                score: 134
+              }
+            ]
           });
         }
       };

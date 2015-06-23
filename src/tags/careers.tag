@@ -9,29 +9,27 @@
       </div><div class="tf-experience-filter  {this.parent.levels.indexOf(level) != -1 ? 'tf-highlight-filter' : ''} " onclick={this.parent.toggleLevel} each={level in this.levelSets}>{level + 1}</div>
 
     </div>
-    <div class="tf-column-{index + 1} tf-column tf-columns-{this.parent.columns}" each="{careerSet, index in this.careerSet}">
-      <div class="tf-career-details tf-show-details" each={careerSet.careers} onclick={this.parent.parent.careerClick}>
-        <img src="{this.career.picture}" class="tf-image" />
-        <div class="tf-title">{this.career.title}</div>
-        <div class="tf-description tf-fade">{this.career.description}</div>
-        <div class="tf-experience">Experience Level</div>
+    <div class="tf-career-details tf-show-details" each={this.careers} onclick={this.parent.careerClick}>
+      <img src="{this.career.picture}" class="tf-image" />
+      <div class="tf-title">{this.career.title}</div>
+      <div class="tf-description tf-fade">{this.career.description}</div>
+      <div class="tf-experience">Experience Level</div>
 
-        <div class="tf-experience-boxes">
-          <div class="tf-experience-box { this.exp > 0 ? 'tf-highlighted-box' : ''}"></div>
-          <div class="tf-experience-box { this.exp > 1 ? 'tf-highlighted-box' : ''}"></div>
-          <div class="tf-experience-box { this.exp > 2 ? 'tf-highlighted-box' : ''}"></div>
-          <div class="tf-experience-box { this.exp > 3 ? 'tf-highlighted-box' : ''}"></div>
-          <div class="tf-experience-box { this.exp > 4 ? 'tf-highlighted-box' : ''}"></div>
-        </div>
-        <span class="tf-education">Education </span>
-        <div class="tf-education-text">{this.career.experience_level.degree}</div>
+      <div class="tf-experience-boxes">
+        <div class="tf-experience-box { this.exp > 0 ? 'tf-highlighted-box' : ''}"></div>
+        <div class="tf-experience-box { this.exp > 1 ? 'tf-highlighted-box' : ''}"></div>
+        <div class="tf-experience-box { this.exp > 2 ? 'tf-highlighted-box' : ''}"></div>
+        <div class="tf-experience-box { this.exp > 3 ? 'tf-highlighted-box' : ''}"></div>
+        <div class="tf-experience-box { this.exp > 4 ? 'tf-highlighted-box' : ''}"></div>
+      </div>
+      <span class="tf-education">Education </span>
+      <div class="tf-education-text">{this.career.experience_level.degree}</div>
 
-        <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div>
-        <div class="tf-score">
-          <div class="tf-clearfix"></div>
-          <div class="tf-score-bar">
-            <div class="tf-score-bar-inner" style="width: {Math.round(this.score)}%"><div>
-          </div>
+      <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div>
+      <div class="tf-score">
+        <div class="tf-clearfix"></div>
+        <div class="tf-score-bar">
+          <div class="tf-score-bar-inner" style="width: {Math.round(this.score)}%"><div>
         </div>
       </div>
     </div>
@@ -230,7 +228,6 @@
     @mountDetails = ->
       career = @careers[0]
       this.careerWidgets = riot.mount(that.detailsTarget, "tf-career", {career: career})
-
     this.setAll = ->
       this.levels = ["all"]
       this.refreshColumns()
@@ -260,24 +257,11 @@
         )
 
     @setColumns = ->
-      careerSet = Array()
-      columns = @columns
-
       careers = @careers
 
-      i = 0
-      while i < columns
-        careerSet[i] = {careers: Array()}
-        i++
-
-      j = 0
-      while j < careers.length
-        career = careers[j]
-
+      for career in @careers
         career.exp = career.career.experience_level.id
-        careerSet[j % columns].careers.push(career)
-        j++
-      @careerSet = careerSet
+
       @update()
 
     @initialize = ->
@@ -287,13 +271,7 @@
       @visible = true
       @columns = opts.columns || 4
       @setColumns()
-      @mountDetails()
+      #mountDetails()
 
-    if @assessmentId
-      window.Traitify.getCareers(@assessmentId).then((response)->
-        that.careers = response.careers
-
-        that.initialize()
-      )
   </script>
 </tf-careers>

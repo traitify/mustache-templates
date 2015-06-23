@@ -354,6 +354,7 @@
             that.customSlideValues.push(slide)
         that.trigger("customSlideValues", that.customSlideValues)
         Traitify.addSlides(that.assessmentId, sendSlides).then((response)->
+          console.log("mine mine")
           opts.trigger("slideDeck.finish", that)
         )
         @infoVisible = "tf-invisible"

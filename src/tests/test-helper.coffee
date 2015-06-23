@@ -113,7 +113,18 @@ Mocks.results = {
                 personality_type_2: {badge:
                     {color_1: "#aaa"}
                 }
-            }
+            },
+            career_matches: [{
+              career:{
+                name: "career",
+                experience_level: "a",
+                salary_projection: {
+                  annual_salary_mean: "a",
+                  annual_salary_median: "a"
+                }
+              },
+              score: 134
+            }]
         })
       }
 }
