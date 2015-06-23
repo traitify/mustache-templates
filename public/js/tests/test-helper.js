@@ -130,16 +130,7 @@ Mocks.results = {
                   color_1: "#aaa"
                 }
               }
-            },
-            career_matches: [
-              {
-                career: {
-                  title: "hihih",
-                  experience_level: "haha"
-                },
-                score: 10
-              }
-            ]
+            }
           });
         }
       };
