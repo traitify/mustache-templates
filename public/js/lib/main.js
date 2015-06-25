@@ -14,18 +14,15 @@ Traitify.ui = {
     if ((base1 = options.slideDeck).tag == null) {
       base1.tag = "tf-slide-deck";
     }
+    if (options.results == null) {
+      options.results = Object();
+    }
     ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
     for (i = 0, len = ref.length; i < len; i++) {
       item = ref[i];
       dataName = item.replace(/-([a-z])/g, function(g) {
         return g[1].toUpperCase();
       });
-      if (options == null) {
-        options = Object();
-      }
-      if (options.results == null) {
-        options.results = Object();
-      }
       if ((base2 = options.results)[dataName] == null) {
         base2[dataName] = Object();
       }
@@ -56,7 +53,6 @@ Traitify.ui = {
           });
           return options.slideDeck.mount.initialize();
         } else {
-          console.log("hi");
           ref2 = Object.keys(that.results);
           results = [];
           for (k = 0, len2 = ref2.length; k < len2; k++) {

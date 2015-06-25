@@ -58,6 +58,11 @@
   <script>
     @assessmentId = @root.getAttribute("assessment-id")
     that = @
+    @on("mount", ->
+      @mounted = true
+      if @initialized
+        opts.trigger("famousPeople.initialized")
+    )
     @initialize = ->
       that.visible = true
 
@@ -67,6 +72,9 @@
           famousPeople.push(famousPerson)
       that.famousPeople = famousPeople[0..4].sort(-> 0.5 - Math.random())
       that.update()
+      @initialized = true
+      if @mounted
+        opts.trigger("famousPeople.initialized")
     if opts.personality_types
       @personality_types = opts.personality_types
       @personality_blend = opts.personality_blend

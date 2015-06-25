@@ -8,6 +8,12 @@ this.levelSets = [0, 1, 2, 3, 4];
 
 this.levels = ["all"];
 
+this.mounted = true;
+
+if (this.initialized) {
+  opts.trigger("careers.initialized");
+}
+
 this.detailsTarget = opts.detailsTarget ? opts.details.target : ".tf-career";
 
 this.careerClick = function() {

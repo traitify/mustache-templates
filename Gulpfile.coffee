@@ -132,7 +132,7 @@ gulp.task("traitify-server", (req, res)->
 )
 
 gulp.task("test", ->
-  gulp.src('./qunit/tests.html').pipe(qunit())
+  gulp.src('./qunit/tests.html').pipe(qunit(timeout: 30))
   .on("gulp-qunit.finished", (answer)->
     response = if answer.passed then "Tests Have Passed! :)" else "Tests Have Failed! :("
     gulp.src('./qunit/tests.html')

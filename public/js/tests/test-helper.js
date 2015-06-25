@@ -20,15 +20,15 @@ Mocks.slideDeck = {
               {
                 id: "oaunth",
                 caption: "hi",
-                image_desktop_retina: "/fixtures/slide_one.jpg"
+                image_desktop_retina: "./fixtures/slide_one.jpg"
               }, {
                 id: "aoeu",
                 caption: "how",
-                image_desktop_retina: "/fixtures/slide_two.jpg"
+                image_desktop_retina: "./fixtures/slide_two.jpg"
               }, {
                 id: "aoeuaoueaoeu",
                 caption: "hidy",
-                image_desktop_retina: "/fixtures/slide_one.jpg"
+                image_desktop_retina: "./fixtures/slide_one.jpg"
               }
             ]
           });
@@ -102,6 +102,7 @@ Mocks.results = {
               {
                 personality_type: {
                   name: "here",
+                  description: "Here is a description",
                   badge: {
                     color_1: "#aaa"
                   },
@@ -111,6 +112,7 @@ Mocks.results = {
               }, {
                 personality_type: {
                   name: "here",
+                  description: "Here is a description 2",
                   badge: {
                     color_1: "#aaa"
                   },
@@ -149,4 +151,8 @@ Mocks.results = {
       };
     };
   }
+};
+
+jQuery.fn.shouldHave = function(content) {
+  return jQuery(this).filter(":contains(" + content + ")").length !== 0;
 };

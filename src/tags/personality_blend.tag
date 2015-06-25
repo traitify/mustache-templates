@@ -79,6 +79,11 @@
 <script>
   @assessmentId =  opts.assessmentId || @root.getAttribute("assessment-id")
   that = @
+  @on("mount", ->
+    @mounted = true
+    if @initialized
+      opts.trigger("personalityBlend.initialized")
+  )
   @initialize = ->
     that.visible = true
 
@@ -93,5 +98,8 @@
 
     that.description = that.personality_blend.description
     that.update()
+    that.initialized = true
+    if that.mounted
+      opts.trigger("personalityBlend.initialized")
 </script>
 </tf-personality-blend>

@@ -270,7 +270,9 @@
     that = @
     this.levelSets = [0, 1, 2, 3, 4]
     this.levels = ["all"]
-
+    @mounted = true
+    if @initialized
+      opts.trigger("careers.initialized")
     @detailsTarget = if opts.detailsTarget then opts.details.target else ".tf-career"
 
     @careerClick = ->

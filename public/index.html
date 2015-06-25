@@ -6,7 +6,7 @@
 	<script src="/support/riot.min.js"></script>
 	<script src="/bundles/v2.debug.js"></script>
 
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<style>
 		h1{
 			text-align: center;
@@ -32,7 +32,7 @@
 	</div>
   <script>
 	    $(function(){
-	      $.post("http://localhost:1376/credentials").then(function(credentials){
+	      $.post("https://pjqsmihlos.localtunnel.me/credentials").then(function(credentials){
 					function loadAssessment(credentials){
 						Traitify.setPublicKey(credentials.publicKey)
 							.ui.init({assessmentId: $.cookie("assessmentId")})
@@ -41,7 +41,7 @@
 					if($.cookie("assessmentId")){
 						loadAssessment(credentials)
 					} else {
-		        $.post("http://localhost:1376/assessments?deck=career-deck").then(function(assessment){
+		        $.post("https://pjqsmihlos.localtunnel.me/assessments?deck=career-deck").then(function(assessment){
 							$.cookie("assessmentId", assessment.id)
 							loadAssessment(credentials)
 		        })

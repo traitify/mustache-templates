@@ -4,6 +4,13 @@ this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id")
 
 that = this;
 
+this.on("mount", function() {
+  this.mounted = true;
+  if (this.initialized) {
+    return opts.trigger("personalityTypes.initialized");
+  }
+});
+
 that.initialize = function() {
   that.visible = true;
   that.types = that.personality_types.map(function(i, index) {
@@ -36,17 +43,11 @@ that.initialize = function() {
     this.type.active = "tf-active";
     return that.update();
   };
-  return that.update();
+  that.update();
+  this.initialized = true;
+  if (this.mounted) {
+    return opts.trigger("personalityTypes.initialized");
+  }
 };
-
-if (opts.personality_types) {
-  that.personality_types = opts.personality_types;
-  that.initialize();
-} else if (this.assessmentId) {
-  window.Traitify.getPersonalityTypes(this.assessmentId).then(function(results) {
-    that.personality_types = results.personality_types;
-    return that.initialize();
-  });
-}
 
 });

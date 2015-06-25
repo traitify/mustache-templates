@@ -86,7 +86,9 @@
   </style>
 <script>
   @assessmentId =  opts.assessmentId || @root.getAttribute("assessment-id")
-
+  @mounted = true
+  if @initialized
+    opts.trigger("personalityTraits.initialized")
   that = @
   @initialize = ->
     that.traits = @personality_traits if @personality_traits
@@ -98,6 +100,9 @@
       tf
     )
     that.update()
+    @initialized = true
+    if @mounted
+      opts.trigger("personalityTraits.initialized")
   if @personality_traits
     that.initialize()
   else if @assessmentId

@@ -2,6 +2,12 @@ riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container" 
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 
+this.mounted = true;
+
+if (this.initialized) {
+  opts.trigger("personalityTraits.initialized");
+}
+
 that = this;
 
 this.initialize = function() {
@@ -15,7 +21,11 @@ this.initialize = function() {
     tf.badge = tf.personality_type.badge;
     return tf;
   });
-  return that.update();
+  that.update();
+  this.initialized = true;
+  if (this.mounted) {
+    return opts.trigger("personalityTraits.initialized");
+  }
 };
 
 if (this.personality_traits) {

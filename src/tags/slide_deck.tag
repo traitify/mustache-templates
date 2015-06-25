@@ -145,6 +145,11 @@
       border-radius: 25px;
       margin: 0px auto;
     }
+    @media screen and (max-width: 380px) {
+      .tf-me-not-me{
+        width: 280px;
+      }
+    }
     .tf-finished .tf-loading{
       background-color: #315F9B;
       color: #fff;
@@ -309,6 +314,9 @@
     @touchDevice = false
     slideTime = new Date()
     @processSlide = (value)->
+      if @processingSlide == true
+        return false
+      @processingSlide = true
       that.trigger("addSlide")
       duration = new Date() - slideTime
       slideTime = new Date()
@@ -320,22 +328,22 @@
 
       Cookie.set("slideData", @slideData)
       if @images[@index + 2] || (@index == @slides.length - 2 && @images[@index + 1])
+        @onFinishedTransition = ->
+          that.trigger("transitionEnd")
+          @panelOne.picture = @panelTwo.picture
+          @panelOne.x = @panelTwo.x
+          @panelOne.y = @panelTwo.y
+          @update()
+
+          that.panelTwo.class = "next"
+          that.panelOne.class = "current"
+          that.index++
+          that.setSlide()
+          that.processingSlide = false
         if @transitionEvent
           @animateSlide()
-          @onFinishedTransition = ->
-            that.trigger("transitionEnd")
-            @panelOne.picture = @panelTwo.picture
-            @panelOne.x = @panelTwo.x
-            @panelOne.y = @panelTwo.y
-            @update()
-
-            that.panelTwo.class = "next"
-            that.panelOne.class = "current"
-            that.index++
-            that.setSlide()
         else
-          @index++
-          @setSlide()
+          @onFinishedTransition()
       else
         @loadingVisible = "tf-visible"
 
@@ -354,7 +362,6 @@
             that.customSlideValues.push(slide)
         that.trigger("customSlideValues", that.customSlideValues)
         Traitify.addSlides(that.assessmentId, sendSlides).then((response)->
-          console.log("mine mine")
           opts.trigger("slideDeck.finish", that)
         )
         @infoVisible = "tf-invisible"

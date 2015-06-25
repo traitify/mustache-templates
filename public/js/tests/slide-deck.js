@@ -55,13 +55,36 @@ QUnit.test("Click To End Of Slider", function(assert) {
   $$("#test-container").html(testSetup());
   widgets = window.Traitify.ui.init();
   widgets.on("slideDeck.initialized", function() {
-    var intervals, that;
+    var checkReady, intervals, that, widgetData;
     Mocks.slideDeck.finished();
     Mocks.slideDeck.addSlides();
     Mocks.results.all();
+    checkReady = function() {
+      if (Object.keys(widgetData).length === 4) {
+        assert.ok(true, "Passed!");
+        return done();
+      }
+    };
     that = widgets.slideDeck.mount;
+    widgetData = Object();
+    widgets.on("famousPeople.initialized", function() {
+      widgetData.famousPeople = true;
+      return checkReady();
+    });
+    widgets.on("personalityBlend.initialized", function() {
+      widgetData.personalityBlend = true;
+      return checkReady();
+    });
+    widgets.on("personalityTraits.initialized", function() {
+      widgetData.personalityTraits = true;
+      return checkReady();
+    });
+    widgets.on("personalityTypes.initialized", function() {
+      widgetData.personalityTypes = true;
+      return checkReady();
+    });
     return intervals = setInterval(function() {
-      if (Object.keys(that.slideData).length === that.allSlides.length) {
+      if (Object.keys(that.slideData).length === that.allSlides.length - 1) {
         clearInterval(intervals);
       }
       return $$(".tf-not-me").trigger("click");

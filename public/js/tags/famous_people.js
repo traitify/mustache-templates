@@ -4,6 +4,13 @@ this.assessmentId = this.root.getAttribute("assessment-id");
 
 that = this;
 
+this.on("mount", function() {
+  this.mounted = true;
+  if (this.initialized) {
+    return opts.trigger("famousPeople.initialized");
+  }
+});
+
 this.initialize = function() {
   var famousPeople, famousPerson, i, j, len, len1, personalityType, ref, ref1;
   that.visible = true;
@@ -20,7 +27,11 @@ this.initialize = function() {
   that.famousPeople = famousPeople.slice(0, 5).sort(function() {
     return 0.5 - Math.random();
   });
-  return that.update();
+  that.update();
+  this.initialized = true;
+  if (this.mounted) {
+    return opts.trigger("famousPeople.initialized");
+  }
 };
 
 if (opts.personality_types) {

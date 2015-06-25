@@ -4,10 +4,9 @@ Traitify.ui = {
     options.slideDeck ?= Object()
     options.slideDeck.target ?= ".tf-slide-deck"
     options.slideDeck.tag ?= "tf-slide-deck"
+    options.results ?= Object()
     for item in ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"]
       dataName = item.replace(/-([a-z])/g, (g)-> g[1].toUpperCase())
-      options ?= Object()
-      options.results ?= Object()
       options.results[dataName] ?= Object()
       options.results[dataName].tag ?= "tf-#{item}"
       options.results[dataName].target ?= ".tf-#{item}"
@@ -28,7 +27,6 @@ Traitify.ui = {
           )
           options.slideDeck.mount.initialize()
         else
-          console.log("hi")
           for resultName in Object.keys(that.results)
             widget = that.results[resultName]
             that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0]

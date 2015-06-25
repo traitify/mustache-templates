@@ -152,7 +152,11 @@
     @assessmentId = opts.assessmentId || @root.getAttribute("assessment-id")
 
     that = @
-
+    @on("mount", ->
+      @mounted = true
+      if @initialized
+        opts.trigger("personalityTypes.initialized")
+    )
     that.initialize = ->
       that.visible = true
 
@@ -186,13 +190,8 @@
         this.type.active = "tf-active"
         that.update()
       that.update()
-    if opts.personality_types
-      that.personality_types = opts.personality_types
-      that.initialize()
-    else if @assessmentId
-      window.Traitify.getPersonalityTypes(@assessmentId).then((results)->
-        that.personality_types = results.personality_types
-        that.initialize()
-      )
+      @initialized = true
+      if @mounted
+        opts.trigger("personalityTypes.initialized")
   </script>
 </tf-personality-types>

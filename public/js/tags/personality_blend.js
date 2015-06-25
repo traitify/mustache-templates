@@ -4,6 +4,13 @@ this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id")
 
 that = this;
 
+this.on("mount", function() {
+  this.mounted = true;
+  if (this.initialized) {
+    return opts.trigger("personalityBlend.initialized");
+  }
+});
+
 this.initialize = function() {
   that.visible = true;
   that.type1 = that.personality_blend.personality_type_1;
@@ -13,7 +20,11 @@ this.initialize = function() {
   that.type2.bg = that.type2.badge.color_1;
   that.type2.border = that.type2.badge.color_1;
   that.description = that.personality_blend.description;
-  return that.update();
+  that.update();
+  that.initialized = true;
+  if (that.mounted) {
+    return opts.trigger("personalityBlend.initialized");
+  }
 };
 
 });
