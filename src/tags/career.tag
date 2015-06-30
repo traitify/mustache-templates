@@ -98,7 +98,7 @@
   </div>
   <style type="text/myparser">
     .tf-career-container{
-      font-family: "Source Sans Pro";
+      font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
       font-size: 18px;
       line-height: 1.5;
       margin: 20px;
@@ -118,7 +118,7 @@
     }
     .tf-career-container .tf-career-inner{
       max-width: 800px;
-      margin: 0px auto;
+      margin: 0 auto;
     }
     .tf-popout-open {
       overflow: hidden;
@@ -255,7 +255,7 @@
       padding: 10px 20px;
     }
     .tf-career-container .tf-experience-boxes{
-      padding: 0px 10px;
+      padding: 0 10px;
       display: inline-block;
     }
     .tf-career-container .tf-experience-box{

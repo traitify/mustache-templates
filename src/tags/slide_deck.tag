@@ -40,12 +40,11 @@
     .tf-cover{
       background-color: #fff;
       position: absolute;
-      top: 0px;
-      left: 0px;
-      right: 0px;
-      bottom: 0px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 2;
-
     }
     .tf-info{
       position: absolute;
@@ -68,7 +67,7 @@
       transition: all .4s ease-in-out;
     }
     .tf-slide-deck-container.tf-finished{
-      height: 0px;
+      height: 0;
       overflow: hidden;
       opacity: 0;
     }
@@ -78,9 +77,9 @@
       overflow: hidden;
       position: relative;
       height: 600px;
-      font-family: "Source Sans Pro";
+      font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
       text-align: center;
-      margin: 0px auto;
+      margin: 0 auto;
       background-color: #4488cc;
     }
     .tf-slide{
@@ -111,7 +110,7 @@
       left: 0%;
     }
     .caption{
-      padding: 3px 0px 8px;
+      padding: 3px 0 8px;
       color: #fff;
       font-size: 28px;
       display: block;
@@ -140,10 +139,10 @@
       position: relative;
       line-height:43px;
       font-size: 24px;
-      padding: 0px;
+      padding: 0;
       overflow: hidden;
       border-radius: 25px;
-      margin: 0px auto;
+      margin: 0 auto;
     }
     .tf-finished .tf-loading{
       background-color: #315F9B;
@@ -166,8 +165,8 @@
       height: 100%;
       text-decoration: none;
       color: #fff;
-      padding:0px;
-      margin: 0px;
+      padding:0;
+      margin: 0;
     }
     .tf-me-not-me .tf-not-me{
       position: relative;
@@ -177,19 +176,19 @@
       height: 100%;
       text-decoration: none;
       color: #fff;
-      padding:0px;
-      margin: 0px;
+      padding:0;
+      margin: 0;
     }
     .progress-bar{
       height: 100%;
-      padding: 0px;
+      padding: 0;
       width: 100%;
     }
     .progress-bar-inner{
       position: absolute;
       background-color: rgba(39,235,95, .8);
       height: 100%;
-      width: 0%;
+      width: 0;
       -webkit-transition: width .4s ease-in-out;
       -moz-transition: width .4s ease-in-out;
       -o-transition: width .4s ease-in-out;
@@ -233,7 +232,6 @@
       -webkit-animation-name: fadeInOut;
       -webkit-animation-duration: 3s;
       -webkit-animation-iteration-count: infinite;
-
       animation-name: fadeInOut;
       animation-duration: 3s;
       animation-iteration-count: infinite;
@@ -276,7 +274,6 @@
         opacity:1
       }
     }
-
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId

@@ -19,27 +19,27 @@
       src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
     }
     .tf-famous-people-container{
-      font-family: "Source Sans Pro"
+      font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
+      margin: 0 auto 30px;
     }
     .tf-famous-people-inner{
       width: 860px;
-      margin: 0px auto
+      margin: 0 auto;
     }
     .tf-famous-people-scroller{
       height: 230px;
       max-width: 860px;
-      margin: 0px auto;
+      margin: 0 auto;
       overflow-y: hidden;
       overflow-x: auto;
       text-align: center;
     }
     .tf-famous-person{
-      font-family: "Source Sans Pro";
       display: inline-block;
       padding: 10px 15px;
       text-align: center;
       color: #555;
-      margin: 0px auto;
+      margin: 0 auto;
       vertical-align: top;
     }
     .tf-famous-person .tf-image{
@@ -48,7 +48,6 @@
       border-radius: 50%;
       overflow: hidden;
     }
-
     .tf-name{
       margin-top: 20px;
       width: 142px;
