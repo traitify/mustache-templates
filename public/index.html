@@ -3,8 +3,8 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 
-	<script src="/support/riot.min.js"></script>
-	<script src="/bundles/v2.debug.js"></script>
+	<script src="./support/riot.min.js"></script>
+	<script src="./bundles/v2.debug.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<style>
@@ -30,24 +30,106 @@
 	</div>
 	<div class="tf-careers">
 	</div>
+
   <script>
-	    $(function(){
-	      $.post("https://pjqsmihlos.localtunnel.me/credentials").then(function(credentials){
-					function loadAssessment(credentials){
-						Traitify.setPublicKey(credentials.publicKey)
-							.ui.init({assessmentId: $.cookie("assessmentId")})
-							.load()
-					}
-					if($.cookie("assessmentId")){
-						loadAssessment(credentials)
-					} else {
-		        $.post("https://pjqsmihlos.localtunnel.me/assessments?deck=career-deck").then(function(assessment){
-							$.cookie("assessmentId", assessment.id)
-							loadAssessment(credentials)
-		        })
-					}
+	      $.get("/assessment.json").then(function(assessment){
+					Traitify.ui.init({
+						publicKey: assessment.publicKey,
+						assessmentId: assessment.id,
+						slideDeck:{
+							progressBarColor: "#0000ff"
+						}
+					}).load()
 	      })
-	    })
   </script>
+	<style>
+		.tf-progress-bar-inner{
+			background-color: "#0000ff"
+		}
+	</style>
+	<style>
+		/*
+		 * Base For Both Bottom And Top Progress Bar
+		 *
+		.tf-me-not-me{
+			border-radius: 0px;
+		}
+		.tf-progress-and-caption .tf-progress-bar{
+			display: none;
+		}
+		.tf-response .tf-progress-bar{
+			width: 320px;
+			display: inline-block;
+			margin: 0px auto;
+			position: absolute;
+		}
+		.tf-response .tf-me-not-me{
+			display:inline-block;
+
+		}
+		.tf-response .tf-progress-bar-inner{
+			border-radius: 0px;
+		}
+		*/
+
+		/*
+		 * Progress Bar Top
+		 *
+		.tf-response .tf-progress-bar{
+			margin-top: -10px;
+		}
+		*/
+
+		/*
+		 * Progress Bar Bottom
+		 *
+		.tf-response .tf-progress-bar{
+			margin-top: 36px;
+		}
+		.tf-response .tf-me-not-me{
+			margin-top: -10px;
+		}
+		.tf-response{
+			bottom: 40px;
+		}
+		*/
+
+		/*
+		 *	Progress Bar In Caption
+		 *
+		.tf-progress-bar{
+		  height: 100%;
+		  padding: 0px;
+		  width: 100%;
+		}
+		.tf-progress-bar-inner{
+		  position: absolute;
+		  background-color: rgba(39,235,95, .8);
+		  height: 100%;
+		  width: 0%;
+		  -webkit-transition: width .4s ease-in-out;
+		  -moz-transition: width .4s ease-in-out;
+		  -o-transition: width .4s ease-in-out;
+		  transition: width .4s ease-in-out;
+			border-radius: 0px;
+		}
+		.tf-progress-and-caption{
+		  margin: 15px auto;
+		  max-width: 450px;
+		  width: 90%;
+		  background-color: rgba(15,84,34, .8);
+		  border-radius: 28px;
+		  overflow: hidden;
+		  position: relative;
+		}
+		.tf-caption{
+		  background-color: transparent;
+		}
+		*/
+		.tf-progress-bar-inner{
+			background-color: #000;
+		}
+	</style>
+
 </body>
 </html>

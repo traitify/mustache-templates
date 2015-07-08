@@ -1,10 +1,18 @@
 Traitify.ui = {
+  deviceType: (
+    if /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      "Phone"
+    else
+      "desktop"
+  )
   init: (options = Object())->
     riot.observable(options)
     options.slideDeck ?= Object()
     options.slideDeck.target ?= ".tf-slide-deck"
     options.slideDeck.tag ?= "tf-slide-deck"
     options.results ?= Object()
+    Traitify.setPublicKey(options.publicKey) if options.publicKey
+    delete options.publicKey
     for item in ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"]
       dataName = item.replace(/-([a-z])/g, (g)-> g[1].toUpperCase())
       options.results[dataName] ?= Object()
@@ -23,7 +31,7 @@ Traitify.ui = {
           options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0]
           options.slideDeck.mount.slides = assessment.slides
           options.on("slideDeck.finish", ->
-            that.load()
+            that.load();
           )
           options.slideDeck.mount.initialize()
         else
@@ -38,6 +46,4 @@ Traitify.ui = {
       )
       return this
     return options
-  on: (event, callback)->
-
 }

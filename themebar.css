@@ -1,0 +1,15 @@
+.tf-progress-bar{
+  height: 100%;
+  padding: 0px;
+  width: 100%;
+}
+.tf-progress-bar-inner{
+  position: absolute;
+  background-color: rgba(39,235,95, .8);
+  height: 100%;
+  width: 0%;
+  -webkit-transition: width .4s ease-in-out;
+  -moz-transition: width .4s ease-in-out;
+  -o-transition: width .4s ease-in-out;
+  transition: width .4s ease-in-out;
+}

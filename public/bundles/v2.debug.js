@@ -888,6 +888,7 @@ riot.mountTo = riot.mount
 })();
 
 Traitify.ui = {
+  deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
   init: function(options) {
     var base, base1, base2, base3, base4, dataName, i, item, len, ref;
     if (options == null) {
@@ -906,6 +907,10 @@ Traitify.ui = {
     if (options.results == null) {
       options.results = Object();
     }
+    if (options.publicKey) {
+      Traitify.setPublicKey(options.publicKey);
+    }
+    delete options.publicKey;
     ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
     for (i = 0, len = ref.length; i < len; i++) {
       item = ref[i];
@@ -962,46 +967,39 @@ Traitify.ui = {
       return this;
     };
     return options;
-  },
-  on: function(event, callback) {}
+  }
 };
 
-riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(15,84,34, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slide-deck-container{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } @media screen and (max-width: 380px) { .tf-me-not-me{ width: 280px; } } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(39,235,95, .8); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var Cookie, slideTime, that;
+riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-progress-bar tf-vertical"><div class="tf-progress-bar-inner" riot-style="height:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-progress-bar{ display: none; } .tf-progress-and-caption .tf-progress-bar{ display: block; } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-progress-bar.tf-vertical{ height: 100%; width: 30px; position: absolute; z-index: 1; } .tf-progress-bar.tf-vertical .tf-progress-bar-inner{ width: 100%; border-radius: 15px 15px 0px 0px; bottom: 0px; position: absolute; -webkit-transition: height .4s ease-in-out; -moz-transition: height .4s ease-in-out; -o-transition: height .4s ease-in-out; transition: height .4s ease-in-out; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 0px 0px; width: 100%; overflow: hidden; position: relative; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .5s ease-in-out; -moz-transition: left .5s ease-in-out; -o-transition: left .5s ease-in-out; transition: left .5s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .tf-caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; background-color: rgba(0, 0, 0, .6); } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-progress-bar{ height: 10px; padding: 0px; width: 100%; background-color: rgba(255, 255, 255, .5) } .tf-progress-bar-inner{ position: relative; height: 100%; width: 0%; background-color: #fff; border-radius: 0px 5px 5px 0px; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var DB, slideTime, that;
 
 this.assessmentId = this.root.getAttribute("assessment-id") || opts.assessmentId;
 
 that = this;
 
+that.imageName = Traitify.ui.deviceType === "desktop" ? "image_desktop_retina" : "image_desktop";
+
 this.panelOne = Object();
 
 this.panelTwo = Object();
 
-Cookie = Object();
+if (opts.slideDeck.progressBarColor) {
+  this.progressBarColor = "background-color: " + opts.slideDeck.progressBarColor;
+}
 
-Cookie.set = function(cname, cvalue, exdays) {
-  var d, expires;
-  d = new Date;
-  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-  expires = 'expires=' + d.toUTCString();
-  document.cookie = ("tf" + that.assessmentId + cname + "=") + JSON.stringify(cvalue) + '; ' + expires;
-};
-
-Cookie.get = function(cname) {
-  var c, ca, i, name;
-  name = "tf" + that.assessmentId + cname + "=";
-  ca = document.cookie.split(';');
-  i = 0;
-  while (i < ca.length) {
-    c = ca[i];
-    while (c.charAt(0) === ' ') {
-      c = c.substring(1);
+DB = {
+  get: function(key) {
+    var value;
+    value = window.sessionStorage.getItem(key);
+    if (value && value.length !== 0) {
+      return JSON.parse(value);
     }
-    if (c.indexOf(name) === 0) {
-      return JSON.parse(c.substring(name.length, c.length));
-    }
-    i++;
+  },
+  set: function(key, value) {
+    return window.sessionStorage.setItem(key, JSON.stringify(value));
+  },
+  del: function(key) {
+    return window.sessionStorage.removeItem(key);
   }
-  return void 0;
 };
 
 this.touchDevice = false;
@@ -1010,11 +1008,7 @@ slideTime = new Date();
 
 this.processSlide = function(value) {
   var customSlides, duration, j, len, sendSlides, slide, slideIds, slides;
-  if (this.processingSlide === true) {
-    return false;
-  }
-  this.processingSlide = true;
-  that.trigger("addSlide");
+  that.trigger("slideDeck.addSlide");
   duration = new Date() - slideTime;
   slideTime = new Date();
   this.slideData[this.slides[this.index].id] = {
@@ -1022,24 +1016,18 @@ this.processSlide = function(value) {
     time_taken: duration,
     response: value
   };
-  Cookie.set("slideData", this.slideData);
+  DB.set(that.assessmentId + "slideData", this.slideData);
   if (this.images[this.index + 2] || (this.index === this.slides.length - 2 && this.images[this.index + 1])) {
-    this.onFinishedTransition = function() {
-      that.trigger("transitionEnd");
-      this.panelOne.picture = this.panelTwo.picture;
-      this.panelOne.x = this.panelTwo.x;
-      this.panelOne.y = this.panelTwo.y;
-      this.update();
-      that.panelTwo["class"] = "next";
-      that.panelOne["class"] = "current";
-      that.index++;
-      that.setSlide();
-      return that.processingSlide = false;
-    };
     if (this.transitionEvent) {
       this.animateSlide();
+      this.onFinishedTransition = function() {
+        that.trigger("transitionEnd");
+        this.index++;
+        return this.setSlide();
+      };
     } else {
-      this.onFinishedTransition();
+      this.index++;
+      this.setSlide();
     }
   } else {
     this.loadingVisible = "tf-visible";
@@ -1066,7 +1054,8 @@ this.processSlide = function(value) {
     }
     that.trigger("customSlideValues", that.customSlideValues);
     Traitify.addSlides(that.assessmentId, sendSlides).then(function(response) {
-      return opts.trigger("slideDeck.finish", that);
+      opts.trigger("slideDeck.finish", that);
+      return DB.del(that.assessmentId + "slideData");
     });
     this.infoVisible = "tf-invisible";
     this.finished = "tf-finished";
@@ -1110,15 +1099,26 @@ this.animateSlide = function() {
 
 this.setSlide = function() {
   var slideOne, slideTwo;
-  slideOne = this.slides[this.index];
-  this.panelOne.caption = slideOne.caption;
-  this.panelOne.picture = slideOne.image_desktop_retina;
-  this.panelOne.x = slideOne.focus_x;
-  this.panelOne.y = slideOne.focus_y;
+  if (this.panelTwo && this.panelTwo.picture) {
+    this.panelOne.picture = this.panelTwo.picture;
+    this.panelOne.caption = this.panelTwo.caption;
+    this.panelOne.x = this.panelTwo.x;
+    this.panelOne.y = this.panelTwo.y;
+    this.update();
+  } else {
+    slideOne = this.slides[this.index];
+    this.panelOne.caption = slideOne.caption;
+    this.panelOne.picture = slideOne[that.imageName];
+    this.panelOne.x = slideOne.focus_x;
+    this.panelOne.y = slideOne.focus_y;
+    this.update();
+  }
+  this.panelTwo["class"] = "next";
+  this.panelOne["class"] = "current";
   if (this.slides[this.index + 1]) {
     slideTwo = this.slides[this.index + 1];
     this.panelTwo.caption = slideTwo.caption;
-    this.panelTwo.picture = slideTwo.image_desktop_retina;
+    this.panelTwo.picture = slideTwo[that.imageName];
     this.panelTwo.y = slideTwo.focus_y;
     this.panelTwo.x = slideTwo.focus_x;
   }
@@ -1148,15 +1148,17 @@ this.transitionEvent = this.whichTransitionEvent();
 opts.on("slideDeck.initialized", function() {
   var el, j, len, ref, slide;
   el = document.getElementsByClassName("tf-panel-two")[0];
-  that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
-    return that.onFinishedTransition();
-  });
-  that.touch(document.querySelector(".tf-me"), function() {
-    return that.processSlide(true);
-  });
-  that.touch(document.querySelector(".tf-not-me"), function() {
-    return that.processSlide(false);
-  });
+  if (el) {
+    that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
+      return that.onFinishedTransition();
+    });
+    that.touch(document.querySelector(".tf-me"), function() {
+      return that.processSlide(true);
+    });
+    that.touch(document.querySelector(".tf-not-me"), function() {
+      return that.processSlide(false);
+    });
+  }
   if (that.customSlides == null) {
     that.customSlides = Array();
   }
@@ -1165,8 +1167,7 @@ opts.on("slideDeck.initialized", function() {
     slide = ref[j];
     that.slides.splice(slide.position, slide);
   }
-  that.update();
-  return opts.on("slideDeck.initialized");
+  return that.update();
 });
 
 this.on("mount", function() {
@@ -1181,7 +1182,7 @@ this.initialize = function() {
   this.index = 0;
   this.visible = true;
   this.update();
-  this.slideData = Cookie.get("slideData");
+  this.slideData = DB.get(that.assessmentId + "slideData");
   if (!this.slideData) {
     this.slideData = Object();
   }
@@ -1197,7 +1198,7 @@ this.initialize = function() {
   this.setSlide();
   this.setProgressBar();
   images = this.slides.map(function(slide) {
-    return slide.image_desktop_retina;
+    return slide[that.imageName];
   });
   this.imageTries = Object();
   this.images = Object();
@@ -1222,9 +1223,13 @@ this.initialize = function() {
         }
       };
       return that.images[i].onload = function() {
-        that.loadingVisible = "";
-        that.update();
-        return that.loadImage(i + 1);
+        if (that.loadingVisible !== "") {
+          that.loadingVisible = "";
+          that.update();
+        }
+        return setTimeout(function() {
+          return that.loadImage(i + 1);
+        }, 300);
       };
     }
   };
@@ -1274,34 +1279,7 @@ this.touch = function(target, callback) {
 
 });
 
-riot.tag('tf-career', '<div class="tf-career-container" if="{this.visible}"> <div class="tf-career-inner"> <div class="tf-career-body"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-details"> <div class="tf-title">{this.career.title}</div> <div class="tf-score"> <span class="tf-percent">{Math.round(this.score)}%</span> <span class="undefined">match</span> </div> <div class="tf-description">{this.career.description}</div> </div> <div class="tf-stats"> <div class="tf-mean tf-stat"> <div class="tf-stat-title">Salary Mean:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_mean} </div> </div> <div class="tf-future tf-stat"> <div class="tf-stat-title">Bright Future:</div> <div class="tf-stat-data"> <span if="{this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/sun.png" alt="Sun"> </span> <span if="{!this.career.bright_outlooks}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-median tf-stat"> <div class="tf-stat-title">Salary Median:</div> <div class="tf-stat-data"> ${this.career.salary_projection.annual_salary_median} </div> </div> <div class="tf-green tf-stat"> <div class="tf-stat-title">Green Career:</div> <div class="tf-stat-data"> <span if="{this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/green.png" alt="Green"> </span> <span if="{!this.career.green_categories}"> <img src="https://cdn.traitify.com/assets/images/career-details/block.png" alt="Block"> </span> </div> </div> <div class="tf-growth tf-stat"> <div class="tf-stat-title">Job Growth:</div> <div class="tf-stat-data">{this.career.employment_projection.percent_growth_2022}%</div> </div> <div class="tf-onet tf-stat"> <div class="tf-stat-title">O\'Net Link:</div> <div class="tf-stat-data"> <a href="http://www.onetonline.org/link/summary/{this.career.id}" target="_blank">{this.career.id}</a> </div> </div> <div class="clearfix"></div> </div> <div class="tf-experience"> <div class="tf-experience-header"> <span class="tf-experience-header-text">Experience Level</span> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.career.experience_level.id > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.career.experience_level.id > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> </div> <div class="tf-experience-body"> {this.career.experience_level.experience} </div> </div> <div class="tf-education"> <div class="tf-education-header"> <span class="tf-education-header-text">Education</span> </div> <div class="tf-education-body"> <div class="tf-education-title">{this.career.experience_level.degree}</div> <div class="tf-education-description">{this.career.experience_level.education}</div> </div> </div> <div class="tf-majors"> <div class="tf-majors-header"> <span class="tf-majors-header-text">Majors</span> </div> <div class="tf-majors-body"> <div class="tf-major" each="{this.career.majors}"> <div class="tf-major-title">{this.title}</div> <div class="tf-major-description">{this.description}</div> </div> </div> </div> </div> </div>', '.tf-career-container{ font-family: "Source Sans Pro"; font-size: 18px; line-height: 1.5; margin: 20px; } .tf-career-container .tf-invisible{ visibility: hidden; } .tf-career-container.ie{ font-family: arial; } .tf-career-container a{ color: black; text-decoration: underline; } .tf-career-container div, .tf-career-container img{ box-sizing: content-box; } .tf-career-container .tf-career-inner{ max-width: 800px; margin: 0px auto; } .tf-popout-open { overflow: hidden; } .tf-popout-open body { overflow: hidden; } .tf-popout-career { position: fixed; overflow-y: scroll; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0); background-color: rgba(0,0,0,0.5); } .tf-popout-career .tf-career-inner { background-color: white; } .tf-career-container .tf-header-inner{ color: white; padding: 10px 25px; background-color: #058fc4; } .tf-career-container .tf-header-close{ float: right; cursor: pointer; } .tf-career-container .tf-career-body{ padding: 20px; } .tf-career-container .tf-image{ width: 25%; display: inline-block; } .tf-career-container .tf-details{ position: relative; width: 70%; padding: 0 20px; display: inline-block; box-sizing: border-box; vertical-align: top; } @media (max-width: 768px) { .tf-career-container .tf-details{ margin-top: 10px; } } .tf-career-container .tf-details .tf-title{ font-weight: bold; display: inline-block; padding-right: 50px; } .tf-career-container .tf-details .tf-score{ position: absolute; top: 0; right: 0; padding: 5px; margin-top: -13px; text-align: center; font-size: 12px; line-height: 1; font-weight: bold; } .tf-career-container .tf-details .tf-score .tf-percent{ font-size: 18px; } .tf-career-container .tf-details .tf-score span{ display: block; } .tf-career-container .tf-stats, .tf-career-container .tf-experience, .tf-career-container .tf-education, .tf-career-container .tf-majors{ margin: 20px 0; } .tf-career-container .tf-majors{ margin-bottom: 0; } .tf-career-container .tf-stats .tf-stat { width: 50%; display: inline-block; float:left; box-sizing: border-box; margin-top: 10px; } @media (max-width: 768px) { .tf-career-container .tf-stats .tf-stat { width: 100%; } } .tf-career-container .tf-stats .tf-stat-title { width: 40%; float: left; text-align: right; font-weight: bold; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data { width: 60%; float: left; text-align: right; display: inline-block; box-sizing: border-box; } .tf-career-container .tf-stats .tf-stat-data-header, .tf-career-container .tf-stats .tf-stat-data-body { width: 50%; float: left; text-align: center; } .tf-career-container .tf-stats .tf-stat-data-body { text-align: right; } .tf-career-container .tf-stats .tf-stat-data-mean, .tf-career-container .tf-stats .tf-stat-data-median { width: 50%; display: inline-block; } .tf-career-container .tf-stats img { width: 23px; } .tf-career-container .tf-stats, .tf-career-container .tf-experience-header, .tf-career-container .tf-education-header, .tf-career-container .tf-majors-header{ padding: 10px 20px; } .tf-career-container .tf-experience-body, .tf-career-container .tf-education-body, .tf-career-container .tf-majors-body{ padding: 10px 20px; } .tf-career-container .tf-experience-boxes{ padding: 0px 10px; display: inline-block; } .tf-career-container .tf-experience-box{ width: 10px; height: 10px; margin-right: 2px; display: inline-block; background-color: #e2e2e2 } .tf-career-container .tf-experience-box.tf-highlighted-box{ background-color: #058fc4; } .tf-career-container .tf-education-title, .tf-career-container .tf-major-title{ font-weight: bold; } .tf-career-container .tf-major-description{ padding-bottom: 10px; } .clearfix{ clear:both; } @media (max-width: 768px) { .tf-career-container .tf-image, .tf-career-container .tf-details{ width: 100%; padding: 0; } }', function(opts) {var that;
-
-that = this;
-
-this.setCareer = function(career) {
-  this.visible = true;
-  this.career = career.career;
-  this.career.salary_projection.annual_salary_mean = this.career.salary_projection.annual_salary_mean.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-  this.career.salary_projection.annual_salary_median = this.career.salary_projection.annual_salary_median.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-  this.score = career.score;
-  return this.update();
-};
-
-if (opts.career) {
-  this.setCareer(opts.career);
-} else {
-  Traitify.getCareers(this.assessmentId).then(function(careers) {
-    var career;
-    career = careers.filter(function(career) {
-      return career.career.id === that.careerId;
-    })[0];
-    return that.setCareer(career);
-  });
-}
-
-});
-
-riot.tag('tf-careers', '<div class="tf-careers-container" if="{this.visible}"> <div class="tf-experience-filters"> <div class="tf-filter-header"> Experience Level: </div> <div class="tf-experience-filter {this.levels.indexOf(\'all\') != -1 ? \'tf-highlight-filter\' : \'\'}" onclick="{this.setAll}"> All </div><div class="tf-experience-filter {this.parent.levels.indexOf(level) != -1 ? \'tf-highlight-filter\' : \'\'} " onclick="{this.parent.toggleLevel}" each="{level in this.levelSets}">{level + 1}</div> </div> <div class="tf-career-details tf-show-details" each="{this.careers}" onclick="{this.parent.careerClick}"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-title">{this.career.title}</div> <div class="tf-description tf-fade">{this.career.description}</div> <div class="tf-experience">Experience Level</div> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.exp > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> <span class="tf-education">Education </span> <div class="tf-education-text">{this.career.experience_level.degree}</div> <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div> <div class="tf-score"> <div class="tf-clearfix"></div> <div class="tf-score-bar"> <div class="tf-score-bar-inner" riot-style="width: {Math.round(this.score)}%" data-match-rate="{Math.round(this.score)}"><div> </div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-careers-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; font-size: 24px; color: #4e4e4e; line-height: 1.5; margin: 20px; text-align: center; max-width: 900px; margin: 0px auto; } .tf-experience-filters{ text-align: right; font-weight: 600; font-size: 15px; line-height: 18px; border-radius: 3px; margin-right: 10px; overflow: hidden; } .tf-experience-filters div{ display: inline-block; } .tf-filter-header{ margin-right: 10px; } @media screen (max-width: 380px) { .tf-filter-header { width: 100%; margin-bottom: 5px; } } .tf-experience-filter{ padding: 5px 12px; background-color: #00aeef; cursor: pointer; color: #fff; } .tf-highlight-filter{ background-color: #0390cb; -moz-box-shadow: inset 1px 1px 5px #184f71; -webkit-box-shadow: inset 1px 1px 5px #184f71; box-shadow: inset 1px 1px 5px #184f71; } .tf-careers div, .tf-careers img{ box-sizing: content-box; } .tf-careers .tf-column{ box-sizing: border-box; padding: 0 10px; display: inline-block; vertical-align: top; } .tf-careers .tf-columns-1{ width: 100%; } .tf-careers .tf-columns-2{ width: 50%; } .tf-careers .tf-columns-3{ width: 33%; } .tf-careers .tf-columns-4{ width: 25%; } .tf-careers .tf-columns-5{ width: 20%; } .tf-careers .tf-columns-6{ width: 16%; } .tf-careers .tf-columns-7{ width: 14%; } .tf-careers .tf-columns-8{ width: 12.5%; } .tf-careers .tf-columns-9{ width: 11%; } .tf-careers .tf-columns-10{ width: 10%; } .tf-careers .tf-columns-11{ width: 9%; } .tf-careers .tf-columns-12{ width: 8%; } @media screen and (min-width: 300px) and (max-width: 380px) { .tf-careers .tf-column{ width: 100%; } } @media screen and (min-width: 381px) and (max-width: 800px) { .tf-careers .tf-column{ width: 50%; } } @media screen and (min-width: 801px) and (max-width: 900px) { .tf-careers .tf-column{ width: 25%; } } .tf-career-details { border: 1px solid; border-color: #e2e2e2; display: inline-block; width: 100%; margin: 10px 0; vertical-align: top; background-color: #fff; position: relative; line-height: 1.3; font-size: 13px; text-align: left; } .tf-career-details hr{ border: none; border-top: 2px solid; border-color: #e2e2e2; margin: 10px 0 5px 0; } .tf-career-details .tf-image{ width: 100%; top: 10px; margin: 0px auto; } .tf-career-details .tf-title{ margin: 10px; margin-bottom: 0px; font-weight: 600; font-size: 16px; height: 42px; /* font-size * line-height * lines to show */ -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; display: block; /* Fallback for non-webkit */ display: -webkit-box; } .tf-career-details .tf-description{ margin-top: 5px; font-weight: 400; } .tf-career-details .tf-description, .tf-career-details .tf-experience-boxes{ padding: 0px 10px 10px; } .tf-career-details .tf-experience, .tf-career-details .tf-education, .tf-career-details .tf-match-rate{ display: block; color: #2e2e2e; font-weight: 600; font-size: 15px; margin: 10px; margin-bottom: 0px; } .tf-career-details .tf-score{ margin: 3px 10px 13px; } .tf-career-details .tf-match-rate .tf-percent{ display: inline-block; float: right; text-align:right; font-weight: 400; font-size: 14px; } .tf-career-details .tf-experience-boxes { margin-top: 5px; padding-bottom: 0; } .tf-career-details .tf-experience-box{ background-color: #e2e2e2; width: 15px; height: 15px; margin-right: 2px; display: inline-block; } .tf-career-details .tf-experience-box.tf-highlighted-box{ background-color: #00aeef; } .tf-career-details .tf-education-text{ margin: 2px 10px 5px; color: #4e4e4e; font-weight: 300; } .tf-career-details .tf-fade{ position: relative; height: 55px; overflow: hidden; } .tf-career-details .tf-fade:after { content: ""; text-align: right; position: absolute; bottom: 0; right: 0; width: 60%; height: 16px; background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 70%); } .tf-score-bar{ background-color: #e3e3e3; height:15px; display: block; } .tf-score-bar-inner{ background-color: #00aeef; height: 100%; } .tf-score-bar-inner[data-match-rate=\'100\'], .tf-score-bar-inner[data-match-rate^=\'9\'] { background-color: #4bc275; } .tf-score-bar-inner[data-match-rate^=\'8\'] { background-color: #6fd172; } .tf-score-bar-inner[data-match-rate^=\'7\'] { background-color: #99d16f; } .tf-score-bar-inner[data-match-rate^=\'6\'] { background-color: #bbd16f; } .tf-score-bar-inner[data-match-rate^=\'5\'] { background-color: #ced16f; } .tf-score-bar-inner[data-match-rate^=\'4\'] { background-color: #ece129; } .tf-score-bar-inner[data-match-rate^=\'3\'] { background-color: #ecb329; } .tf-score-bar-inner[data-match-rate^=\'2\'] { background-color: #f28316; } .tf-score-bar-inner[data-match-rate^=\'1\'] { background-color: #f25416; } .tf-career-details.tf-show-details:hover { cursor: pointer; } .tf-clearfix{ clear:both; }', function(opts) {var that;
+riot.tag('tf-careers', '<div class="tf-careers-container" if="{this.visible}"> <div class="tf-experience-filters"> <div class="tf-filter-header"> Experience Level: </div> <div class="tf-experience-filter {this.levels.indexOf(\'all\') != -1 ? \'tf-highlight-filter\' : \'\'}" onclick="{this.setAll}"> All </div><div class="tf-experience-filter {this.parent.levels.indexOf(level) != -1 ? \'tf-highlight-filter\' : \'\'} " onclick="{this.parent.toggleLevel}" each="{level in this.levelSets}">{level + 1}</div> </div> <div class="tf-career-details tf-show-details" each="{this.careers}" onclick="{this.parent.careerClick}"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-title">{this.career.title}</div> <div class="tf-description tf-fade">{this.career.description}</div> <div class="tf-experience">Experience Level</div> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.exp > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> <span class="tf-education">Education </span> <div class="tf-education-text">{this.career.experience_level.degree}</div> <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div> <div class="tf-score"> <div class="tf-clearfix"></div> <div class="tf-score-bar"> <div class="tf-score-bar-inner" riot-style="width: {Math.round(this.score)}%" data-match-rate="{Math.round(this.score)}"><div> </div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-careers-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; font-size: 24px; color: #4e4e4e; line-height: 1.5; margin: 20px; text-align: center; max-width: 900px; margin: 0px auto; box-sizing: border-box; } .tf-experience-filters{ text-align: right; font-weight: 600; font-size: 15px; line-height: 18px; border-radius: 3px; margin-right: 10px; overflow: hidden; } .tf-experience-filters div{ display: inline-block; } .tf-filter-header{ margin-right: 10px; } @media screen and (max-width: 380px) { .tf-filter-header { width: 100%; display: block; margin-bottom: 5px; } } .tf-experience-filter{ padding: 5px 12px; background-color: #00aeef; cursor: pointer; color: #fff; } .tf-highlight-filter{ background-color: #0390cb; -moz-box-shadow: inset 1px 1px 5px #184f71; -webkit-box-shadow: inset 1px 1px 5px #184f71; box-shadow: inset 1px 1px 5px #184f71; } .tf-career-details { border: 1px solid; border-color: #e2e2e2; display: block; width: 90%; margin: 10px 5%; vertical-align: top; background-color: #fff; position: relative; line-height: 1.3; font-size: 13px; text-align: left; } @media screen and (min-width: 568px) { .tf-career-details { float: left; width: 46%; margin: 10px; } } @media screen and (min-width: 768px) { .tf-career-details { float: left; width: 31%; margin: 10px 1%; } } @media screen and (min-width: 900px) { .tf-career-details { float: left; width: 22.7%; } } .tf-career-details .tf-image{ width: 100%; top: 10px; margin: 0px auto; } .tf-career-details .tf-title{ margin: 10px; margin-bottom: 0px; font-weight: 600; font-size: 16px; height: 42px; /* font-size * line-height * lines to show */ -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; display: block; /* Fallback for non-webkit */ display: -webkit-box; } .tf-career-details .tf-description{ margin-top: 5px; font-weight: 400; } .tf-career-details .tf-description, .tf-career-details .tf-experience-boxes{ padding: 0px 10px 10px; } .tf-career-details .tf-experience, .tf-career-details .tf-education, .tf-career-details .tf-match-rate{ display: block; color: #2e2e2e; font-weight: 600; font-size: 15px; margin: 10px; margin-bottom: 0px; } .tf-career-details .tf-score{ margin: 3px 10px 13px; } .tf-career-details .tf-match-rate .tf-percent{ display: inline-block; float: right; text-align:right; font-weight: 400; font-size: 14px; } .tf-career-details .tf-experience-boxes { margin-top: 5px; padding-bottom: 0; } .tf-career-details .tf-experience-box{ background-color: #e2e2e2; width: 15px; height: 15px; margin-right: 2px; display: inline-block; } .tf-career-details .tf-experience-box.tf-highlighted-box{ background-color: #00aeef; } .tf-career-details .tf-education-text{ margin: 2px 10px 5px; color: #4e4e4e; font-weight: 300; } .tf-career-details .tf-fade{ position: relative; height: 55px; overflow: hidden; } .tf-career-details .tf-fade:after { content: ""; text-align: right; position: absolute; bottom: 0; right: 0; width: 60%; height: 16px; background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 70%); } .tf-score-bar{ background-color: #e3e3e3; height:15px; display: block; } .tf-score-bar-inner{ background-color: #00aeef; height: 100%; } .tf-score-bar-inner[data-match-rate=\'100\'], .tf-score-bar-inner[data-match-rate^=\'9\'] { background-color: #4bc275; } .tf-score-bar-inner[data-match-rate^=\'8\'] { background-color: #6fd172; } .tf-score-bar-inner[data-match-rate^=\'7\'] { background-color: #99d16f; } .tf-score-bar-inner[data-match-rate^=\'6\'] { background-color: #bbd16f; } .tf-score-bar-inner[data-match-rate^=\'5\'] { background-color: #ced16f; } .tf-score-bar-inner[data-match-rate^=\'4\'] { background-color: #ece129; } .tf-score-bar-inner[data-match-rate^=\'3\'] { background-color: #ecb329; } .tf-score-bar-inner[data-match-rate^=\'2\'] { background-color: #f28316; } .tf-score-bar-inner[data-match-rate^=\'1\'] { background-color: #f25416; } .tf-career-details.tf-show-details:hover { cursor: pointer; } .tf-clearfix{ clear:both; }', function(opts) {var that;
 
 this.assessmentId = this.root.getAttribute("assessment-id");
 
@@ -1317,30 +1295,14 @@ if (this.initialized) {
   opts.trigger("careers.initialized");
 }
 
-this.detailsTarget = opts.detailsTarget ? opts.details.target : ".tf-career";
-
 this.careerClick = function() {
-  var career, careerWidget, i, len, ref, results;
+  var career;
   career = this;
-  career = {
+  this.currentCareer = {
     career: career.career,
     score: career.score
   };
-  ref = that.careerWidgets;
-  results = [];
-  for (i = 0, len = ref.length; i < len; i++) {
-    careerWidget = ref[i];
-    results.push(careerWidget.setCareer(career));
-  }
-  return results;
-};
-
-this.mountDetails = function() {
-  var career;
-  career = this.careers[0];
-  return this.careerWidgets = riot.mount(that.detailsTarget, "tf-career", {
-    career: career
-  });
+  return opts.trigger("careers.click");
 };
 
 this.setAll = function() {
@@ -1457,7 +1419,7 @@ if (opts.personality_types) {
 
 });
 
-riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container" if="{this.visible}"> <div each="{trait in this.traits}" class="tf-trait" riot-style="border-color:#{trait.badge.color_1}"> <div class="tf-background-color" riot-style="background-color: #{trait.badge.color_1}"></div> <div class="tf-name">{trait.name}</div> <div class="tf-definition">{trait.definition}</div> <div class="tf-background" riot-style="background-image:url({trait.badge.image_medium})"></div> </div> </div>', '.tf-personality-traits-container .tf-background-color{ opacity: .03; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; } .tf-personality-traits-container div, .tf-personality-traits-container img{ box-sizing: content-box; } .tf-personality-traits-container .your-top-traits{ font-size: 24px; margin: 20px; text-align: center; } .tf-personality-traits-container{ max-width:800px; margin:0px auto; text-align: center; font-family: "Source Sans Pro"; } .tf-personality-traits-container .tf-trait{ border-top: 6px solid; border-color: #99aaff; display: inline-block; width: 180px; margin: 5px; vertical-align:top; background-color:#fff; height: 180px; position:relative; line-height: 1.2em; text-align:center; } .tf-personality-traits-container.ie .tf-trait{ height:280px; } @media (max-width: 768px) { tf-traits .personality-traits .tf-trait{ width:45%; } } .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px 20px; margin-bottom: 0px; display: inline-block; font-weight: 600; text-align: center; } .tf-personality-traits-container .tf-trait .tf-definition{ padding: 0px 20px; margin-top: 10px; font-size:14px; font-weight: 400; text-align: left; } .tf-personality-traits-container .tf-trait .tf-background{ width: 52px; height: 52px; right: 20px; bottom: 20px; position:absolute; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: .15; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; } .tf-personality-traits-container .tf-trait:hover .tf-background{ opacity:.8; }', function(opts) {var that;
+riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container" if="{this.visible}"> <div each="{trait in this.traits}" class="tf-trait" riot-style="border-color:#{trait.badge.color_1}"> <div class="tf-background-color" riot-style="background-color: #{trait.badge.color_1}"></div> <div class="tf-name">{trait.name}</div> <div class="tf-definition">{trait.definition}</div> <div class="tf-background" riot-style="background-image:url({trait.badge.image_medium})"></div> </div> </div>', '.tf-personality-traits-container .tf-background-color{ opacity: .03; position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; } .tf-personality-traits-container div, .tf-personality-traits-container img{ box-sizing: content-box; } .tf-personality-traits-container .your-top-traits{ font-size: 24px; margin: 20px; text-align: center; } .tf-personality-traits-container{ max-width:800px; margin:0px auto; text-align: center; font-family: "Source Sans Pro"; } .tf-personality-traits-container .tf-trait{ border-top: 6px solid; border-color: #99aaff; display: inline-block; max-width: 180px; width: 45%; margin: 5px; vertical-align:top; background-color:#fff; height: 180px; position:relative; line-height: 1.2em; text-align:center; } .tf-personality-traits-container.ie .tf-trait{ height:280px; } @media (max-width: 768px) { tf-traits .personality-traits .tf-trait{ width:45%; } } .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px 20px; margin-bottom: 0px; display: inline-block; font-weight: 600; text-align: center; } @media (max-width: 768px) { .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px auto; } } .tf-personality-traits-container .tf-trait .tf-definition{ padding: 0px 20px; margin-top: 10px; font-size:14px; font-weight: 400; text-align: left; } .tf-personality-traits-container .tf-trait .tf-background{ width: 52px; height: 52px; right: 20px; bottom: 20px; position:absolute; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: .15; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; } .tf-personality-traits-container .tf-trait:hover .tf-background{ opacity:.8; }', function(opts) {var that;
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 
@@ -1498,7 +1460,7 @@ if (this.personality_traits) {
 
 });
 
-riot.tag('tf-personality-types', '<div class="tf-types-container" if="{this.visible}"> <div class="tf-types-scroller"> <div class="tf-types"> <div each="{type in this.currentTypes}" class="tf-type {type.active}" onclick="{parent.handleClick}"> <div class="tf-name-small">{type.name}</div> <div class="tf-badge-score-container" riot-style="border-color: #{type.badge.color_1}"> <img class="tf-badge" riot-src="{type.badge.image_medium}"> </div> <div class="tf-percent"> {type.score} / 100 </div> </div> <div class="tf-pointer" riot-style="left: {this.pointerPosition}px; background-color: #{this.pointerColor}"></div> </div> </div> <div class="tf-description"> {this.description} </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-pointer{ margin-left: 20px; position: absolute; width: 86px; height: 10px; border-radius: 5px; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-types-scroller{ width: 100%; overflow-x: auto; overflow-y: hidden; margin-bottom: 35px; text-align: center; } .tf-types-container{ font-family: "Source Sans Pro"; } .tf-types-container .tf-score{ border-bottom: 1px solid #fff; font-size: 22px; } .tf-types-container .tf-name{ font-size: 28px; margin-top: 15px; text-align: center; } .tf-types-container .tf-types .tf-name-small{ font-size: 16px; margin-top: 0px; } .tf-types-container .tf-badge{ width: 100%; } .tf-badge-score-background{ width: 100%; position: relative; height: 100%; opacity: .1; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; } .tf-types-container .tf-badge-score-container{ border: 1px solid; width: 40px; height: 40px; position: relative; overflow: hidden; border-radius: 50%; padding: 22px; margin: 5px auto; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; -webkit-transform: translate3d(0, 0, 0); -moz-transform: translate3d(0, 0, 0) } .tf-types-container .tf-type .tf-badge{ opacity: .9; } .tf-types-container .tf-percent{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; position: relative; color: #bbb; } .tf-types-container .tf-badge-score-background{ width: 100%; height: 100%; opacity: .1; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)"; position: absolute; left: 0px; bottom: 0px; } .tf-types-container .tf-badge-score{ width: 100%; height: 0%; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"; position: absolute; left: 0px; bottom: 0px; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; opacity: .3; } .tf-types-container .tf-type.tf-active .tf-badge-score{ height: 100%; bottom: 0px } .tf-types-container .tf-type:hover .tf-percent{ width: 100%; color: #333; } .tf-types-container .tf-types{ margin: 0px auto; position: relative; display: inline-block; width:882px; margin-bottom: 10px; } .tf-types-container .tf-type{ text-align: center; cursor: pointer; display: inline-block; position: relative; display: inline-block; padding: 10px; margin: 0px 10px; } .tf-types-container .tf-description{ max-width: 600px; margin: 0px auto; text-align: justify; height: 130px; }', function(opts) {var that;
+riot.tag('tf-personality-types', '<div class="tf-types-container" if="{this.visible}"> <div class="tf-types-scroller"> <div class="tf-types"> <div each="{type in this.currentTypes}" class="tf-type {type.active}" onclick="{parent.handleClick}"> <div class="tf-name-small">{type.name}</div> <div class="tf-badge-score-container" riot-style="border-color: #{type.badge.color_1}"> <img class="tf-badge" riot-src="{type.badge.image_medium}"> </div> <div class="tf-percent"> {type.score} / 100 </div> </div> <div class="tf-pointer" riot-style="left: {this.pointerPosition}px; background-color: #{this.pointerColor}"></div> </div> </div> <div class="tf-description"> {this.description} </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-pointer{ margin-left: 20px; position: absolute; width: 86px; height: 10px; border-radius: 5px; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-types-scroller{ width: 100%; overflow-x: auto; overflow-y: hidden; margin-bottom: 35px; text-align: center; } .tf-types-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; } .tf-types-container .tf-score{ border-bottom: 1px solid #fff; font-size: 22px; } .tf-types-container .tf-name{ font-size: 28px; margin-top: 15px; text-align: center; } .tf-types-container .tf-types .tf-name-small{ font-size: 16px; margin-top: 0px; } .tf-types-container .tf-badge{ width: 100%; } .tf-badge-score-background{ width: 100%; position: relative; height: 100%; opacity: .1; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; } .tf-types-container .tf-badge-score-container{ border: 1px solid; width: 40px; height: 40px; position: relative; overflow: hidden; border-radius: 50%; padding: 22px; margin: 7px auto 10px; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; -webkit-transform: translate3d(0, 0, 0); -moz-transform: translate3d(0, 0, 0) } .tf-types-container .tf-type .tf-badge{ opacity: .9; } .tf-types-container .tf-percent{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; position: relative; color: #bbb; } .tf-types-container .tf-badge-score-background{ width: 100%; height: 100%; opacity: .1; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)"; position: absolute; left: 0px; bottom: 0px; } .tf-types-container .tf-badge-score{ width: 100%; height: 0%; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"; position: absolute; left: 0px; bottom: 0px; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; opacity: .3; } .tf-types-container .tf-type:hover .tf-percent{ color: #333; } .tf-types-container .tf-types{ margin: 0px auto; position: relative; display: inline-block; width:882px; margin-bottom: 10px; } .tf-types-container .tf-type{ text-align: center; cursor: pointer; display: inline-block; position: relative; display: inline-block; padding: 10px; margin: 0px 10px; } .tf-types-container .tf-description{ max-width: 600px; margin: 0px auto; text-align: justify; font-size: 16px; }', function(opts) {var that;
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 
@@ -1552,7 +1514,7 @@ that.initialize = function() {
 
 });
 
-riot.tag('tf-personality-blend', '<div class="tf-blends-container" if="{this.visible}"> <div class="tf-badges"> <div class="tf-badge" riot-style="border-color: {this.type1.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type1.badge.image_medium}"> </div> <div class="tf-badge" riot-style="border-color: {this.type2.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type2.badge.image_medium}"> </div> </div> <h2>{this.type1.name} / {this.type2.name}</h2> <div class="description">{this.description}</div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-blends-container .tf-badge-background{ width: 100%; height: 100%; position: absolute; opacity: .2; top: 0px; left: 0px; } .tf-blends-container{ width: 100%; } .tf-blends-container{ font-family: "Source Sans Pro"; padding: 10px; } .tf-blends-container.ie{ font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif"; } .tf-blends-container div, img{ box-sizing: content-box; width: 100%; } .tf-blends-container .tf-badge{ width: 22%; padding:12%; position: relative; border-radius: 50%; border: 2px solid; display: inline-block; overflow: hidden; } .tf-blends-container .tf-badge:first-child{ margin-right: -4%; z-index: 1; } .tf-blends-container .tf-badge:last-child{ margin-left: -4%; } .tf-blends-container .tf-badges{ width: 100%; max-width: 330px; margin: 0px auto; text-align:center; } .tf-blends-container h2{ text-align: center; font-size: 25px; font-weight: 400; } .tf-blends-container .description{ max-width: 800px; margin: 0px auto; text-align: justify; }', function(opts) {var that;
+riot.tag('tf-personality-blend', '<div class="tf-blends-container" if="{this.visible}"> <div class="tf-badges"> <div class="tf-badge" riot-style="border-color: {this.type1.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type1.badge.image_medium}"> </div> <div class="tf-badge" riot-style="border-color: {this.type2.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type2.badge.image_medium}"> </div> </div> <h2 class="tf-blend-title">{this.type1.name} / {this.type2.name}</h2> <div class="tf-blend-description">{this.description}</div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-blends-container{ width: 100%; font-family: "Source Sans Pro", Arial, Verdana, sans-serif; padding: 20px 20px 10px; box-sizing: border-box; } .tf-blends-container .tf-badge-background{ width: 100%; height: 100%; position: absolute; opacity: .2; top: 0px; left: 0px; } img{ width: 100%; } .tf-blends-container .tf-badges{ width: 100%; max-width: 330px; margin: 0px auto; text-align:center; } .tf-blends-container .tf-badge{ width: 22%; padding:12%; position: relative; border-radius: 50%; border: 2px solid; display: inline-block; overflow: hidden; } .tf-blends-container .tf-badge:first-child{ margin-right: -4%; z-index: 1; } .tf-blends-container .tf-badge:last-child{ margin-left: -4%; } .tf-blend-title { text-align: center; font-size: 25px; font-weight: 400; } .tf-blend-description{ margin: 0px auto 30px; text-align: justify; font-size: 15px; } @media screen and (min-width: 768px) { .tf-blend-description { font-size: 17px; max-width: 580px; } } @media screen and (min-width: 900px) { .tf-blend-description { font-size: 18px; max-width: 750px; } }', function(opts) {var that;
 
 this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
 

@@ -1,39 +1,33 @@
-riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="progress-bar-inner" riot-style="width:{this.progressBar}%"></div> <div class="caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 15px auto; max-width: 450px; width: 90%; background-color: rgba(15,84,34, .8); border-radius: 28px; overflow: hidden; position: relative; } .tf-slide-deck-container{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .4s ease-in-out; -moz-transition: left .4s ease-in-out; -o-transition: left .4s ease-in-out; transition: left .4s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } @media screen and (max-width: 380px) { .tf-me-not-me{ width: 280px; } } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .progress-bar{ height: 100%; padding: 0px; width: 100%; } .progress-bar-inner{ position: absolute; background-color: rgba(39,235,95, .8); height: 100%; width: 0%; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var Cookie, slideTime, that;
+riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-progress-bar tf-vertical"><div class="tf-progress-bar-inner" riot-style="height:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-progress-bar{ display: none; } .tf-progress-and-caption .tf-progress-bar{ display: block; } .tf-cover{ background-color: #fff; position: absolute; top: 0px; left: 0px; right: 0px; bottom: 0px; z-index: 2; } .tf-progress-bar.tf-vertical{ height: 100%; width: 30px; position: absolute; z-index: 1; } .tf-progress-bar.tf-vertical .tf-progress-bar-inner{ width: 100%; border-radius: 15px 15px 0px 0px; bottom: 0px; position: absolute; -webkit-transition: height .4s ease-in-out; -moz-transition: height .4s ease-in-out; -o-transition: height .4s ease-in-out; transition: height .4s ease-in-out; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 0px 0px; width: 100%; overflow: hidden; position: relative; } .tf-slide-deck-container.tf-finished{ height: 0px; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro"; text-align: center; margin: 0px auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .5s ease-in-out; -moz-transition: left .5s ease-in-out; -o-transition: left .5s ease-in-out; transition: left .5s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .tf-caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; background-color: rgba(0, 0, 0, .6); } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0px; overflow: hidden; border-radius: 25px; margin: 0px auto; } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0px; margin: 0px; } .tf-progress-bar{ height: 10px; padding: 0px; width: 100%; background-color: rgba(255, 255, 255, .5) } .tf-progress-bar-inner{ position: relative; height: 100%; width: 0%; background-color: #fff; border-radius: 0px 5px 5px 0px; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var DB, slideTime, that;
 
 this.assessmentId = this.root.getAttribute("assessment-id") || opts.assessmentId;
 
 that = this;
 
+that.imageName = Traitify.ui.deviceType === "desktop" ? "image_desktop_retina" : "image_desktop";
+
 this.panelOne = Object();
 
 this.panelTwo = Object();
 
-Cookie = Object();
+if (opts.slideDeck.progressBarColor) {
+  this.progressBarColor = "background-color: " + opts.slideDeck.progressBarColor;
+}
 
-Cookie.set = function(cname, cvalue, exdays) {
-  var d, expires;
-  d = new Date;
-  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
-  expires = 'expires=' + d.toUTCString();
-  document.cookie = ("tf" + that.assessmentId + cname + "=") + JSON.stringify(cvalue) + '; ' + expires;
-};
-
-Cookie.get = function(cname) {
-  var c, ca, i, name;
-  name = "tf" + that.assessmentId + cname + "=";
-  ca = document.cookie.split(';');
-  i = 0;
-  while (i < ca.length) {
-    c = ca[i];
-    while (c.charAt(0) === ' ') {
-      c = c.substring(1);
+DB = {
+  get: function(key) {
+    var value;
+    value = window.sessionStorage.getItem(key);
+    if (value && value.length !== 0) {
+      return JSON.parse(value);
     }
-    if (c.indexOf(name) === 0) {
-      return JSON.parse(c.substring(name.length, c.length));
-    }
-    i++;
+  },
+  set: function(key, value) {
+    return window.sessionStorage.setItem(key, JSON.stringify(value));
+  },
+  del: function(key) {
+    return window.sessionStorage.removeItem(key);
   }
-  return void 0;
 };
 
 this.touchDevice = false;
@@ -42,11 +36,7 @@ slideTime = new Date();
 
 this.processSlide = function(value) {
   var customSlides, duration, j, len, sendSlides, slide, slideIds, slides;
-  if (this.processingSlide === true) {
-    return false;
-  }
-  this.processingSlide = true;
-  that.trigger("addSlide");
+  that.trigger("slideDeck.addSlide");
   duration = new Date() - slideTime;
   slideTime = new Date();
   this.slideData[this.slides[this.index].id] = {
@@ -54,24 +44,18 @@ this.processSlide = function(value) {
     time_taken: duration,
     response: value
   };
-  Cookie.set("slideData", this.slideData);
+  DB.set(that.assessmentId + "slideData", this.slideData);
   if (this.images[this.index + 2] || (this.index === this.slides.length - 2 && this.images[this.index + 1])) {
-    this.onFinishedTransition = function() {
-      that.trigger("transitionEnd");
-      this.panelOne.picture = this.panelTwo.picture;
-      this.panelOne.x = this.panelTwo.x;
-      this.panelOne.y = this.panelTwo.y;
-      this.update();
-      that.panelTwo["class"] = "next";
-      that.panelOne["class"] = "current";
-      that.index++;
-      that.setSlide();
-      return that.processingSlide = false;
-    };
     if (this.transitionEvent) {
       this.animateSlide();
+      this.onFinishedTransition = function() {
+        that.trigger("transitionEnd");
+        this.index++;
+        return this.setSlide();
+      };
     } else {
-      this.onFinishedTransition();
+      this.index++;
+      this.setSlide();
     }
   } else {
     this.loadingVisible = "tf-visible";
@@ -98,7 +82,8 @@ this.processSlide = function(value) {
     }
     that.trigger("customSlideValues", that.customSlideValues);
     Traitify.addSlides(that.assessmentId, sendSlides).then(function(response) {
-      return opts.trigger("slideDeck.finish", that);
+      opts.trigger("slideDeck.finish", that);
+      return DB.del(that.assessmentId + "slideData");
     });
     this.infoVisible = "tf-invisible";
     this.finished = "tf-finished";
@@ -142,15 +127,26 @@ this.animateSlide = function() {
 
 this.setSlide = function() {
   var slideOne, slideTwo;
-  slideOne = this.slides[this.index];
-  this.panelOne.caption = slideOne.caption;
-  this.panelOne.picture = slideOne.image_desktop_retina;
-  this.panelOne.x = slideOne.focus_x;
-  this.panelOne.y = slideOne.focus_y;
+  if (this.panelTwo && this.panelTwo.picture) {
+    this.panelOne.picture = this.panelTwo.picture;
+    this.panelOne.caption = this.panelTwo.caption;
+    this.panelOne.x = this.panelTwo.x;
+    this.panelOne.y = this.panelTwo.y;
+    this.update();
+  } else {
+    slideOne = this.slides[this.index];
+    this.panelOne.caption = slideOne.caption;
+    this.panelOne.picture = slideOne[that.imageName];
+    this.panelOne.x = slideOne.focus_x;
+    this.panelOne.y = slideOne.focus_y;
+    this.update();
+  }
+  this.panelTwo["class"] = "next";
+  this.panelOne["class"] = "current";
   if (this.slides[this.index + 1]) {
     slideTwo = this.slides[this.index + 1];
     this.panelTwo.caption = slideTwo.caption;
-    this.panelTwo.picture = slideTwo.image_desktop_retina;
+    this.panelTwo.picture = slideTwo[that.imageName];
     this.panelTwo.y = slideTwo.focus_y;
     this.panelTwo.x = slideTwo.focus_x;
   }
@@ -180,15 +176,17 @@ this.transitionEvent = this.whichTransitionEvent();
 opts.on("slideDeck.initialized", function() {
   var el, j, len, ref, slide;
   el = document.getElementsByClassName("tf-panel-two")[0];
-  that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
-    return that.onFinishedTransition();
-  });
-  that.touch(document.querySelector(".tf-me"), function() {
-    return that.processSlide(true);
-  });
-  that.touch(document.querySelector(".tf-not-me"), function() {
-    return that.processSlide(false);
-  });
+  if (el) {
+    that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
+      return that.onFinishedTransition();
+    });
+    that.touch(document.querySelector(".tf-me"), function() {
+      return that.processSlide(true);
+    });
+    that.touch(document.querySelector(".tf-not-me"), function() {
+      return that.processSlide(false);
+    });
+  }
   if (that.customSlides == null) {
     that.customSlides = Array();
   }
@@ -197,8 +195,7 @@ opts.on("slideDeck.initialized", function() {
     slide = ref[j];
     that.slides.splice(slide.position, slide);
   }
-  that.update();
-  return opts.on("slideDeck.initialized");
+  return that.update();
 });
 
 this.on("mount", function() {
@@ -213,7 +210,7 @@ this.initialize = function() {
   this.index = 0;
   this.visible = true;
   this.update();
-  this.slideData = Cookie.get("slideData");
+  this.slideData = DB.get(that.assessmentId + "slideData");
   if (!this.slideData) {
     this.slideData = Object();
   }
@@ -229,7 +226,7 @@ this.initialize = function() {
   this.setSlide();
   this.setProgressBar();
   images = this.slides.map(function(slide) {
-    return slide.image_desktop_retina;
+    return slide[that.imageName];
   });
   this.imageTries = Object();
   this.images = Object();
@@ -254,9 +251,13 @@ this.initialize = function() {
         }
       };
       return that.images[i].onload = function() {
-        that.loadingVisible = "";
-        that.update();
-        return that.loadImage(i + 1);
+        if (that.loadingVisible !== "") {
+          that.loadingVisible = "";
+          that.update();
+        }
+        return setTimeout(function() {
+          return that.loadImage(i + 1);
+        }, 300);
       };
     }
   };

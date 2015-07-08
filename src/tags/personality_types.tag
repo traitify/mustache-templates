@@ -44,7 +44,7 @@
       text-align: center;
     }
     .tf-types-container{
-      font-family: "Source Sans Pro";
+      font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
     }
     .tf-types-container .tf-score{
       border-bottom: 1px solid #fff;
@@ -63,12 +63,12 @@
       width: 100%;
     }
     .tf-badge-score-background{
-        width: 100%;
-        position: relative;
-        height: 100%;
-        opacity: .1;
-        -webkit-backface-visibility: hidden;
-        -moz-backface-visibility: hidden;
+			width: 100%;
+			position: relative;
+			height: 100%;
+			opacity: .1;
+			-webkit-backface-visibility: hidden;
+			-moz-backface-visibility: hidden;
     }
     .tf-types-container .tf-badge-score-container{
       border: 1px solid;
@@ -78,7 +78,7 @@
       overflow: hidden;
       border-radius: 50%;
       padding: 22px;
-      margin: 5px auto;
+      margin: 7px auto 10px;
       -webkit-backface-visibility: hidden;
       -moz-backface-visibility: hidden;
       -webkit-transform: translate3d(0, 0, 0);
@@ -117,12 +117,7 @@
       transition: all .2s ease-in-out;
       opacity: .3;
     }
-    .tf-types-container .tf-type.tf-active .tf-badge-score{
-      height: 100%;
-      bottom: 0px
-    }
     .tf-types-container .tf-type:hover .tf-percent{
-      width: 100%;
       color: #333;
     }
     .tf-types-container .tf-types{
@@ -145,7 +140,7 @@
       max-width: 600px;
       margin: 0px auto;
       text-align: justify;
-      height: 130px;
+			font-size: 16px;
     }
   </style>
   <script>

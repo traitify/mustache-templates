@@ -1,5 +1,11 @@
 QUnit.module("Slide Deck", {
   beforeEach: function() {
+    var i, keyName, len, ref;
+    ref = Object.keys(window.sessionStorage);
+    for (i = 0, len = ref.length; i < len; i++) {
+      keyName = ref[i];
+      window.sessionStorage.removeItem(keyName);
+    }
     return $$.removeCookie("tfassessment-idslideData");
   }
 });
@@ -11,7 +17,7 @@ QUnit.test("Initialized", function(assert) {
   $$("#test-container").html(testSetup());
   widgets = window.Traitify.ui.init();
   widgets.on("slideDeck.initialized", function() {
-    assert.ok(document.querySelector(".caption").innerHTML === "hi", "Passed!");
+    assert.ok(document.querySelector(".tf-caption").innerHTML === "hi", "Passed!");
     return done();
   });
   widgets.assessmentId = "assessment-id";
@@ -26,7 +32,7 @@ QUnit.test("Click Me", function(assert) {
   widgets = window.Traitify.ui.init();
   widgets.on("slideDeck.initialized", function() {
     $$(".tf-me").trigger("click");
-    assert.ok(document.querySelector(".caption").innerHTML === "hi", "Passed!");
+    assert.ok(document.querySelector(".tf-caption").innerHTML === "hi", "Passed!");
     return done();
   });
   widgets.assessmentId = "assessment-id";
@@ -41,7 +47,7 @@ QUnit.test("Click Not Me", function(assert) {
   widgets = window.Traitify.ui.init();
   widgets.on("slideDeck.initialized", function() {
     $$(".tf-not-me").trigger("click");
-    assert.ok(document.querySelector(".caption").innerHTML === "hi", "Passed!");
+    assert.ok(document.querySelector(".tf-caption").innerHTML === "hi", "Passed!");
     return done();
   });
   widgets.assessmentId = "assessment-id";
@@ -84,7 +90,7 @@ QUnit.test("Click To End Of Slider", function(assert) {
       return checkReady();
     });
     return intervals = setInterval(function() {
-      if (Object.keys(that.slideData).length === that.allSlides.length - 1) {
+      if (Object.keys(that.slideData).length === that.allSlides.length) {
         clearInterval(intervals);
       }
       return $$(".tf-not-me").trigger("click");

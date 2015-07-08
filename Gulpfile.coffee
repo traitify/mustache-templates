@@ -15,14 +15,12 @@ uglify = require('gulp-uglify')
 rename = require("gulp-rename")
 gzip = require('gulp-gzip')
 notify = require("gulp-notify")
-process.setMaxListeners(50)
 
 gulp.task('coffee', ->
   gulp.src('./src/**/*.coffee')
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(gulp.dest('./public/js'))
 )
-
 
 gulp.task 'riot', ->
   gulp.src './src/**/*.tag'
@@ -34,8 +32,7 @@ gulp.task('webserver', ->
     .pipe(webserver({
       livereload: true,
       directoryListing: false,
-      port: 8080,
-      open: true
+      port: 8080
     }))
 )
 
@@ -108,27 +105,21 @@ gulp.task('bundles', ->
       res.redirect(writePath(".min").replace("./public", ""))
     )
   )
+
   app.use(express.static(path.join(__dirname, 'public')));
   app.listen(3000)
 )
 
-gulp.task("traitify-server", (req, res)->
-  express = require("express")
-  cors = require("cors")
-  app = express()
-  app.use(cors())
-  app.post("/assessments", (req, res)->
+gulp.task("traitify-config", (req, res)->
     traitify.setHost(process.env.TF_HOST)
     traitify.setVersion("v1")
     traitify.setSecretKey(process.env.TF_SECRET_KEY)
-    traitify.createAssessment(req.query.deck, (assessment)->
-      res.send(assessment)
+    traitify.createAssessment("career-deck", (assessment)->
+      assessment
+      assessment.publicKey = process.env.TF_PUBLIC_KEY
+      assessment.host = process.env.TF_HOST
+      fs.writeFileSync("./public/assessment.json", JSON.stringify(assessment))
     )
-  )
-  app.post("/credentials", (req, res)->
-    res.send({publicKey: process.env.TF_PUBLIC_KEY, host: process.env.TF_HOST})
-  )
-  app.listen(1376)
 )
 
 gulp.task("test", ->
@@ -141,4 +132,4 @@ gulp.task("test", ->
 )
 
 
-gulp.task('default', ['coffee', 'webserver', 'watch', 'traitify-server'])
+gulp.task('default', ['coffee', 'webserver', 'watch', 'traitify-config'])

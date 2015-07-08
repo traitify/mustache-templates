@@ -34,7 +34,8 @@
       border-top: 6px solid;
       border-color: #99aaff;
       display: inline-block;
-      width: 180px;
+      max-width: 180px;
+      width: 45%;
       margin: 5px;
       vertical-align:top;
       background-color:#fff;
@@ -57,6 +58,11 @@
       display: inline-block;
       font-weight: 600;
       text-align: center;
+    }
+    @media (max-width: 768px) {
+      .tf-personality-traits-container .tf-trait .tf-name{
+        margin: 20px auto;
+      }
     }
     .tf-personality-traits-container .tf-trait .tf-definition{
       padding: 0px 20px;

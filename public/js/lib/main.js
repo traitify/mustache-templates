@@ -1,4 +1,5 @@
 Traitify.ui = {
+  deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
   init: function(options) {
     var base, base1, base2, base3, base4, dataName, i, item, len, ref;
     if (options == null) {
@@ -17,6 +18,10 @@ Traitify.ui = {
     if (options.results == null) {
       options.results = Object();
     }
+    if (options.publicKey) {
+      Traitify.setPublicKey(options.publicKey);
+    }
+    delete options.publicKey;
     ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
     for (i = 0, len = ref.length; i < len; i++) {
       item = ref[i];
@@ -73,6 +78,5 @@ Traitify.ui = {
       return this;
     };
     return options;
-  },
-  on: function(event, callback) {}
+  }
 };

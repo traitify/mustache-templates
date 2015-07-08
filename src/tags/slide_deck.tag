@@ -1,10 +1,12 @@
 <tf-slide-deck>
   <div class="tf-slide-deck-container {this.finished}" if={this.visible}>
     <div class="tf-slides" style="max-height: {this.maxHeight}px">
+      <div class="tf-progress-bar tf-vertical"><div class="tf-progress-bar-inner" style="height:{this.progressBar}%; {this.progressBarColor}"></div></div>
+      <div class="tf-progress-bar"><div class="tf-progress-bar-inner" style="width:{this.progressBar}%; {this.progressBarColor}"></div></div>
       <div class="tf-info {this.infoVisible}">
         <div class="tf-progress-and-caption">
-            <div class="progress-bar-inner" style="width:{this.progressBar}%"></div>
-          <div class="caption">{this.panelOne.caption}</div>
+          <div class="tf-progress-bar"><div class="tf-progress-bar-inner" style="width:{this.progressBar}%; {this.progressBarColor}"></div></div>
+          <div class="tf-caption">{this.panelOne.caption}</div>
         </div>
       </div>
       <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" style="background-image: url('{this.panelOne.picture}'); background-position:{this.panelOne.x}% {this.panelOne.y}%;">
@@ -12,6 +14,7 @@
       <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" style="background-image: url('{this.panelTwo.picture}'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;">
       </div>
       <div class="tf-response">
+        <div class="tf-progress-bar"><div class="tf-progress-bar-inner" style="width:{this.progressBar}%; {this.progressBarColor}"></div></div>
         <div class="tf-me-not-me">
           <div class="tf-loading {this.loadingVisible}">
             <a href="#" class="tf-refresh {this.refreshVisible}" onclick={handleRefresh}>
@@ -19,7 +22,6 @@
             </a>
             <span class="tf-loading-animation {this.hideLoading}">Loading...</span>
           </div>
-
           <a href="#" class="tf-me" onclick={handleMe}>
             ME
           </a>
@@ -37,6 +39,12 @@
       font-weight: 400;
       src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
     }
+    .tf-progress-bar{
+      display: none;
+    }
+    .tf-progress-and-caption .tf-progress-bar{
+      display: block;
+    }
     .tf-cover{
       background-color: #fff;
       position: absolute;
@@ -47,25 +55,32 @@
       z-index: 2;
 
     }
+    .tf-progress-bar.tf-vertical{
+      height: 100%;
+      width: 30px;
+      position: absolute;
+      z-index: 1;
+    }
+    .tf-progress-bar.tf-vertical .tf-progress-bar-inner{
+      width: 100%;
+      border-radius: 15px 15px 0px 0px;
+      bottom: 0px;
+      position: absolute;
+      -webkit-transition: height .4s ease-in-out;
+      -moz-transition: height .4s ease-in-out;
+      -o-transition: height .4s ease-in-out;
+      transition: height .4s ease-in-out;
+    }
     .tf-info{
       position: absolute;
       z-index: 1;
       width: 100%;
     }
     .tf-progress-and-caption{
-      margin: 15px auto;
-      max-width: 450px;
-      width: 90%;
-      background-color: rgba(15,84,34, .8);
-      border-radius: 28px;
+      margin: 0px 0px;
+      width: 100%;
       overflow: hidden;
       position: relative;
-    }
-    .tf-slide-deck-container{
-      -webkit-transition: all .4s ease-in-out;
-      -moz-transition: all .4s ease-in-out;
-      -o-transition: all .4s ease-in-out;
-      transition: all .4s ease-in-out;
     }
     .tf-slide-deck-container.tf-finished{
       height: 0px;
@@ -84,10 +99,10 @@
       background-color: #4488cc;
     }
     .tf-slide{
-      -webkit-transition: left .4s ease-in-out;
-      -moz-transition: left .4s ease-in-out;
-      -o-transition: left .4s ease-in-out;
-      transition: left .4s ease-in-out;
+      -webkit-transition: left .5s ease-in-out;
+      -moz-transition: left .5s ease-in-out;
+      -o-transition: left .5s ease-in-out;
+      transition: left .5s ease-in-out;
       background-size: cover;
     }
     .tf-slides{
@@ -110,13 +125,14 @@
     .tf-slide.tf-current{
       left: 0%;
     }
-    .caption{
+    .tf-caption{
       padding: 3px 0px 8px;
       color: #fff;
       font-size: 28px;
       display: block;
       position:relative;
       z-index:1;
+      background-color: rgba(0, 0, 0, .6);
     }
     .tf-slide.tf-current.tf-panel-one{
       -moz-transition: none;
@@ -144,11 +160,6 @@
       overflow: hidden;
       border-radius: 25px;
       margin: 0px auto;
-    }
-    @media screen and (max-width: 380px) {
-      .tf-me-not-me{
-        width: 280px;
-      }
     }
     .tf-finished .tf-loading{
       background-color: #315F9B;
@@ -185,16 +196,18 @@
       padding:0px;
       margin: 0px;
     }
-    .progress-bar{
-      height: 100%;
+    .tf-progress-bar{
+      height: 10px;
       padding: 0px;
       width: 100%;
+      background-color: rgba(255, 255, 255, .5)
     }
-    .progress-bar-inner{
-      position: absolute;
-      background-color: rgba(39,235,95, .8);
+    .tf-progress-bar-inner{
+      position: relative;
       height: 100%;
       width: 0%;
+      background-color: #fff;
+      border-radius: 0px 5px 5px 0px;
       -webkit-transition: width .4s ease-in-out;
       -moz-transition: width .4s ease-in-out;
       -o-transition: width .4s ease-in-out;
@@ -285,39 +298,27 @@
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId
-
     that = this
+    that.imageName = if Traitify.ui.deviceType == "desktop" then "image_desktop_retina" else "image_desktop"
     @panelOne = Object()
     @panelTwo = Object()
-    Cookie = Object()
-    Cookie.set = (cname, cvalue, exdays) ->
-      d = new Date
-      d.setTime d.getTime() + exdays * 24 * 60 * 60 * 1000
-      expires = 'expires=' + d.toUTCString()
+    @progressBarColor = "background-color: #{opts.slideDeck.progressBarColor}" if opts.slideDeck.progressBarColor
 
-      document.cookie = "tf#{that.assessmentId}#{cname}=" + JSON.stringify(cvalue) + '; ' + expires
-      return
+    DB = {
+      get: (key)->
+        value = window.sessionStorage.getItem(key)
+        JSON.parse(value) if value && value.length != 0
+      set: (key, value)->
+        window.sessionStorage.setItem(key, JSON.stringify(value))
+      del: (key)->
+        window.sessionStorage.removeItem(key)
+    }
 
-    Cookie.get = (cname) ->
-      name = "tf#{that.assessmentId}#{cname}="
-      ca = document.cookie.split(';')
-      i = 0
-      while i < ca.length
-        c = ca[i]
-        while c.charAt(0) == ' '
-          c = c.substring(1)
-        if c.indexOf(name) == 0
-          return JSON.parse(c.substring(name.length, c.length))
-        i++
-      return undefined
 
     @touchDevice = false
     slideTime = new Date()
     @processSlide = (value)->
-      if @processingSlide == true
-        return false
-      @processingSlide = true
-      that.trigger("addSlide")
+      that.trigger("slideDeck.addSlide")
       duration = new Date() - slideTime
       slideTime = new Date()
       @slideData[@slides[@index].id] = {
@@ -326,24 +327,17 @@
         response: value
       }
 
-      Cookie.set("slideData", @slideData)
+      DB.set("#{that.assessmentId}slideData", @slideData)
       if @images[@index + 2] || (@index == @slides.length - 2 && @images[@index + 1])
-        @onFinishedTransition = ->
-          that.trigger("transitionEnd")
-          @panelOne.picture = @panelTwo.picture
-          @panelOne.x = @panelTwo.x
-          @panelOne.y = @panelTwo.y
-          @update()
-
-          that.panelTwo.class = "next"
-          that.panelOne.class = "current"
-          that.index++
-          that.setSlide()
-          that.processingSlide = false
         if @transitionEvent
           @animateSlide()
+          @onFinishedTransition = ->
+            that.trigger("transitionEnd")
+            @index++
+            @setSlide()
         else
-          @onFinishedTransition()
+          @index++
+          @setSlide()
       else
         @loadingVisible = "tf-visible"
 
@@ -363,6 +357,7 @@
         that.trigger("customSlideValues", that.customSlideValues)
         Traitify.addSlides(that.assessmentId, sendSlides).then((response)->
           opts.trigger("slideDeck.finish", that)
+          DB.del("#{that.assessmentId}slideData")
         )
         @infoVisible = "tf-invisible"
         @finished = "tf-finished"
@@ -393,20 +388,29 @@
       @panelTwo.class = "current"
 
     @setSlide = ->
-      slideOne = @slides[@index]
-      @panelOne.caption = slideOne.caption
-      @panelOne.picture = slideOne.image_desktop_retina
-      @panelOne.x = slideOne.focus_x
-      @panelOne.y = slideOne.focus_y
+      if @panelTwo && @panelTwo.picture
+        @panelOne.picture = @panelTwo.picture
+        @panelOne.caption = @panelTwo.caption
+        @panelOne.x = @panelTwo.x
+        @panelOne.y = @panelTwo.y
+        @update()
+      else
+        slideOne = @slides[@index]
+        @panelOne.caption = slideOne.caption
+        @panelOne.picture = slideOne[that.imageName]
+        @panelOne.x = slideOne.focus_x
+        @panelOne.y = slideOne.focus_y
+        @update()
+      @panelTwo.class = "next"
+      @panelOne.class = "current"
 
       if @slides[@index + 1]
         slideTwo = @slides[@index + 1]
         @panelTwo.caption = slideTwo.caption
-        @panelTwo.picture = slideTwo.image_desktop_retina
+        @panelTwo.picture = slideTwo[that.imageName]
         @panelTwo.y = slideTwo.focus_y
         @panelTwo.x = slideTwo.focus_x
       @update()
-
     @whichTransitionEvent = ->
         el = document.createElement('fakeelement')
         transitions = {
@@ -424,34 +428,33 @@
 
     opts.on("slideDeck.initialized", ->
       el = document.getElementsByClassName("tf-panel-two")[0]
-      that.transitionEvent && el.addEventListener(that.transitionEvent, ->
-        that.onFinishedTransition()
-      )
-      that.touch(document.querySelector(".tf-me"), ->
-        that.processSlide(true)
-      )
-      that.touch(document.querySelector(".tf-not-me"), ->
-        that.processSlide(false)
-      )
+      if el
+        that.transitionEvent && el.addEventListener(that.transitionEvent, ->
+          that.onFinishedTransition()
+        )
+        that.touch(document.querySelector(".tf-me"), ->
+          that.processSlide(true)
+        )
+        that.touch(document.querySelector(".tf-not-me"), ->
+          that.processSlide(false)
+        )
 
       that.customSlides ?= Array()
       for slide in that.customSlides
         that.slides.splice(slide.position, slide)
       that.update()
-      opts.on("slideDeck.initialized")
     )
     @on("mount", ->
       that.mounted = true
       if that.initialized == true
         opts.trigger("slideDeck.initialized")
     )
-
     @initialize = ->
       @index = 0
       @visible = true
       @update()
 
-      @slideData = Cookie.get("slideData")
+      @slideData = DB.get("#{that.assessmentId}slideData")
       unless @slideData
         @slideData = Object()
 
@@ -471,7 +474,7 @@
       @setSlide()
       @setProgressBar()
       images = @slides.map((slide)->
-        slide.image_desktop_retina
+        slide[that.imageName]
       )
 
       @imageTries = Object()
@@ -493,9 +496,13 @@
               that.update()
 
           that.images[i].onload = ->
-            that.loadingVisible = ""
-            that.update()
-            that.loadImage(i + 1)
+            if that.loadingVisible != ""
+              that.loadingVisible = ""
+              that.update()
+            setTimeout(->
+              that.loadImage(i + 1)
+            , 300)
+
 
       @loadImage(0)
       that.initialized = true

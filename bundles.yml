@@ -4,7 +4,6 @@ v2:
   - "public/support/riot"
   - "public/js/lib/main"
   - "public/js/tags/slide_deck"
-  - "public/js/tags/career"
   - "public/js/tags/careers"
   - "public/js/tags/famous_people"
   - "public/js/tags/personality_traits"
