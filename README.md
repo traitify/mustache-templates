@@ -20,6 +20,7 @@ You must have npm installed to compile these tags.
     personalityBlend.initialized
     
     personalityTypes.initialized
+    personalityTypes.selectType
     
     personalityTraits.initialized
     
