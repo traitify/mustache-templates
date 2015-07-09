@@ -18,23 +18,45 @@ You must have npm installed to compile these tags.
 ### Features
 
 #### Event Handlers Include
-
+```javascript
+	widgets.on("slideDeck.initialized", function(){
+	  alert("Slide Deck Initialized")
+	})
+	widgets.on("slideDeck.me", function(){
+	  alert("Me Clicked")
+	})
+	widgets.on("slideDeck.notMe", function(){
+	  alert("Not Me Clicked")
+	})
+	widgets.on("slideDeck.finished", function(){
+	  alert("Slide Deck Finished")
+	})
     
-    slideDeck.initialized
-    slideDeck.me
-    slideDeck.notMe
-    slideDeck.finished
+	widgets.on("personalityBlend.initialized", function(){
+	  alert("Personality Blend Initialized")
+	})
     
-    personalityBlend.initialized
+    	widgets.on("personalityTypes.initialized", function(){
+	  alert("Personality Types Initialized")
+	})
+	
+	widgets.on("personalityTypes.typeSelected", function(widget){
+	  alert("Personality Type Selected " + widget.personalityType)
+	})
+	
+	widgets.on("personalityTraits.initialized", function(){
+	  alert("Personality Traits Initialized")
+	})
     
-    personalityTypes.initialized
-    personalityTypes.selectType
+    	widgets.on("famousPeople.initialized", function(){
+	  alert("Famous People Initialized")
+	})
+	
+	widgets.on("careers.initialized", function(){
+	  alert("Careers Initialized")
+	})
     
-    personalityTraits.initialized
     
-    famousPeople.initialized
-    
-    careers.initialized
     
     
 ### Theming
