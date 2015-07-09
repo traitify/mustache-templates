@@ -45,6 +45,7 @@
     }
     .tf-types-container{
       font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
+      margin-bottom: 50px;
     }
     .tf-types-container .tf-score{
       border-bottom: 1px solid #fff;
@@ -57,21 +58,21 @@
     }
     .tf-types-container .tf-types .tf-name-small{
       font-size: 16px;
-      margin-top: 0px;
+      margin-top: 0;
     }
     .tf-types-container .tf-badge{
       width: 100%;
     }
     .tf-badge-score-background{
-			width: 100%;
-			position: relative;
-			height: 100%;
-			opacity: .1;
-			-webkit-backface-visibility: hidden;
-			-moz-backface-visibility: hidden;
+      width: 100%;
+      position: relative;
+      height: 100%;
+      opacity: .1;
+      -webkit-backface-visibility: hidden;
+      -moz-backface-visibility: hidden;
     }
     .tf-types-container .tf-badge-score-container{
-      border: 1px solid;
+      border: 1px solid #fff;
       width: 40px;
       height: 40px;
       position: relative;
@@ -101,27 +102,31 @@
       opacity: .1;
       -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)";
       position: absolute;
-      left: 0px;
-      bottom: 0px;
+      left: 0;
+      bottom: 0;
     }
     .tf-types-container .tf-badge-score{
       width: 100%;
       height: 0%;
       -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
       position: absolute;
-      left: 0px;
-      bottom: 0px;
+      left: 0;
+      bottom: 0;
       -webkit-transition: all .2s ease-in-out;
       -moz-transition: all .2s ease-in-out;
       -o-transition: all .2s ease-in-out;
       transition: all .2s ease-in-out;
       opacity: .3;
     }
+    .tf-types-container .tf-type.tf-active .tf-badge-score{
+      height: 100%;
+      bottom: 0;
+    }
     .tf-types-container .tf-type:hover .tf-percent{
       color: #333;
     }
     .tf-types-container .tf-types{
-      margin: 0px auto;
+      margin: 0 auto;
       position: relative;
       display: inline-block;
       width:882px;
@@ -134,11 +139,11 @@
       position: relative;
       display: inline-block;
       padding: 10px;
-      margin: 0px 10px;
+      margin: 0 10px;
     }
     .tf-types-container .tf-description{
       max-width: 600px;
-      margin: 0px auto;
+      margin: 0 auto;
       text-align: justify;
 			font-size: 16px;
     }

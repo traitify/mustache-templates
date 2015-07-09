@@ -48,12 +48,11 @@
     .tf-cover{
       background-color: #fff;
       position: absolute;
-      top: 0px;
-      left: 0px;
-      right: 0px;
-      bottom: 0px;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 2;
-
     }
     .tf-progress-bar.tf-vertical{
       height: 100%;
@@ -83,7 +82,7 @@
       position: relative;
     }
     .tf-slide-deck-container.tf-finished{
-      height: 0px;
+      height: 0;
       overflow: hidden;
       opacity: 0;
     }
@@ -93,9 +92,9 @@
       overflow: hidden;
       position: relative;
       height: 600px;
-      font-family: "Source Sans Pro";
+      font-family: "Source Sans Pro", Arial, Verdana, sans-serif;
       text-align: center;
-      margin: 0px auto;
+      margin: 0 auto;
       background-color: #4488cc;
     }
     .tf-slide{
@@ -156,10 +155,10 @@
       position: relative;
       line-height:43px;
       font-size: 24px;
-      padding: 0px;
+      padding: 0;
       overflow: hidden;
       border-radius: 25px;
-      margin: 0px auto;
+      margin: 0 auto;
     }
     .tf-finished .tf-loading{
       background-color: #315F9B;
@@ -182,8 +181,8 @@
       height: 100%;
       text-decoration: none;
       color: #fff;
-      padding:0px;
-      margin: 0px;
+      padding:0;
+      margin: 0;
     }
     .tf-me-not-me .tf-not-me{
       position: relative;
@@ -193,8 +192,8 @@
       height: 100%;
       text-decoration: none;
       color: #fff;
-      padding:0px;
-      margin: 0px;
+      padding:0;
+      margin: 0;
     }
     .tf-progress-bar{
       height: 10px;
@@ -251,7 +250,6 @@
       -webkit-animation-name: fadeInOut;
       -webkit-animation-duration: 3s;
       -webkit-animation-iteration-count: infinite;
-
       animation-name: fadeInOut;
       animation-duration: 3s;
       animation-iteration-count: infinite;
@@ -294,7 +292,6 @@
         opacity:1
       }
     }
-
   </style>
   <script>
     @assessmentId = @root.getAttribute("assessment-id") || opts.assessmentId
