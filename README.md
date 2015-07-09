@@ -3,10 +3,13 @@
 You must have npm installed to compile these tags.
 
 ## Usage
-
-    npm install
-    gulp
-
+### Initialize and Load With Options Hash
+    Traitify.ui.init({assessmentId: "your assessment id", publicKey: "your public key"}).load()
+### Initialize and Load With Init Object 
+    widgets = Traitify.ui.init()
+    widgets.assessmentId = "your assessment id"
+    widgets.publicKey = "your public key"
+    widgets.load()
 
 ## Features
 
@@ -32,3 +35,7 @@ You must have npm installed to compile these tags.
     assessmentId
     slideDeck.progressBarColor = #aaa
     
+    
+## Building
+    npm install
+    gulp
