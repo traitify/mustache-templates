@@ -8,10 +8,12 @@ You must have npm installed to compile these tags.
     Traitify.ui.init({assessmentId: "your assessment id", publicKey: "your public key"}).load()
 ```
 #### Initialize and Load With Init Object 
+```javascript
     widgets = Traitify.ui.init()
     widgets.assessmentId = "your assessment id"
     widgets.publicKey = "your public key"
     widgets.load()
+```
 
 ### Features
 
