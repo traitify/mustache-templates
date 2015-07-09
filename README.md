@@ -16,3 +16,14 @@ You must have npm installed to compile these tags.
     slideDeck.me
     slideDeck.notMe
     slideDeck.finished
+    
+    personalityBlend.initialized
+    
+    personalityTypes.initialized
+    
+    personalityTraits.initialized
+    
+    famousPeople.initialized
+    
+    careers.initialized
+    
