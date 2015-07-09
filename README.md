@@ -11,7 +11,8 @@ You must have npm installed to compile these tags.
 ## Features
 
 ### Event Handlers Include
-  slideDeck.initialized
-  slideDeck.me
-  slideDeck.notMe
-  slideDeck.finished
+
+    slideDeck.initialized
+    slideDeck.me
+    slideDeck.notMe
+    slideDeck.finished
