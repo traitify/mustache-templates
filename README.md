@@ -2,18 +2,18 @@
 
 You must have npm installed to compile these tags.
 
-## Usage
-### Initialize and Load With Options Hash
+### Usage
+#### Initialize and Load With Options Hash
     Traitify.ui.init({assessmentId: "your assessment id", publicKey: "your public key"}).load()
-### Initialize and Load With Init Object 
+#### Initialize and Load With Init Object 
     widgets = Traitify.ui.init()
     widgets.assessmentId = "your assessment id"
     widgets.publicKey = "your public key"
     widgets.load()
 
-## Features
+### Features
 
-### Event Handlers Include
+#### Event Handlers Include
 
     slideDeck.initialized
     slideDeck.me
@@ -31,7 +31,7 @@ You must have npm installed to compile these tags.
     
     careers.initialized
     
-### Options
+#### Options
     assessmentId
     slideDeck.progressBarColor = #aaa
     
