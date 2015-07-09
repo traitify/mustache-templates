@@ -4,7 +4,9 @@ You must have npm installed to compile these tags.
 
 ### Usage
 #### Initialize and Load With Options Hash
+```javascript
     Traitify.ui.init({assessmentId: "your assessment id", publicKey: "your public key"}).load()
+```
 #### Initialize and Load With Init Object 
     widgets = Traitify.ui.init()
     widgets.assessmentId = "your assessment id"
