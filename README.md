@@ -28,3 +28,7 @@ You must have npm installed to compile these tags.
     
     careers.initialized
     
+### Options
+    assessmentId
+    slideDeck.progressBarColor = #aaa
+    
