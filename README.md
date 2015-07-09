@@ -36,9 +36,12 @@ You must have npm installed to compile these tags.
     careers.initialized
     
 #### Options
+```javascript
+
     assessmentId
     slideDeck.progressBarColor = "#aaa"
-    
+```
+
 ## Building
     npm install
     gulp
