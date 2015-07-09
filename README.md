@@ -37,8 +37,7 @@ You must have npm installed to compile these tags.
     
 #### Options
     assessmentId
-    slideDeck.progressBarColor = #aaa
-    
+    slideDeck.progressBarColor = "#aaa"
     
 ## Building
     npm install
