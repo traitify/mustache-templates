@@ -3,6 +3,21 @@
 A widget is anything graphical element that is self contained, a widget builder is a library for that supports the self contained library (widget), and a slider is a deck of slides that is displayed in the user interface to gather personality information. By clicking me or not me per slide (Image with caption), the user is able to give the api feedback on particular elements of personality that traitify's psychology team has deamed valuable.
 
 ### Usage
+#### Simple Usage Instructions 
+```html
+   <div class="tf-slide-deck"></div>
+   <div class="tf-personality-blend"></div>
+   <div class="tf-personality-types"></div>
+   <div class="tf-personality-traits"></div>
+   <div class="tf-careers"></div>
+   <script>
+   	widgets = Traitify.ui.init()
+   	widgets.assessmentId = "your assessment Id"
+   	widgets.publicKey = "your public key"
+   	widgets.load()
+   </script>
+```
+
 #### Initialize and Load With Options Hash
 ```javascript
     Traitify.ui.init({assessmentId: "your assessment id", publicKey: "your public key"}).load()
