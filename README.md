@@ -35,28 +35,28 @@ A widget is anything graphical element that is self contained, a widget builder 
 #### Event Handlers Include
 ```javascript
 	widgets.on("slideDeck.initialized", function(){
-	  alert("Slide Deck Initialized")
+	    alert("Slide Deck Initialized")
 	})
 	widgets.on("slideDeck.me", function(){
-	  alert("Me Clicked")
+	    alert("Me Clicked")
 	})
 	widgets.on("slideDeck.notMe", function(){
-	  alert("Not Me Clicked")
+	    alert("Not Me Clicked")
 	})
 	widgets.on("slideDeck.finished", function(){
-	  alert("Slide Deck Finished")
+	    alert("Slide Deck Finished")
 	})
     
 	widgets.on("personalityBlend.initialized", function(){
-	  alert("Personality Blend Initialized")
+	    alert("Personality Blend Initialized")
 	})
     
 	widgets.on("personalityTypes.initialized", function(){
-	  alert("Personality Types Initialized")
+	    alert("Personality Types Initialized")
 	})
 	
 	widgets.on("personalityTypes.typeSelected", function(widget){
-	  alert("Personality Type Selected " + widget.currentType)
+	    alert("Personality Type Selected " + widget.currentType)
 	})
 	
 	widgets.on("personalityTraits.initialized", function(){
