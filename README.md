@@ -67,7 +67,9 @@ Notice that Event Handlers Can Be Chained
 	    alert("Careers Initialized")
 	})
     
-    
+    widgets.on("careers.initialized slideDeck.me").on(function(){
+        alert("Careers Initialized or Slide Deck Me Click")
+    })
     
 ```
 ### Theming
