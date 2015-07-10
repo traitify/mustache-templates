@@ -60,15 +60,15 @@ A widget is anything graphical element that is self contained, a widget builder 
 	})
 	
 	widgets.on("personalityTraits.initialized", function(){
-	  alert("Personality Traits Initialized")
+	    alert("Personality Traits Initialized")
 	})
 	
 	widgets.on("famousPeople.initialized", function(){
-	  alert("Famous People Initialized")
+	    alert("Famous People Initialized")
 	})
 	
 	widgets.on("careers.initialized", function(){
-	  alert("Careers Initialized")
+	    alert("Careers Initialized")
 	})
     
     
