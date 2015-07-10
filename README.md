@@ -130,6 +130,18 @@ A widget is anything graphical element that is self contained, a widget builder 
 		bottom: 40px;
 	}
 ```
+#### Progress Bar Vertical
+```css
+	.tf-me-not-me{
+		border-radius: 0px;
+	}
+	.tf-progress-and-caption .tf-progress-bar{
+		display: none;
+	}
+	.tf-progress-bar.tf-vertical{
+		display: inline-block;
+	}
+```
 #### Progress Bar In Caption
 ```css
 	.tf-progress-bar{
