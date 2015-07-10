@@ -66,7 +66,9 @@ Notice that Event Handlers Can Be Chained
 	widgets.on("careers.initialized", function(){
 	    alert("Careers Initialized")
 	})
-    
+```
+#### Listen to Two Separate Events Using the Same On Function 
+```javascript
     widgets.on("careers.initialized slideDeck.me").on(function(){
         alert("Careers Initialized or Slide Deck Me Click")
     })
