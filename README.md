@@ -167,9 +167,10 @@ A widget is anything graphical element that is self contained, a widget builder 
 		background-color: #000;
 	}
 ```
-#### Change Progress Bar Color Via CSS
+#### Change Progress Bar Color Via Javascript
 ```javascript
     Traitify.ui.init({
+    	assessmentId: "Your Assessment Id",
         slideDeck: {progressBarColor: "#aaa"}
     }).load()
 ```
