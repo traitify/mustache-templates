@@ -145,32 +145,32 @@ A widget is anything graphical element that is self contained, a widget builder 
 #### Progress Bar In Caption
 ```css
 	.tf-progress-bar{
-	  height: 100%;
-	  padding: 0px;
-	  width: 100%;
+		height: 100%;
+		padding: 0px;
+		width: 100%;
 	}
 	.tf-progress-bar-inner{
-	  position: absolute;
-	  background-color: rgba(39,235,95, .8);
-	  height: 100%;
-	  width: 0%;
-	  -webkit-transition: width .4s ease-in-out;
-	  -moz-transition: width .4s ease-in-out;
-	  -o-transition: width .4s ease-in-out;
-	  transition: width .4s ease-in-out;
-	  border-radius: 0px;
+		position: absolute;
+		background-color: rgba(39,235,95, .8);
+		height: 100%;
+		width: 0%;
+		-webkit-transition: width .4s ease-in-out;
+		-moz-transition: width .4s ease-in-out;
+		-o-transition: width .4s ease-in-out;
+		transition: width .4s ease-in-out;
+		border-radius: 0px;
 	}
 	.tf-progress-and-caption{
-	  margin: 15px auto;
-	  max-width: 450px;
-	  width: 90%;
-	  background-color: rgba(15,84,34, .8);
-	  border-radius: 28px;
-	  overflow: hidden;
-	  position: relative;
+		margin: 15px auto;
+		max-width: 450px;
+		width: 90%;
+		background-color: rgba(15,84,34, .8);
+		border-radius: 28px;
+		overflow: hidden;
+		position: relative;
 	}
 	.tf-caption{
-	  background-color: transparent;
+		background-color: transparent;
 	}
 ```
 #### Change Progress Bar Color Via CSS
