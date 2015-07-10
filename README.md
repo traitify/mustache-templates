@@ -171,6 +171,7 @@ A widget is anything graphical element that is self contained, a widget builder 
 ```javascript
     Traitify.ui.init({
     	assessmentId: "Your Assessment Id",
+    	publicKey: "My Public Key",
         slideDeck: {progressBarColor: "#aaa"}
     }).load()
 ```
