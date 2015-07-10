@@ -11,10 +11,10 @@ A widget is anything graphical element that is self contained, a widget builder 
    <div class="tf-personality-traits"></div>
    <div class="tf-careers"></div>
    <script>
-   	widgets = Traitify.ui.init()
-   	widgets.assessmentId = "your assessment Id"
-   	widgets.publicKey = "your public key"
-   	widgets.load()
+        widgets = Traitify.ui.init()
+        widgets.assessmentId = "your assessment Id"
+        widgets.publicKey = "your public key"
+        widgets.load()
    </script>
 ```
 
