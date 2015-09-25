@@ -11,890 +11,646 @@ Traitify.setProduction = function(value) {
 
 Traitify.version = "v1";
 
-/* Riot v2.0.12, @license MIT, (c) 2015 Muut Inc. + contributors */
+/*!
+ * mustache.js - Logic-less {{mustache}} templates with JavaScript
+ * http://github.com/janl/mustache.js
+ */
 
-;(function() {
+/*global define: false Mustache: true*/
 
-  var riot = { version: 'v2.0.12', settings: {} }
+(function defineMustache (global, factory) {
+  if (typeof exports === 'object' && exports && typeof exports.nodeName !== 'string') {
+    factory(exports); // CommonJS
+  } else if (typeof define === 'function' && define.amd) {
+    define(['exports'], factory); // AMD
+  } else {
+    global.Mustache = {};
+    factory(Mustache); // script, wsh, asp
+  }
+}(this, function mustacheFactory (mustache) {
 
-  'use strict'
+  var objectToString = Object.prototype.toString;
+  var isArray = Array.isArray || function isArrayPolyfill (object) {
+    return objectToString.call(object) === '[object Array]';
+  };
 
-riot.observable = function(el) {
-
-  el = el || {}
-
-  var callbacks = {},
-      _id = 0
-
-  el.on = function(events, fn) {
-    if (typeof fn == 'function') {
-      fn._id = typeof fn._id == 'undefined' ? _id++ : fn._id
-
-      events.replace(/\S+/g, function(name, pos) {
-        (callbacks[name] = callbacks[name] || []).push(fn)
-        fn.typed = pos > 0
-      })
-    }
-    return el
+  function isFunction (object) {
+    return typeof object === 'function';
   }
 
-  el.off = function(events, fn) {
-    if (events == '*') callbacks = {}
-    else {
-      events.replace(/\S+/g, function(name) {
-        if (fn) {
-          var arr = callbacks[name]
-          for (var i = 0, cb; (cb = arr && arr[i]); ++i) {
-            if (cb._id == fn._id) { arr.splice(i, 1); i-- }
+  /**
+   * More correct typeof string handling array
+   * which normally returns typeof 'object'
+   */
+  function typeStr (obj) {
+    return isArray(obj) ? 'array' : typeof obj;
+  }
+
+  function escapeRegExp (string) {
+    return string.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&');
+  }
+
+  /**
+   * Null safe way of checking whether or not an object,
+   * including its prototype, has a given property
+   */
+  function hasProperty (obj, propName) {
+    return obj != null && typeof obj === 'object' && (propName in obj);
+  }
+
+  // Workaround for https://issues.apache.org/jira/browse/COUCHDB-577
+  // See https://github.com/janl/mustache.js/issues/189
+  var regExpTest = RegExp.prototype.test;
+  function testRegExp (re, string) {
+    return regExpTest.call(re, string);
+  }
+
+  var nonSpaceRe = /\S/;
+  function isWhitespace (string) {
+    return !testRegExp(nonSpaceRe, string);
+  }
+
+  var entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;'
+  };
+
+  function escapeHtml (string) {
+    return String(string).replace(/[&<>"'\/]/g, function fromEntityMap (s) {
+      return entityMap[s];
+    });
+  }
+
+  var whiteRe = /\s*/;
+  var spaceRe = /\s+/;
+  var equalsRe = /\s*=/;
+  var curlyRe = /\s*\}/;
+  var tagRe = /#|\^|\/|>|\{|&|=|!/;
+
+  /**
+   * Breaks up the given `template` string into a tree of tokens. If the `tags`
+   * argument is given here it must be an array with two string values: the
+   * opening and closing tags used in the template (e.g. [ "<%", "%>" ]). Of
+   * course, the default is to use mustaches (i.e. mustache.tags).
+   *
+   * A token is an array with at least 4 elements. The first element is the
+   * mustache symbol that was used inside the tag, e.g. "#" or "&". If the tag
+   * did not contain a symbol (i.e. {{myValue}}) this element is "name". For
+   * all text that appears outside a symbol this element is "text".
+   *
+   * The second element of a token is its "value". For mustache tags this is
+   * whatever else was inside the tag besides the opening symbol. For text tokens
+   * this is the text itself.
+   *
+   * The third and fourth elements of the token are the start and end indices,
+   * respectively, of the token in the original template.
+   *
+   * Tokens that are the root node of a subtree contain two more elements: 1) an
+   * array of tokens in the subtree and 2) the index in the original template at
+   * which the closing tag for that section begins.
+   */
+  function parseTemplate (template, tags) {
+    if (!template)
+      return [];
+
+    var sections = [];     // Stack to hold section tokens
+    var tokens = [];       // Buffer to hold the tokens
+    var spaces = [];       // Indices of whitespace tokens on the current line
+    var hasTag = false;    // Is there a {{tag}} on the current line?
+    var nonSpace = false;  // Is there a non-space char on the current line?
+
+    // Strips all whitespace tokens array for the current line
+    // if there was a {{#tag}} on it and otherwise only space.
+    function stripSpace () {
+      if (hasTag && !nonSpace) {
+        while (spaces.length)
+          delete tokens[spaces.pop()];
+      } else {
+        spaces = [];
+      }
+
+      hasTag = false;
+      nonSpace = false;
+    }
+
+    var openingTagRe, closingTagRe, closingCurlyRe;
+    function compileTags (tagsToCompile) {
+      if (typeof tagsToCompile === 'string')
+        tagsToCompile = tagsToCompile.split(spaceRe, 2);
+
+      if (!isArray(tagsToCompile) || tagsToCompile.length !== 2)
+        throw new Error('Invalid tags: ' + tagsToCompile);
+
+      openingTagRe = new RegExp(escapeRegExp(tagsToCompile[0]) + '\\s*');
+      closingTagRe = new RegExp('\\s*' + escapeRegExp(tagsToCompile[1]));
+      closingCurlyRe = new RegExp('\\s*' + escapeRegExp('}' + tagsToCompile[1]));
+    }
+
+    compileTags(tags || mustache.tags);
+
+    var scanner = new Scanner(template);
+
+    var start, type, value, chr, token, openSection;
+    while (!scanner.eos()) {
+      start = scanner.pos;
+
+      // Match any text between tags.
+      value = scanner.scanUntil(openingTagRe);
+
+      if (value) {
+        for (var i = 0, valueLength = value.length; i < valueLength; ++i) {
+          chr = value.charAt(i);
+
+          if (isWhitespace(chr)) {
+            spaces.push(tokens.length);
+          } else {
+            nonSpace = true;
+          }
+
+          tokens.push([ 'text', chr, start, start + 1 ]);
+          start += 1;
+
+          // Check for whitespace on the current line.
+          if (chr === '\n')
+            stripSpace();
+        }
+      }
+
+      // Match the opening tag.
+      if (!scanner.scan(openingTagRe))
+        break;
+
+      hasTag = true;
+
+      // Get the tag type.
+      type = scanner.scan(tagRe) || 'name';
+      scanner.scan(whiteRe);
+
+      // Get the tag value.
+      if (type === '=') {
+        value = scanner.scanUntil(equalsRe);
+        scanner.scan(equalsRe);
+        scanner.scanUntil(closingTagRe);
+      } else if (type === '{') {
+        value = scanner.scanUntil(closingCurlyRe);
+        scanner.scan(curlyRe);
+        scanner.scanUntil(closingTagRe);
+        type = '&';
+      } else {
+        value = scanner.scanUntil(closingTagRe);
+      }
+
+      // Match the closing tag.
+      if (!scanner.scan(closingTagRe))
+        throw new Error('Unclosed tag at ' + scanner.pos);
+
+      token = [ type, value, start, scanner.pos ];
+      tokens.push(token);
+
+      if (type === '#' || type === '^') {
+        sections.push(token);
+      } else if (type === '/') {
+        // Check section nesting.
+        openSection = sections.pop();
+
+        if (!openSection)
+          throw new Error('Unopened section "' + value + '" at ' + start);
+
+        if (openSection[1] !== value)
+          throw new Error('Unclosed section "' + openSection[1] + '" at ' + start);
+      } else if (type === 'name' || type === '{' || type === '&') {
+        nonSpace = true;
+      } else if (type === '=') {
+        // Set the tags for the next time around.
+        compileTags(value);
+      }
+    }
+
+    // Make sure there are no open sections when we're done.
+    openSection = sections.pop();
+
+    if (openSection)
+      throw new Error('Unclosed section "' + openSection[1] + '" at ' + scanner.pos);
+
+    return nestTokens(squashTokens(tokens));
+  }
+
+  /**
+   * Combines the values of consecutive text tokens in the given `tokens` array
+   * to a single token.
+   */
+  function squashTokens (tokens) {
+    var squashedTokens = [];
+
+    var token, lastToken;
+    for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+      token = tokens[i];
+
+      if (token) {
+        if (token[0] === 'text' && lastToken && lastToken[0] === 'text') {
+          lastToken[1] += token[1];
+          lastToken[3] = token[3];
+        } else {
+          squashedTokens.push(token);
+          lastToken = token;
+        }
+      }
+    }
+
+    return squashedTokens;
+  }
+
+  /**
+   * Forms the given array of `tokens` into a nested tree structure where
+   * tokens that represent a section have two additional items: 1) an array of
+   * all tokens that appear in that section and 2) the index in the original
+   * template that represents the end of that section.
+   */
+  function nestTokens (tokens) {
+    var nestedTokens = [];
+    var collector = nestedTokens;
+    var sections = [];
+
+    var token, section;
+    for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+      token = tokens[i];
+
+      switch (token[0]) {
+      case '#':
+      case '^':
+        collector.push(token);
+        sections.push(token);
+        collector = token[4] = [];
+        break;
+      case '/':
+        section = sections.pop();
+        section[5] = token[2];
+        collector = sections.length > 0 ? sections[sections.length - 1][4] : nestedTokens;
+        break;
+      default:
+        collector.push(token);
+      }
+    }
+
+    return nestedTokens;
+  }
+
+  /**
+   * A simple string scanner that is used by the template parser to find
+   * tokens in template strings.
+   */
+  function Scanner (string) {
+    this.string = string;
+    this.tail = string;
+    this.pos = 0;
+  }
+
+  /**
+   * Returns `true` if the tail is empty (end of string).
+   */
+  Scanner.prototype.eos = function eos () {
+    return this.tail === '';
+  };
+
+  /**
+   * Tries to match the given regular expression at the current position.
+   * Returns the matched text if it can match, the empty string otherwise.
+   */
+  Scanner.prototype.scan = function scan (re) {
+    var match = this.tail.match(re);
+
+    if (!match || match.index !== 0)
+      return '';
+
+    var string = match[0];
+
+    this.tail = this.tail.substring(string.length);
+    this.pos += string.length;
+
+    return string;
+  };
+
+  /**
+   * Skips all text until the given regular expression can be matched. Returns
+   * the skipped string, which is the entire tail if no match can be made.
+   */
+  Scanner.prototype.scanUntil = function scanUntil (re) {
+    var index = this.tail.search(re), match;
+
+    switch (index) {
+    case -1:
+      match = this.tail;
+      this.tail = '';
+      break;
+    case 0:
+      match = '';
+      break;
+    default:
+      match = this.tail.substring(0, index);
+      this.tail = this.tail.substring(index);
+    }
+
+    this.pos += match.length;
+
+    return match;
+  };
+
+  /**
+   * Represents a rendering context by wrapping a view object and
+   * maintaining a reference to the parent context.
+   */
+  function Context (view, parentContext) {
+    this.view = view;
+    this.cache = { '.': this.view };
+    this.parent = parentContext;
+  }
+
+  /**
+   * Creates a new context using the given view with this context
+   * as the parent.
+   */
+  Context.prototype.push = function push (view) {
+    return new Context(view, this);
+  };
+
+  /**
+   * Returns the value of the given name in this context, traversing
+   * up the context hierarchy if the value is absent in this context's view.
+   */
+  Context.prototype.lookup = function lookup (name) {
+    var cache = this.cache;
+
+    var value;
+    if (cache.hasOwnProperty(name)) {
+      value = cache[name];
+    } else {
+      var context = this, names, index, lookupHit = false;
+
+      while (context) {
+        if (name.indexOf('.') > 0) {
+          value = context.view;
+          names = name.split('.');
+          index = 0;
+
+          /**
+           * Using the dot notion path in `name`, we descend through the
+           * nested objects.
+           *
+           * To be certain that the lookup has been successful, we have to
+           * check if the last object in the path actually has the property
+           * we are looking for. We store the result in `lookupHit`.
+           *
+           * This is specially necessary for when the value has been set to
+           * `undefined` and we want to avoid looking up parent contexts.
+           **/
+          while (value != null && index < names.length) {
+            if (index === names.length - 1)
+              lookupHit = hasProperty(value, names[index]);
+
+            value = value[names[index++]];
           }
         } else {
-          callbacks[name] = []
+          value = context.view[name];
+          lookupHit = hasProperty(context.view, name);
         }
-      })
-    }
-    return el
-  }
 
-  // only single event supported
-  el.one = function(name, fn) {
-    if (fn) fn.one = 1
-    return el.on(name, fn)
-  }
+        if (lookupHit)
+          break;
 
-  el.trigger = function(name) {
-    var args = [].slice.call(arguments, 1),
-        fns = callbacks[name] || []
-
-    for (var i = 0, fn; (fn = fns[i]); ++i) {
-      if (!fn.busy) {
-        fn.busy = 1
-        fn.apply(el, fn.typed ? [name].concat(args) : args)
-        if (fn.one) { fns.splice(i, 1); i-- }
-         else if (fns[i] !== fn) { i-- } // Makes self-removal possible during iteration
-        fn.busy = 0
+        context = context.parent;
       }
+
+      cache[name] = value;
     }
 
-    return el
+    if (isFunction(value))
+      value = value.call(this.view);
+
+    return value;
+  };
+
+  /**
+   * A Writer knows how to take a stream of tokens and render them to a
+   * string, given a context. It also maintains a cache of templates to
+   * avoid the need to parse the same template twice.
+   */
+  function Writer () {
+    this.cache = {};
   }
 
-  return el
+  /**
+   * Clears all cached templates in this writer.
+   */
+  Writer.prototype.clearCache = function clearCache () {
+    this.cache = {};
+  };
 
-}
-;(function(riot, evt) {
+  /**
+   * Parses and caches the given `template` and returns the array of tokens
+   * that is generated from the parse.
+   */
+  Writer.prototype.parse = function parse (template, tags) {
+    var cache = this.cache;
+    var tokens = cache[template];
 
-  // browsers only
-  if (!this.top) return
+    if (tokens == null)
+      tokens = cache[template] = parseTemplate(template, tags);
 
-  var loc = location,
-      fns = riot.observable(),
-      win = window,
-      current
+    return tokens;
+  };
 
-  function hash() {
-    return loc.hash.slice(1)
-  }
+  /**
+   * High-level method that is used to render the given `template` with
+   * the given `view`.
+   *
+   * The optional `partials` argument may be an object that contains the
+   * names and templates of partials that are used in the template. It may
+   * also be a function that is used to load partial templates on the fly
+   * that takes a single argument: the name of the partial.
+   */
+  Writer.prototype.render = function render (template, view, partials) {
+    var tokens = this.parse(template);
+    var context = (view instanceof Context) ? view : new Context(view);
+    return this.renderTokens(tokens, context, partials, template);
+  };
 
-  function parser(path) {
-    return path.split('/')
-  }
+  /**
+   * Low-level method that renders the given array of `tokens` using
+   * the given `context` and `partials`.
+   *
+   * Note: The `originalTemplate` is only ever used to extract the portion
+   * of the original template that was contained in a higher-order section.
+   * If the template doesn't use higher-order sections, this argument may
+   * be omitted.
+   */
+  Writer.prototype.renderTokens = function renderTokens (tokens, context, partials, originalTemplate) {
+    var buffer = '';
 
-  function emit(path) {
-    if (path.type) path = hash()
+    var token, symbol, value;
+    for (var i = 0, numTokens = tokens.length; i < numTokens; ++i) {
+      value = undefined;
+      token = tokens[i];
+      symbol = token[0];
 
-    if (path != current) {
-      fns.trigger.apply(null, ['H'].concat(parser(path)))
-      current = path
+      if (symbol === '#') value = this.renderSection(token, context, partials, originalTemplate);
+      else if (symbol === '^') value = this.renderInverted(token, context, partials, originalTemplate);
+      else if (symbol === '>') value = this.renderPartial(token, context, partials, originalTemplate);
+      else if (symbol === '&') value = this.unescapedValue(token, context);
+      else if (symbol === 'name') value = this.escapedValue(token, context);
+      else if (symbol === 'text') value = this.rawValue(token);
+
+      if (value !== undefined)
+        buffer += value;
     }
-  }
 
-  var r = riot.route = function(arg) {
-    // string
-    if (arg[0]) {
-      loc.hash = arg
-      emit(arg)
+    return buffer;
+  };
 
-    // function
+  Writer.prototype.renderSection = function renderSection (token, context, partials, originalTemplate) {
+    var self = this;
+    var buffer = '';
+    var value = context.lookup(token[1]);
+
+    // This function is used to render an arbitrary template
+    // in the current context by higher-order sections.
+    function subRender (template) {
+      return self.render(template, context, partials);
+    }
+
+    if (!value) return;
+
+    if (isArray(value)) {
+      for (var j = 0, valueLength = value.length; j < valueLength; ++j) {
+        buffer += this.renderTokens(token[4], context.push(value[j]), partials, originalTemplate);
+      }
+    } else if (typeof value === 'object' || typeof value === 'string' || typeof value === 'number') {
+      buffer += this.renderTokens(token[4], context.push(value), partials, originalTemplate);
+    } else if (isFunction(value)) {
+      if (typeof originalTemplate !== 'string')
+        throw new Error('Cannot use higher-order sections without the original template');
+
+      // Extract the portion of the original template that the section contains.
+      value = value.call(context.view, originalTemplate.slice(token[3], token[5]), subRender);
+
+      if (value != null)
+        buffer += value;
     } else {
-      fns.on('H', arg)
+      buffer += this.renderTokens(token[4], context, partials, originalTemplate);
     }
-  }
-
-  r.exec = function(fn) {
-    fn.apply(null, parser(hash()))
-  }
-
-  r.parser = function(fn) {
-    parser = fn
-  }
-
-  win.addEventListener ? win.addEventListener(evt, emit, false) : win.attachEvent('on' + evt, emit)
-
-})(riot, 'hashchange')
-/*
-
-//// How it works?
-
-
-Three ways:
-
-1. Expressions: tmpl('{ value }', data).
-   Returns the result of evaluated expression as a raw object.
-
-2. Templates: tmpl('Hi { name } { surname }', data).
-   Returns a string with evaluated expressions.
-
-3. Filters: tmpl('{ show: !done, highlight: active }', data).
-   Returns a space separated list of trueish keys (mainly
-   used for setting html classes), e.g. "show highlight".
-
-
-// Template examples
-
-tmpl('{ title || "Untitled" }', data)
-tmpl('Results are { results ? "ready" : "loading" }', data)
-tmpl('Today is { new Date() }', data)
-tmpl('{ message.length > 140 && "Message is too long" }', data)
-tmpl('This item got { Math.round(rating) } stars', data)
-tmpl('<h1>{ title }</h1>{ body }', data)
-
-
-// Falsy expressions in templates
-
-In templates (as opposed to single expressions) all falsy values
-except zero (undefined/null/false) will default to empty string:
-
-tmpl('{ undefined } - { false } - { null } - { 0 }', {})
-// will return: " - - - 0"
-
-*/
-
-
-var brackets = (function(orig, s, b) {
-  return function(x) {
-
-    // make sure we use the current setting
-    s = riot.settings.brackets || orig
-    if (b != s) b = s.split(' ')
-
-    // if regexp given, rewrite it with current brackets (only if differ from default)
-    // else, get brackets
-    return x && x.test
-      ? s == orig
-        ? x : RegExp(x.source
-                      .replace(/\{/g, b[0].replace(/(?=.)/g, '\\'))
-                      .replace(/\}/g, b[1].replace(/(?=.)/g, '\\')),
-                    x.global ? 'g' : '')
-      : b[x]
-
-  }
-})('{ }')
-
-
-var tmpl = (function() {
-
-  var cache = {},
-      re_vars = /(['"\/]).*?[^\\]\1|\.\w*|\w*:|\b(?:(?:new|typeof|in|instanceof) |(?:this|true|false|null|undefined)\b|function *\()|([a-z_$]\w*)/gi
-              // [ 1               ][ 2  ][ 3 ][ 4                                                                                  ][ 5       ]
-              // find variable names:
-              // 1. skip quoted strings and regexps: "a b", 'a b', 'a \'b\'', /a b/
-              // 2. skip object properties: .name
-              // 3. skip object literals: name:
-              // 4. skip javascript keywords
-              // 5. match var name
-
-  // build a template (or get it from cache), render with data
-  return function(str, data) {
-    return str && (cache[str] = cache[str] || tmpl(str))(data)
-  }
-
-
-  // create a template instance
-
-  function tmpl(s, p) {
-
-    // default template string to {}
-    s = (s || (brackets(0) + brackets(1)))
-
-      // temporarily convert \{ and \} to a non-character
-      .replace(brackets(/\\{/g), '\uFFF0')
-      .replace(brackets(/\\}/g), '\uFFF1')
-
-    // split string to expression and non-expresion parts
-    p = split(s, brackets(/{[\s\S]*?}/g))
-
-    return new Function('d', 'return ' + (
-
-      // is it a single expression or a template? i.e. {x} or <b>{x}</b>
-      !p[0] && !p[2] && !p[3]
-
-        // if expression, evaluate it
-        ? expr(p[1])
-
-        // if template, evaluate all expressions in it
-        : '[' + p.map(function(s, i) {
-
-            // is it an expression or a string (every second part is an expression)
-          return i % 2
-
-              // evaluate the expressions
-              ? expr(s, true)
-
-              // process string parts of the template:
-              : '"' + s
-
-                  // preserve new lines
-                  .replace(/\n/g, '\\n')
-
-                  // escape quotes
-                  .replace(/"/g, '\\"')
-
-                + '"'
-
-        }).join(',') + '].join("")'
-      )
-
-      // bring escaped { and } back
-      .replace(/\uFFF0/g, brackets(0))
-      .replace(/\uFFF1/g, brackets(1))
-
-    + ';')
-
-  }
-
-
-  // parse { ... } expression
-
-  function expr(s, n) {
-    s = s
-
-      // convert new lines to spaces
-      .replace(/\n/g, ' ')
-
-      // trim whitespace, curly brackets, strip comments
-      .replace(brackets(/^[{ ]+|[ }]+$|\/\*.+?\*\//g), '')
-
-    // is it an object literal? i.e. { key : value }
-    return /^\s*[\w- "']+ *:/.test(s)
-
-      // if object literal, return trueish keys
-      // e.g.: { show: isOpen(), done: item.done } -> "show done"
-      ? '[' + s.replace(/\W*([\w- ]+)\W*:([^,]+)/g, function(_, k, v) {
-
-        return v.replace(/[^&|=!><]+/g, wrap) + '?"' + k.trim() + '":"",'
-
-      }) + '].join(" ").trim()'
-
-      // if js expression, evaluate as javascript
-      : wrap(s, n)
-
-  }
-
-
-  // execute js w/o breaking on errors or undefined vars
-
-  function wrap(s, nonull) {
-    s = s.trim()
-    return !s ? '' : '(function(v){try{v='
-
-        // prefix vars (name => data.name)
-        + (s.replace(re_vars, function(s, _, v) { return v ? '(d.'+v+'===undefined?window.'+v+':d.'+v+')' : s })
-
-          // break the expression if its empty (resulting in undefined value)
-          || 'x')
-
-      + '}finally{return '
-
-        // default to empty string for falsy values except zero
-        + (nonull === true ? '!v&&v!==0?"":v' : 'v')
-
-      + '}}).call(d)'
-  }
-
-
-  // a substitute for str.split(re) for IE8
-  // because IE8 doesn't support capturing parenthesis in it
-
-  function split(s, re) {
-    var parts = [], last = 0
-    s.replace(re, function(m, i) {
-      // push matched expression and part before it
-      parts.push(s.slice(last, i), m)
-      last = i + m.length
-    })
-    // push the remaining part
-    return parts.concat(s.slice(last))
-  }
-
-})()
-
-// { key, i in items} -> { key, i, items }
-function loopKeys(expr) {
-  var ret = { val: expr },
-      els = expr.split(/\s+in\s+/)
-
-  if (els[1]) {
-    ret.val = brackets(0) + els[1]
-    els = els[0].slice(brackets(0).length).trim().split(/,\s*/)
-    ret.key = els[0]
-    ret.pos = els[1]
-  }
-
-  return ret
-}
-
-function mkitem(expr, key, val) {
-  var item = {}
-  item[expr.key] = key
-  if (expr.pos) item[expr.pos] = val
-  return item
-}
-
-
-/* Beware: heavy stuff */
-function _each(dom, parent, expr) {
-
-  remAttr(dom, 'each')
-
-  var template = dom.outerHTML,
-      prev = dom.previousSibling,
-      root = dom.parentNode,
-      rendered = [],
-      tags = [],
-      checksum
-
-  expr = loopKeys(expr)
-
-  function add(pos, item, tag) {
-    rendered.splice(pos, 0, item)
-    tags.splice(pos, 0, tag)
-  }
-
-  // clean template code
-  parent.one('update', function() {
-    root.removeChild(dom)
-
-  }).one('premount', function() {
-    if (root.stub) root = parent.root
-
-  }).on('update', function() {
-
-    var items = tmpl(expr.val, parent)
-    if (!items) return
-
-    // object loop. any changes cause full redraw
-    if (!Array.isArray(items)) {
-      var testsum = JSON.stringify(items)
-      if (testsum == checksum) return
-      checksum = testsum
-
-      // clear old items
-      each(tags, function(tag) { tag.unmount() })
-      rendered = []
-      tags = []
-
-      items = Object.keys(items).map(function(key) {
-        return mkitem(expr, key, items[key])
-      })
-
+    return buffer;
+  };
+
+  Writer.prototype.renderInverted = function renderInverted (token, context, partials, originalTemplate) {
+    var value = context.lookup(token[1]);
+
+    // Use JavaScript's definition of falsy. Include empty arrays.
+    // See https://github.com/janl/mustache.js/issues/186
+    if (!value || (isArray(value) && value.length === 0))
+      return this.renderTokens(token[4], context, partials, originalTemplate);
+  };
+
+  Writer.prototype.renderPartial = function renderPartial (token, context, partials) {
+    if (!partials) return;
+
+    var value = isFunction(partials) ? partials(token[1]) : partials[token[1]];
+    if (value != null)
+      return this.renderTokens(this.parse(value), context, partials, value);
+  };
+
+  Writer.prototype.unescapedValue = function unescapedValue (token, context) {
+    var value = context.lookup(token[1]);
+    if (value != null)
+      return value;
+  };
+
+  Writer.prototype.escapedValue = function escapedValue (token, context) {
+    var value = context.lookup(token[1]);
+    if (value != null)
+      return mustache.escape(value);
+  };
+
+  Writer.prototype.rawValue = function rawValue (token) {
+    return token[1];
+  };
+
+  mustache.name = 'mustache.js';
+  mustache.version = '2.1.3';
+  mustache.tags = [ '{{', '}}' ];
+
+  // All high-level mustache.* functions use this writer.
+  var defaultWriter = new Writer();
+
+  /**
+   * Clears all cached templates in the default writer.
+   */
+  mustache.clearCache = function clearCache () {
+    return defaultWriter.clearCache();
+  };
+
+  /**
+   * Parses and caches the given template in the default writer and returns the
+   * array of tokens it contains. Doing this ahead of time avoids the need to
+   * parse templates on the fly as they are rendered.
+   */
+  mustache.parse = function parse (template, tags) {
+    return defaultWriter.parse(template, tags);
+  };
+
+  /**
+   * Renders the `template` with the given `view` and `partials` using the
+   * default writer.
+   */
+  mustache.render = function render (template, view, partials) {
+    if (typeof template !== 'string') {
+      throw new TypeError('Invalid template! Template should be a "string" ' +
+                          'but "' + typeStr(template) + '" was given as the first ' +
+                          'argument for mustache#render(template, view, partials)');
     }
 
-    // unmount redundant
-    each(arrDiff(rendered, items), function(item) {
-      var pos = rendered.indexOf(item),
-          tag = tags[pos]
+    return defaultWriter.render(template, view, partials);
+  };
 
-      if (tag) {
-        tag.unmount()
-        rendered.splice(pos, 1)
-        tags.splice(pos, 1)
-      }
+  // This is here for backwards compatibility with 0.4.x.,
+  /*eslint-disable */ // eslint wants camel cased function name
+  mustache.to_html = function to_html (template, view, partials, send) {
+    /*eslint-enable*/
 
-    })
+    var result = mustache.render(template, view, partials);
 
-    // mount new / reorder
-    var nodes = root.childNodes,
-        prev_index = [].indexOf.call(nodes, prev)
-
-    each(items, function(item, i) {
-
-      // start index search from position based on the current i
-      var pos = items.indexOf(item, i),
-          oldPos = rendered.indexOf(item, i)
-
-      // if not found, search backwards from current i position
-      pos < 0 && (pos = items.lastIndexOf(item, i))
-      oldPos < 0 && (oldPos = rendered.lastIndexOf(item, i))
-
-      // mount new
-      if (oldPos < 0) {
-        if (!checksum && expr.key) item = mkitem(expr, item, pos)
-
-        var tag = new Tag({ tmpl: template }, {
-          before: nodes[prev_index + 1 + pos],
-          parent: parent,
-          root: root,
-          item: item
-        })
-
-        tag.mount()
-
-        return add(pos, item, tag)
-      }
-
-      // change pos value
-      if (expr.pos && tags[oldPos][expr.pos] != pos) {
-        tags[oldPos].one('update', function(item) {
-          item[expr.pos] = pos
-        })
-        tags[oldPos].update()
-      }
-
-      // reorder
-      if (pos != oldPos) {
-        root.insertBefore(nodes[prev_index + oldPos + 1], nodes[prev_index + pos + 1])
-        return add(pos, rendered.splice(oldPos, 1)[0], tags.splice(oldPos, 1)[0])
-      }
-
-    })
-
-    rendered = items.slice()
-
-  })
-
-}
-
-
-function parseNamedElements(root, parent, child_tags) {
-
-  walk(root, function(dom) {
-    if (dom.nodeType == 1) {
-
-      // custom child tag
-      var child = getTag(dom)
-
-      if (child && !dom.getAttribute('each')) {
-        var tag = new Tag(child, { root: dom, parent: parent })
-        parent.tags[dom.getAttribute('name') || child.name] = tag
-        child_tags.push(tag)
-      }
-
-      each(dom.attributes, function(attr) {
-        if (/^(name|id)$/.test(attr.name)) parent[attr.value] = dom
-      })
-    }
-
-  })
-
-}
-
-function parseExpressions(root, tag, expressions) {
-
-  function addExpr(dom, val, extra) {
-    if (val.indexOf(brackets(0)) >= 0) {
-      var expr = { dom: dom, expr: val }
-      expressions.push(extend(expr, extra))
-    }
-  }
-
-  walk(root, function(dom) {
-    var type = dom.nodeType
-
-    // text node
-    if (type == 3 && dom.parentNode.tagName != 'STYLE') addExpr(dom, dom.nodeValue)
-    if (type != 1) return
-
-    /* element */
-
-    // loop
-    var attr = dom.getAttribute('each')
-    if (attr) { _each(dom, tag, attr); return false }
-
-    // attribute expressions
-    each(dom.attributes, function(attr) {
-      var name = attr.name,
-          bool = name.split('__')[1]
-
-      addExpr(dom, attr.value, { attr: bool || name, bool: bool })
-      if (bool) { remAttr(dom, name); return false }
-
-    })
-
-    // skip custom tags
-    if (getTag(dom)) return false
-
-  })
-
-}
-
-function Tag(impl, conf) {
-
-  var self = riot.observable(this),
-      opts = inherit(conf.opts) || {},
-      dom = mkdom(impl.tmpl),
-      parent = conf.parent,
-      expressions = [],
-      child_tags = [],
-      root = conf.root,
-      item = conf.item,
-      fn = impl.fn,
-      attr = {},
-      loop_dom
-
-  if (fn && root.riot) return
-  root.riot = true
-
-  extend(this, { parent: parent, root: root, opts: opts, tags: {} }, item)
-
-  // grab attributes
-  each(root.attributes, function(el) {
-    attr[el.name] = el.value
-  })
-
-  // options
-  function updateOpts(rem_attr) {
-    each(Object.keys(attr), function(name) {
-      opts[name] = tmpl(attr[name], parent || self)
-    })
-  }
-
-  this.update = function(data, init) {
-    extend(self, data, item)
-    updateOpts()
-    self.trigger('update', item)
-    update(expressions, self, item)
-    self.trigger('updated')
-  }
-
-  this.mount = function() {
-
-    updateOpts()
-
-    // initialiation
-    fn && fn.call(self, opts)
-
-    toggle(true)
-
-    // parse layout after init. fn may calculate args for nested custom tags
-    parseExpressions(dom, self, expressions)
-
-    self.update()
-
-    // internal use only, fixes #403
-    self.trigger('premount')
-
-    if (fn) {
-      while (dom.firstChild) root.appendChild(dom.firstChild)
-
+    if (isFunction(send)) {
+      send(result);
     } else {
-      loop_dom = dom.firstChild
-      root.insertBefore(loop_dom, conf.before || null) // null needed for IE8
+      return result;
     }
+  };
 
-    if (root.stub) self.root = root = parent.root
-    self.trigger('mount')
+  // Export the escaping function so that the user may override it.
+  // See https://github.com/janl/mustache.js/issues/244
+  mustache.escape = escapeHtml;
 
-  }
+  // Export these mainly for testing, but also for advanced usage.
+  mustache.Scanner = Scanner;
+  mustache.Context = Context;
+  mustache.Writer = Writer;
 
-
-  this.unmount = function() {
-    var el = fn ? root : loop_dom,
-        p = el.parentNode
-
-    if (p) {
-      if (parent) p.removeChild(el)
-      else while (root.firstChild) root.removeChild(root.firstChild)
-      toggle()
-      self.trigger('unmount')
-      self.off('*')
-      delete root.riot
-    }
-
-  }
-
-  function toggle(is_mount) {
-
-    // mount/unmount children
-    each(child_tags, function(child) { child[is_mount ? 'mount' : 'unmount']() })
-
-    // listen/unlisten parent (events flow one way from parent to children)
-    if (parent) {
-      var evt = is_mount ? 'on' : 'off'
-      parent[evt]('update', self.update)[evt]('unmount', self.unmount)
-    }
-  }
-
-  // named elements available for fn
-  parseNamedElements(dom, this, child_tags)
-
-
-}
-
-function setEventHandler(name, handler, dom, tag, item) {
-
-  dom[name] = function(e) {
-
-    // cross browser event fix
-    e = e || window.event
-    e.which = e.which || e.charCode || e.keyCode
-    e.target = e.target || e.srcElement
-    e.currentTarget = dom
-    e.item = item
-
-    // prevent default behaviour (by default)
-    if (handler.call(tag, e) !== true) {
-      e.preventDefault && e.preventDefault()
-      e.returnValue = false
-    }
-
-    var el = item ? tag.parent : tag
-    el.update()
-
-  }
-
-}
-
-// used by if- attribute
-function insertTo(root, node, before) {
-  if (root) {
-    root.insertBefore(before, node)
-    root.removeChild(node)
-  }
-}
-
-// item = currently looped item
-function update(expressions, tag, item) {
-
-  each(expressions, function(expr) {
-
-    var dom = expr.dom,
-        attr_name = expr.attr,
-        value = tmpl(expr.expr, tag),
-        parent = expr.dom.parentNode
-
-    if (value == null) value = ''
-
-    // leave out riot- prefixes from strings inside textarea
-    if (parent && parent.tagName == 'TEXTAREA') value = value.replace(/riot-/g, '')
-
-    // no change
-    if (expr.value === value) return
-    expr.value = value
-
-    // text node
-    if (!attr_name) return dom.nodeValue = value
-
-    // remove original attribute
-    remAttr(dom, attr_name)
-
-    // event handler
-    if (typeof value == 'function') {
-      setEventHandler(attr_name, value, dom, tag, item)
-
-    // if- conditional
-    } else if (attr_name == 'if') {
-      var stub = expr.stub
-
-      // add to DOM
-      if (value) {
-        stub && insertTo(stub.parentNode, stub, dom)
-
-      // remove from DOM
-      } else {
-        stub = expr.stub = stub || document.createTextNode('')
-        insertTo(dom.parentNode, dom, stub)
-      }
-
-    // show / hide
-    } else if (/^(show|hide)$/.test(attr_name)) {
-      if (attr_name == 'hide') value = !value
-      dom.style.display = value ? '' : 'none'
-
-    // field value
-    } else if (attr_name == 'value') {
-      dom.value = value
-
-    // <img src="{ expr }">
-    } else if (attr_name.slice(0, 5) == 'riot-') {
-      attr_name = attr_name.slice(5)
-      value ? dom.setAttribute(attr_name, value) : remAttr(dom, attr_name)
-
-    } else {
-      if (expr.bool) {
-        dom[attr_name] = value
-        if (!value) return
-        value = attr_name
-      }
-
-      if (typeof value != 'object') dom.setAttribute(attr_name, value)
-
-    }
-
-  })
-
-}
-function each(els, fn) {
-  for (var i = 0, len = (els || []).length, el; i < len; i++) {
-    el = els[i]
-    // return false -> reomve current item during loop
-    if (el != null && fn(el, i) === false) i--
-  }
-  return els
-}
-
-function remAttr(dom, name) {
-  dom.removeAttribute(name)
-}
-
-// max 2 from objects allowed
-function extend(obj, from, from2) {
-  from && each(Object.keys(from), function(key) {
-    obj[key] = from[key]
-  })
-  return from2 ? extend(obj, from2) : obj
-}
-
-function mkdom(template) {
-  var tag_name = template.trim().slice(1, 3).toLowerCase(),
-      root_tag = /td|th/.test(tag_name) ? 'tr' : tag_name == 'tr' ? 'tbody' : 'div',
-      el = document.createElement(root_tag)
-
-  el.stub = true
-  el.innerHTML = template
-  return el
-}
-
-function walk(dom, fn) {
-  if (dom) {
-    if (fn(dom) === false) walk(dom.nextSibling, fn)
-    else {
-      dom = dom.firstChild
-
-      while (dom) {
-        walk(dom, fn)
-        dom = dom.nextSibling
-      }
-    }
-  }
-}
-
-function arrDiff(arr1, arr2) {
-  return arr1.filter(function(el) {
-    return arr2.indexOf(el) < 0
-  })
-}
-
-function inherit(parent) {
-  function Child() {}
-  Child.prototype = parent
-  return new Child()
-}
-
-
-
-/*
- Virtual dom is an array of custom tags on the document.
- Updates and unmounts propagate downwards from parent to children.
-*/
-
-var virtual_dom = [],
-    tag_impl = {}
-
-
-function getTag(dom) {
-  return tag_impl[dom.tagName.toLowerCase()]
-}
-
-function injectStyle(css) {
-  var node = document.createElement('style')
-  node.innerHTML = css
-  document.head.appendChild(node)
-}
-
-function mountTo(root, tagName, opts) {
-  var tag = tag_impl[tagName]
-
-  if (tag && root) tag = new Tag(tag, { root: root, opts: opts })
-
-  if (tag && tag.mount) {
-    tag.mount()
-    virtual_dom.push(tag)
-    return tag.on('unmount', function() {
-      virtual_dom.splice(virtual_dom.indexOf(tag), 1)
-    })
-  }
-
-}
-
-riot.tag = function(name, html, css, fn) {
-  if (typeof css == 'function') fn = css
-  else if (css) injectStyle(css)
-  tag_impl[name] = { name: name, tmpl: html, fn: fn }
-}
-
-riot.mount = function(selector, tagName, opts) {
-  if (selector == '*') selector = Object.keys(tag_impl).join(', ')
-  if (typeof tagName == 'object') { opts = tagName; tagName = 0 }
-
-  var tags = []
-
-  function push(root) {
-    var name = tagName || root.tagName.toLowerCase(),
-        tag = mountTo(root, name, opts)
-
-    if (tag) tags.push(tag)
-  }
-
-  // DOM node
-  if (selector.tagName) {
-    push(selector)
-    return tags[0]
-
-  // selector
-  } else {
-    each(document.querySelectorAll(selector), push)
-    return tags
-  }
-
-}
-
-// update everything
-riot.update = function() {
-  return each(virtual_dom, function(tag) {
-    tag.update()
-  })
-}
-
-// @deprecated
-riot.mountTo = riot.mount
-
-
-  
-  // share methods for other riot parts, e.g. compiler
-  riot.util = { brackets: brackets, tmpl: tmpl }
-
-  // support CommonJS
-  if (typeof exports === 'object')
-    module.exports = riot
-
-  // support AMD
-  else if (typeof define === 'function' && define.amd)
-    define(function() { return riot })
-
-  // support browser
-  else
-    this.riot = riot
-
-})();
+}));
 
 Traitify.ui = {
   deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
+  widgets: Object(),
+  widget: function(name, args) {
+    return this.widgets[name] = args;
+  },
   init: function(options) {
-    var base, base1, base2, base3, base4, dataName, i, item, len, ref;
+    var base, base1;
     if (options == null) {
       options = Object();
     }
-    riot.observable(options);
+    Traitify.ui.observable(options);
     if (options.slideDeck == null) {
       options.slideDeck = Object();
     }
@@ -911,55 +667,54 @@ Traitify.ui = {
       Traitify.setPublicKey(options.publicKey);
     }
     delete options.publicKey;
-    ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      dataName = item.replace(/-([a-z])/g, function(g) {
-        return g[1].toUpperCase();
-      });
-      if ((base2 = options.results)[dataName] == null) {
-        base2[dataName] = Object();
-      }
-      if ((base3 = options.results[dataName]).tag == null) {
-        base3.tag = "tf-" + item;
-      }
-      if ((base4 = options.results[dataName]).target == null) {
-        base4.target = ".tf-" + item;
-      }
-    }
-    options.load = function() {
-      var args, j, len1, ref1, scopes, slideDeck, that;
+    options.render = function() {
+      var args, i, len, ref, scopes, slideDeck, that;
       that = this;
       scopes = "slides,blend,types,traits,career_matches";
       args = "image_pack=linear&data=" + scopes;
-      ref1 = options.slideDeck;
-      for (j = 0, len1 = ref1.length; j < len1; j++) {
-        slideDeck = ref1[j];
+      ref = options.slideDeck;
+      for (i = 0, len = ref.length; i < len; i++) {
+        slideDeck = ref[i];
         slideDeck.assessmentId = options.assessmentId;
       }
       Traitify.get("/assessments/" + options.assessmentId + "?" + args).then(function(assessment) {
-        var k, key, l, len2, len3, ref2, ref3, resultName, results, widget;
+        var assessmentName, data, innerScript, j, k, l, len1, len2, len3, name, ref1, ref2, ref3, results, script, view, widget;
         if (assessment.completed_at === void 0) {
-          options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0];
-          options.slideDeck.mount.slides = assessment.slides;
-          options.on("slideDeck.finish", function() {
-            return that.load();
-          });
-          return options.slideDeck.mount.initialize();
-        } else {
-          ref2 = Object.keys(that.results);
-          results = [];
-          for (k = 0, len2 = ref2.length; k < len2; k++) {
-            resultName = ref2[k];
-            widget = that.results[resultName];
-            that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0];
-            that.results[resultName].mount.assessmentId = that.assessmentId;
-            ref3 = Object.keys(assessment);
-            for (l = 0, len3 = ref3.length; l < len3; l++) {
-              key = ref3[l];
-              that.results[resultName].mount[key] = assessment[key];
+          options.slideDeck.mount = document.querySelector(options.slideDeck.target);
+          widget = Traitify.ui.widgets[options.slideDeck.tag];
+          data = Object();
+          ref1 = Object.keys(assessment);
+          for (j = 0, len1 = ref1.length; j < len1; j++) {
+            assessmentName = ref1[j];
+            if (widget.data.indexOf(assessmentName) !== -1) {
+              data[assessmentName] = assessment[assessmentName];
             }
-            results.push(that.results[resultName].mount.initialize());
+          }
+          view = Mustache.render(widget.template, assessment);
+          options.slideDeck.mount.innerHTML = view;
+          ref2 = widget.scripts;
+          for (k = 0, len2 = ref2.length; k < len2; k++) {
+            innerScript = ref2[k];
+            script = document.createElement("script");
+            script.innerHTML = innerScript;
+            options.slideDeck.mount.appendChild(script);
+          }
+          options.slideDeck.mount.traitify.data = data;
+          options.slideDeck.mount.traitify.assessmentId = assessment.id;
+          options.slideDeck.mount.traitify.initialize();
+          options.slideDeck.mount.traitify.mount = options.slideDeck.mount;
+          return options.slideDeck.mount.traitify.on("finish", function() {
+            return that.render();
+          });
+        } else {
+          ref3 = Object.keys(assessment);
+          results = [];
+          for (l = 0, len3 = ref3.length; l < len3; l++) {
+            name = ref3[l];
+            widget = Traitify.ui.widgets[name];
+            console.log("widget");
+            console.log(Traitify.ui.widgets);
+            results.push(console.log("/widget"));
           }
           return results;
         }
@@ -967,580 +722,30 @@ Traitify.ui = {
       return this;
     };
     return options;
-  }
-};
-
-riot.tag('tf-slide-deck', '<div class="tf-slide-deck-container {this.finished}" if="{this.visible}"> <div class="tf-slides" riot-style="max-height: {this.maxHeight}px"> <div class="tf-progress-bar tf-vertical"><div class="tf-progress-bar-inner" riot-style="height:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-info {this.infoVisible}"> <div class="tf-progress-and-caption"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-caption">{this.panelOne.caption}</div> </div> </div> <div class="tf-slide tf-panel-one tf-{this.panelOne.class}" riot-style="background-image: url(\'{this.panelOne.picture}\'); background-position:{this.panelOne.x}% {this.panelOne.y}%;"> </div> <div class="tf-slide tf-panel-two tf-{this.panelTwo.class}" riot-style="background-image: url(\'{this.panelTwo.picture}\'); background-position:{this.panelTwo.x}% {this.panelTwo.y}%;"> </div> <div class="tf-response"> <div class="tf-progress-bar"><div class="tf-progress-bar-inner" riot-style="width:{this.progressBar}%; {this.progressBarColor}"></div></div> <div class="tf-me-not-me"> <div class="tf-loading {this.loadingVisible}"> <a href="#" class="tf-refresh {this.refreshVisible}" onclick="{handleRefresh}"> Click To Refresh </a> <span class="tf-loading-animation {this.hideLoading}">Loading...</span> </div> <a href="#" class="tf-me" onclick="{handleMe}"> ME </a> <a href="#" class="tf-not-me" onclick="{handleNotMe}"> NOT ME </a> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-progress-bar{ display: none; } .tf-progress-and-caption .tf-progress-bar{ display: block; } .tf-cover{ background-color: #fff; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2; } .tf-progress-bar.tf-vertical{ height: 100%; width: 30px; position: absolute; z-index: 1; } .tf-progress-bar.tf-vertical .tf-progress-bar-inner{ width: 100%; border-radius: 15px 15px 0px 0px; bottom: 0px; position: absolute; -webkit-transition: height .4s ease-in-out; -moz-transition: height .4s ease-in-out; -o-transition: height .4s ease-in-out; transition: height .4s ease-in-out; } .tf-info{ position: absolute; z-index: 1; width: 100%; } .tf-progress-and-caption{ margin: 0px 0px; width: 100%; overflow: hidden; position: relative; } .tf-slide-deck-container.tf-finished{ height: 0; overflow: hidden; opacity: 0; } .tf-slides{ width:100%; max-width: 1200px; overflow: hidden; position: relative; height: 600px; font-family: "Source Sans Pro", Arial, Verdana, sans-serif; text-align: center; margin: 0 auto; background-color: #4488cc; } .tf-slide{ -webkit-transition: left .5s ease-in-out; -moz-transition: left .5s ease-in-out; -o-transition: left .5s ease-in-out; transition: left .5s ease-in-out; background-size: cover; } .tf-slides{ position: relative; } .tf-slide{ position: absolute; height: 100%; width: 100%; } .tf-slide.tf-next{ position: absolute; left: 100%; width: 100%; -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-current{ left: 0%; } .tf-caption{ padding: 3px 0px 8px; color: #fff; font-size: 28px; display: block; position:relative; z-index:1; background-color: rgba(0, 0, 0, .6); } .tf-slide.tf-current.tf-panel-one{ -moz-transition: none; -webkit-transition: none; -o-transition: color 0 ease-in; transition: none; } .tf-slide.tf-last{ position: absolute; left: -100%; width: 100%; } .tf-response{ position: absolute; bottom: 20px; width: 100%; } .tf-me-not-me{ width: 320px; height: 46px; position: relative; line-height:43px; font-size: 24px; padding: 0; overflow: hidden; border-radius: 25px; margin: 0 auto; } .tf-finished .tf-loading{ background-color: #315F9B; color: #fff; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-me-not-me .tf-me, .tf-me-not-me .tf-not-me{ box-sizing: initial; float:left; } .tf-me-not-me .tf-me{ position: relative; background-color: #1dafec; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0; margin: 0; } .tf-me-not-me .tf-not-me{ position: relative; background-color: #fc5f62; width: 50%; display: inline-block; height: 100%; text-decoration: none; color: #fff; padding:0; margin: 0; } .tf-progress-bar{ height: 10px; padding: 0px; width: 100%; background-color: rgba(255, 255, 255, .5) } .tf-progress-bar-inner{ position: relative; height: 100%; width: 0%; background-color: #fff; border-radius: 0px 5px 5px 0px; -webkit-transition: width .4s ease-in-out; -moz-transition: width .4s ease-in-out; -o-transition: width .4s ease-in-out; transition: width .4s ease-in-out; } .tf-refresh{ background-color: #4488cc; height: 100%; width: 100%; color: #fff; display: none; text-decoration: none; } .tf-loading{ background-color: #4488cc; height: 100%; width: 100%; position: absolute; z-index: 1; display: none; color: #fff; } .tf-finished .tf-response{ bottom: 50%; margin-bottom: -22px; -webkit-transition: bottom .4s ease-in-out; -moz-transition: bottom .4s ease-in-out; -o-transition: bottom .4s ease-in-out; transition: bottom .4s ease-in-out; } .tf-slide-deck .tf-me:active{ background-color: #2684AB; } .tf-slide-deck .tf-not-me:active{ background-color: #D74648; } .tf-visible{ display: block; } .tf-loading-animation{ -webkit-animation-name: fadeInOut; -webkit-animation-duration: 3s; -webkit-animation-iteration-count: infinite; animation-name: fadeInOut; animation-duration: 3s; animation-iteration-count: infinite; } .tf-invisible{ display: none; } @keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } } @-webkit-keyframes fadeInOut { 0% { opacity:1; } 45% { opacity:1; } 55% { opacity:0; } 80% { opacity:0; } 100%{ opacity:1 } }', function(opts) {var DB, slideTime, that;
-
-this.assessmentId = this.root.getAttribute("assessment-id") || opts.assessmentId;
-
-that = this;
-
-that.imageName = Traitify.ui.deviceType === "desktop" ? "image_desktop_retina" : "image_desktop";
-
-this.panelOne = Object();
-
-this.panelTwo = Object();
-
-if (opts.slideDeck.progressBarColor) {
-  this.progressBarColor = "background-color: " + opts.slideDeck.progressBarColor;
-}
-
-DB = {
-  get: function(key) {
-    var value;
-    value = window.sessionStorage.getItem(key);
-    if (value && value.length !== 0) {
-      return JSON.parse(value);
-    }
   },
-  set: function(key, value) {
-    return window.sessionStorage.setItem(key, JSON.stringify(value));
-  },
-  del: function(key) {
-    return window.sessionStorage.removeItem(key);
-  }
-};
-
-this.touchDevice = false;
-
-slideTime = new Date();
-
-this.processSlide = function(value) {
-  var customSlides, duration, j, len, sendSlides, slide, slideIds, slides;
-  that.trigger("slideDeck.addSlide");
-  duration = new Date() - slideTime;
-  slideTime = new Date();
-  this.slideData[this.slides[this.index].id] = {
-    id: this.slides[this.index].id,
-    time_taken: duration,
-    response: value
-  };
-  DB.set(that.assessmentId + "slideData", this.slideData);
-  if (this.images[this.index + 2] || (this.index === this.slides.length - 2 && this.images[this.index + 1])) {
-    if (this.transitionEvent) {
-      this.animateSlide();
-      this.onFinishedTransition = function() {
-        that.trigger("transitionEnd");
-        this.index++;
-        return this.setSlide();
-      };
-    } else {
-      this.index++;
-      this.setSlide();
-    }
-  } else {
-    this.loadingVisible = "tf-visible";
-  }
-  if (this.index === this.slides.length - 1) {
-    slides = Object.keys(this.slideData).map(function(id) {
-      return that.slideData[id];
-    });
-    slideIds = this.allSlides.map(function(slide) {
-      return slide.id;
-    });
-    sendSlides = Array();
-    customSlides = Array();
-    for (j = 0, len = slides.length; j < len; j++) {
-      slide = slides[j];
-      if (slideIds.indexOf(slide.id) !== -1) {
-        sendSlides.push(slide);
+  observable: function(options) {
+    options.observable = {
+      events: Object()
+    };
+    options.on = function(key, callback) {
+      if (options.observable.events[key] == null) {
+        return options.observable.events[key] = [callback];
       } else {
-        if (that.customSlideValues == null) {
-          that.customSlideValues = Array();
-        }
-        that.customSlideValues.push(slide);
+        return options.observable.events[key].push(callback);
       }
-    }
-    that.trigger("customSlideValues", that.customSlideValues);
-    Traitify.addSlides(that.assessmentId, sendSlides).then(function(response) {
-      opts.trigger("slideDeck.finish", that);
-      return DB.del(that.assessmentId + "slideData");
-    });
-    this.infoVisible = "tf-invisible";
-    this.finished = "tf-finished";
-    this.panelOne.picture = "";
-    this.progress;
-  }
-  return this.setProgressBar();
-};
-
-this.setProgressBar = function() {
-  return this.progressBar = (Object.keys(this.slideData).length / this.allSlides.length) * 100;
-};
-
-this.handleMe = function() {
-  if (!this.touchDevice) {
-    return this.processSlide(true);
-  }
-};
-
-this.handleNotMe = function() {
-  if (!this.touchDevice) {
-    return this.processSlide(false);
-  }
-};
-
-this.handleRefresh = function() {
-  this.refreshVisible = "";
-  this.loadingVisible = "tf-visible";
-  this.imageTries[this.index + 1] = 0;
-  return this.loadImage(this.index + 1);
-};
-
-this.panelOne["class"] = "current";
-
-this.panelTwo["class"] = "next";
-
-this.animateSlide = function() {
-  this.progressBar = (this.slideData.length / this.allSlides.length) * 100;
-  return this.panelTwo["class"] = "current";
-};
-
-this.setSlide = function() {
-  var slideOne, slideTwo;
-  if (this.panelTwo && this.panelTwo.picture) {
-    this.panelOne.picture = this.panelTwo.picture;
-    this.panelOne.caption = this.panelTwo.caption;
-    this.panelOne.x = this.panelTwo.x;
-    this.panelOne.y = this.panelTwo.y;
-    this.update();
-  } else {
-    slideOne = this.slides[this.index];
-    this.panelOne.caption = slideOne.caption;
-    this.panelOne.picture = slideOne[that.imageName];
-    this.panelOne.x = slideOne.focus_x;
-    this.panelOne.y = slideOne.focus_y;
-    this.update();
-  }
-  this.panelTwo["class"] = "next";
-  this.panelOne["class"] = "current";
-  if (this.slides[this.index + 1]) {
-    slideTwo = this.slides[this.index + 1];
-    this.panelTwo.caption = slideTwo.caption;
-    this.panelTwo.picture = slideTwo[that.imageName];
-    this.panelTwo.y = slideTwo.focus_y;
-    this.panelTwo.x = slideTwo.focus_x;
-  }
-  return this.update();
-};
-
-this.whichTransitionEvent = function() {
-  var el, j, len, ref, t, transitions;
-  el = document.createElement('fakeelement');
-  transitions = {
-    'transition': 'transitionend',
-    'OTransition': 'oTransitionEnd',
-    'MozTransition': 'transitionend',
-    'WebkitTransition': 'webkitTransitionEnd'
-  };
-  ref = Object.keys(transitions);
-  for (j = 0, len = ref.length; j < len; j++) {
-    t = ref[j];
-    if (el.style[t] !== void 0) {
-      return transitions[t];
-    }
-  }
-};
-
-this.transitionEvent = this.whichTransitionEvent();
-
-opts.on("slideDeck.initialized", function() {
-  var el, j, len, ref, slide;
-  el = document.getElementsByClassName("tf-panel-two")[0];
-  if (el) {
-    that.transitionEvent && el.addEventListener(that.transitionEvent, function() {
-      return that.onFinishedTransition();
-    });
-    that.touch(document.querySelector(".tf-me"), function() {
-      return that.processSlide(true);
-    });
-    that.touch(document.querySelector(".tf-not-me"), function() {
-      return that.processSlide(false);
-    });
-  }
-  if (that.customSlides == null) {
-    that.customSlides = Array();
-  }
-  ref = that.customSlides;
-  for (j = 0, len = ref.length; j < len; j++) {
-    slide = ref[j];
-    that.slides.splice(slide.position, slide);
-  }
-  return that.update();
-});
-
-this.on("mount", function() {
-  that.mounted = true;
-  if (that.initialized === true) {
-    return opts.trigger("slideDeck.initialized");
-  }
-});
-
-this.initialize = function() {
-  var images, playedSlideIds;
-  this.index = 0;
-  this.visible = true;
-  this.update();
-  this.slideData = DB.get(that.assessmentId + "slideData");
-  if (!this.slideData) {
-    this.slideData = Object();
-  }
-  this.allSlides = this.slides.map(function(slide) {
-    return slide;
-  });
-  playedSlideIds = Object.keys(this.slideData).map(function(slideName) {
-    return that.slideData[slideName].id;
-  });
-  this.slides = this.slides.filter(function(slide) {
-    return playedSlideIds.indexOf(slide.id) === -1;
-  });
-  this.setSlide();
-  this.setProgressBar();
-  images = this.slides.map(function(slide) {
-    return slide[that.imageName];
-  });
-  this.imageTries = Object();
-  this.images = Object();
-  this.loadImage = function(i) {
-    var base;
-    if (images[i]) {
-      if ((base = that.imageTries)[i] == null) {
-        base[i] = 0;
+    };
+    options.trigger = function(key, args) {
+      var i, len, onEvent, ref, results;
+      ref = options.observable.events[key];
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        onEvent = ref[i];
+        results.push(onEvent(args));
       }
-      that.images[i] = new Image();
-      that.images[i].src = images[i];
-      that.images[i].onerror = function() {
-        that.imageTries[i]++;
-        if (that.imageTries[i] < 30) {
-          return setTimeout(function() {
-            return that.loadImage(i);
-          }, 1000);
-        } else {
-          that.refreshVisible = "tf-visible";
-          that.hiddenRefresh = "tf-invisible";
-          return that.update();
-        }
-      };
-      return that.images[i].onload = function() {
-        if (that.loadingVisible !== "") {
-          that.loadingVisible = "";
-          that.update();
-        }
-        return setTimeout(function() {
-          return that.loadImage(i + 1);
-        }, 300);
-      };
-    }
-  };
-  this.loadImage(0);
-  that.initialized = true;
-  if (that.mounted === true) {
-    return opts.trigger("slideDeck.initialized");
+      return results;
+    };
+    return options;
   }
 };
 
-this.maxHeight = window.innerHeight;
-
-document.addEventListener("orientationchange", function() {
-  that.maxHeight = window.innerHeight;
-  return that.update();
-});
-
-this.setCustomSlides = function(slides) {
-  return this.customSlides = slides;
-};
-
-this.touch = function(target, callback) {
-  (function() {
-    var touchClick;
-    touchClick = false;
-    target.addEventListener('touchstart', (function() {
-      that.touchDevice = true;
-      touchClick = true;
-    }), false);
-    target.addEventListener('touchmove', (function() {
-      touchClick = false;
-    }), false);
-    target.addEventListener('touchend', (function(e) {
-      var event;
-      if (touchClick) {
-        touchClick = false;
-        event = document.createEvent('CustomEvent');
-        event.initCustomEvent('fastclick', true, true, e.target);
-        e.target.dispatchEvent(event);
-      }
-    }), false);
-  })();
-  return target.addEventListener('fastclick', (function(e) {
-    return callback();
-  }), false);
-};
-
-});
-
-riot.tag('tf-careers', '<div class="tf-careers-container" if="{this.visible}"> <div class="tf-experience-filters"> <div class="tf-filter-header"> Experience Level: </div> <div class="tf-experience-filter {this.levels.indexOf(\'all\') != -1 ? \'tf-highlight-filter\' : \'\'}" onclick="{this.setAll}"> All </div><div class="tf-experience-filter {this.parent.levels.indexOf(level) != -1 ? \'tf-highlight-filter\' : \'\'} " onclick="{this.parent.toggleLevel}" each="{level in this.levelSets}">{level + 1}</div> </div> <div class="tf-career-details tf-show-details" each="{this.careers}" onclick="{this.parent.careerClick}"> <img riot-src="{this.career.picture}" class="tf-image"> <div class="tf-title">{this.career.title}</div> <div class="tf-description tf-fade">{this.career.description}</div> <div class="tf-experience">Experience Level</div> <div class="tf-experience-boxes"> <div class="tf-experience-box { this.exp > 0 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 1 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 2 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 3 ? \'tf-highlighted-box\' : \'\'}"></div> <div class="tf-experience-box { this.exp > 4 ? \'tf-highlighted-box\' : \'\'}"></div> </div> <span class="tf-education">Education </span> <div class="tf-education-text">{this.career.experience_level.degree}</div> <div class="tf-match-rate">Match Rate <div class="tf-percent">{Math.round(this.score)}%</div></div> <div class="tf-score"> <div class="tf-clearfix"></div> <div class="tf-score-bar"> <div class="tf-score-bar-inner" riot-style="width: {Math.round(this.score)}%" data-match-rate="{Math.round(this.score)}"><div> </div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-careers-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; font-size: 24px; color: #4e4e4e; line-height: 1.5; margin: 20px; text-align: center; max-width: 900px; margin: 0 auto; box-sizing: border-box; } .tf-experience-filters{ text-align: right; font-weight: 600; font-size: 15px; line-height: 18px; border-radius: 3px; margin-right: 10px; overflow: hidden; } .tf-experience-filters div{ display: inline-block; } .tf-filter-header{ margin-right: 10px; } @media screen and (max-width: 380px) { .tf-filter-header { width: 100%; display: block; margin-bottom: 5px; } } .tf-experience-filter{ padding: 5px 12px; background-color: #00aeef; cursor: pointer; color: #fff; } .tf-highlight-filter{ background-color: #0390cb; -moz-box-shadow: inset 1px 1px 5px #184f71; -webkit-box-shadow: inset 1px 1px 5px #184f71; box-shadow: inset 1px 1px 5px #184f71; } .tf-career-details { border: 1px solid; border-color: #e2e2e2; display: block; width: 90%; margin: 10px 5%; vertical-align: top; background-color: #fff; position: relative; line-height: 1.3; font-size: 13px; text-align: left; } @media screen and (min-width: 568px) { .tf-career-details { float: left; width: 46%; margin: 10px; } } @media screen and (min-width: 768px) { .tf-career-details { float: left; width: 31%; margin: 10px 1%; } } @media screen and (min-width: 900px) { .tf-career-details { float: left; width: 22.7%; } } .tf-career-details .tf-image{ width: 100%; top: 10px; margin: 0 auto; } .tf-career-details .tf-title{ margin: 10px; margin-bottom: 0; font-weight: 600; font-size: 16px; height: 42px; /* font-size * line-height * lines to show */ -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; display: block; /* Fallback for non-webkit */ display: -webkit-box; } .tf-career-details .tf-description{ margin-top: 5px; font-weight: 400; } .tf-career-details .tf-description, .tf-career-details .tf-experience-boxes{ padding: 0 10px 10px; } .tf-career-details .tf-experience, .tf-career-details .tf-education, .tf-career-details .tf-match-rate{ display: block; color: #2e2e2e; font-weight: 600; font-size: 15px; margin: 10px; margin-bottom: 0; } .tf-career-details .tf-score{ margin: 3px 10px 13px; } .tf-career-details .tf-match-rate .tf-percent{ display: inline-block; float: right; text-align:right; font-weight: 400; font-size: 14px; } .tf-career-details .tf-experience-boxes { margin-top: 5px; padding-bottom: 0; } .tf-career-details .tf-experience-box{ background-color: #e2e2e2; width: 15px; height: 15px; margin-right: 2px; display: inline-block; } .tf-career-details .tf-experience-box.tf-highlighted-box{ background-color: #00aeef; } .tf-career-details .tf-education-text{ margin: 2px 10px 5px; color: #4e4e4e; font-weight: 300; } .tf-career-details .tf-fade{ position: relative; height: 55px; overflow: hidden; } .tf-career-details .tf-fade:after { content: ""; text-align: right; position: absolute; bottom: 0; right: 0; width: 60%; height: 16px; background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 70%); } .tf-score-bar{ background-color: #e3e3e3; height:15px; display: block; } .tf-score-bar-inner{ background-color: #00aeef; height: 100%; } .tf-score-bar-inner[data-match-rate=\'100\'], .tf-score-bar-inner[data-match-rate^=\'9\'] { background-color: #4bc275; } .tf-score-bar-inner[data-match-rate^=\'8\'] { background-color: #6fd172; } .tf-score-bar-inner[data-match-rate^=\'7\'] { background-color: #99d16f; } .tf-score-bar-inner[data-match-rate^=\'6\'] { background-color: #bbd16f; } .tf-score-bar-inner[data-match-rate^=\'5\'] { background-color: #ced16f; } .tf-score-bar-inner[data-match-rate^=\'4\'] { background-color: #ece129; } .tf-score-bar-inner[data-match-rate^=\'3\'] { background-color: #ecb329; } .tf-score-bar-inner[data-match-rate^=\'2\'] { background-color: #f28316; } .tf-score-bar-inner[data-match-rate^=\'1\'] { background-color: #f25416; } .tf-clearfix{ clear:both; }', function(opts) {var that;
-
-this.assessmentId = this.root.getAttribute("assessment-id");
-
-that = this;
-
-this.levelSets = [0, 1, 2, 3, 4];
-
-this.levels = ["all"];
-
-this.mounted = true;
-
-if (this.initialized) {
-  opts.trigger("careers.initialized");
-}
-
-this.careerClick = function() {
-  var career;
-  career = this;
-  this.currentCareer = {
-    career: career.career,
-    score: career.score
-  };
-  return opts.trigger("careers.click");
-};
-
-this.setAll = function() {
-  this.levels = ["all"];
-  return this.refreshColumns();
-};
-
-this.toggleLevel = function(level) {
-  level = this.level;
-  if (that.levels.indexOf("all") !== -1) {
-    that.levels = [];
-  }
-  if (that.levels.indexOf(level) !== -1) {
-    that.levels = that.levels.filter(function(lvl) {
-      return lvl !== level;
-    });
-    if (that.levels.length === 0) {
-      that.levels = ["all"];
-    }
-  } else {
-    that.levels.push(level);
-  }
-  return that.refreshColumns();
-};
-
-this.refreshColumns = function() {
-  var levels;
-  if (this.levels.indexOf("all") !== -1) {
-    this.careers = this.career_matches;
-    return this.setColumns();
-  } else {
-    levels = that.levels.map(function(a) {
-      return a + 1;
-    });
-    return window.Traitify.getCareers(this.assessmentId, {
-      experience_levels: levels.join(","),
-      number_of_matches: 20
-    }).then(function(careers) {
-      that.careers = careers;
-      return that.setColumns();
-    });
-  }
-};
-
-this.setColumns = function() {
-  var career, careers, i, len, ref;
-  careers = this.careers;
-  ref = this.careers;
-  for (i = 0, len = ref.length; i < len; i++) {
-    career = ref[i];
-    career.exp = career.career.experience_level.id;
-  }
-  return this.update();
-};
-
-this.initialize = function() {
-  if (this.career_matches) {
-    this.assessmentId = this.assessmentId;
-    this.careers = this.career_matches;
-  }
-  this.visible = true;
-  this.columns = opts.columns || 4;
-  return this.setColumns();
-};
-
-});
-
-riot.tag('tf-famous-people', '<div class="tf-famous-people-container" if="{this.visible}"> <div class="tf-famous-people-scroller"> <div class="tf-famous-people-inner"> <div class="tf-famous-person" each="{famousPerson in this.famousPeople}"> <div class="tf-image"> <img riot-src="{famousPerson.picture}"> </div> <div class="tf-name">{famousPerson.name}</div> </div> </div> </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-famous-people-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; margin: 0 auto 30px; } .tf-famous-people-inner{ width: 860px; margin: 0 auto; } .tf-famous-people-scroller{ height: 230px; max-width: 860px; margin: 0 auto; overflow-y: hidden; overflow-x: auto; text-align: center; } .tf-famous-person{ display: inline-block; padding: 10px 15px; text-align: center; color: #555; margin: 0 auto; vertical-align: top; } .tf-famous-person .tf-image{ width: 142px; height: 142px; border-radius: 50%; overflow: hidden; } .tf-name{ margin-top: 20px; width: 142px; line-height:1em; }', function(opts) {var that;
-
-this.assessmentId = this.root.getAttribute("assessment-id");
-
-that = this;
-
-this.on("mount", function() {
-  this.mounted = true;
-  if (this.initialized) {
-    return opts.trigger("famousPeople.initialized");
-  }
-});
-
-this.initialize = function() {
-  var famousPeople, famousPerson, i, j, len, len1, personalityType, ref, ref1;
-  that.visible = true;
-  famousPeople = Array();
-  ref = that.personality_types;
-  for (i = 0, len = ref.length; i < len; i++) {
-    personalityType = ref[i];
-    ref1 = personalityType.personality_type.famous_people;
-    for (j = 0, len1 = ref1.length; j < len1; j++) {
-      famousPerson = ref1[j];
-      famousPeople.push(famousPerson);
-    }
-  }
-  that.famousPeople = famousPeople.slice(0, 5).sort(function() {
-    return 0.5 - Math.random();
-  });
-  that.update();
-  this.initialized = true;
-  if (this.mounted) {
-    return opts.trigger("famousPeople.initialized");
-  }
-};
-
-if (opts.personality_types) {
-  this.personality_types = opts.personality_types;
-  this.personality_blend = opts.personality_blend;
-  this.initialize();
-} else if (this.assessmentId) {
-  window.Traitify.getPersonalityTypes(this.assessmentId).then(function(response) {
-    that.famousPeople = response.personality_blend.famous_people;
-    return that.initialize();
-  });
-}
-
-});
-
-riot.tag('tf-personality-traits', '<div class="tf-personality-traits-container" if="{this.visible}"> <div each="{trait in this.traits}" class="tf-trait" riot-style="border-color:#{trait.badge.color_1}"> <div class="tf-background-color" riot-style="background-color: #{trait.badge.color_1}"></div> <div class="tf-name">{trait.name}</div> <div class="tf-definition">{trait.definition}</div> <div class="tf-background" riot-style="background-image:url({trait.badge.image_medium})"></div> </div> </div>', '.tf-personality-traits-container .tf-background-color{ opacity: .03; position: absolute; left: 0; top: 0; width: 100%; height: 100%; } .tf-personality-traits-container div, .tf-personality-traits-container img{ box-sizing: content-box; } .tf-personality-traits-container .your-top-traits{ font-size: 24px; margin: 20px; text-align: center; } .tf-personality-traits-container{ max-width:860px; margin:0 auto 50px; text-align: center; font-family: "Source Sans Pro", Arial, Verdana, sans-serif; } .tf-personality-traits-container .tf-trait{ border-top: 6px solid; border-color: #99aaff; display: inline-block; width: 46%; height: 180px; margin: 5px; vertical-align:top; background-color:#fff; position:relative; line-height: 1.2em; text-align:center; } .tf-personality-traits-container.ie .tf-trait{ height:280px; } @media (min-width: 768px) { .tf-personality-traits-container .tf-trait{ width:30%; } } @media screen and (min-width: 900px) { .tf-personality-traits-container .tf-trait{ width:23%; } } .tf-personality-traits-container .tf-trait .tf-name{ margin: 20px auto; margin-bottom: 0; display: inline-block; font-weight: 600; text-align: center; } .tf-personality-traits-container .tf-trait .tf-definition{ padding: 0 20px; margin-top: 10px; font-size:14px; font-weight: 400; text-align: left; } .tf-personality-traits-container .tf-trait .tf-background{ width: 52px; height: 52px; right: 20px; bottom: 20px; position:absolute; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: .15; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; } .tf-personality-traits-container .tf-trait:hover .tf-background{ opacity:.8; }', function(opts) {var that;
-
-this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
-
-this.mounted = true;
-
-if (this.initialized) {
-  opts.trigger("personalityTraits.initialized");
-}
-
-that = this;
-
-this.initialize = function() {
-  if (this.personality_traits) {
-    that.traits = this.personality_traits;
-  }
-  that.visible = true;
-  that.traits = that.traits.slice(0, 8).map(function(trait) {
-    var tf;
-    tf = trait.personality_trait;
-    tf.badge = tf.personality_type.badge;
-    return tf;
-  });
-  that.update();
-  this.initialized = true;
-  if (this.mounted) {
-    return opts.trigger("personalityTraits.initialized");
-  }
-};
-
-if (this.personality_traits) {
-  that.initialize();
-} else if (this.assessmentId) {
-  window.Traitify.getPersonalityTraits(this.assessmentId).then(function(results) {
-    that.traits = results.personality_traits;
-    return that.initialize();
-  });
-}
-
-});
-
-riot.tag('tf-personality-types', '<div class="tf-types-container" if="{this.visible}"> <div class="tf-types-scroller"> <div class="tf-types"> <div each="{type in this.currentTypes}" class="tf-type {type.active}" onclick="{parent.handleClick}"> <div class="tf-name-small">{type.name}</div> <div class="tf-badge-score-container" riot-style="border-color: #{type.badge.color_1}"> <img class="tf-badge" riot-src="{type.badge.image_medium}"> </div> <div class="tf-percent"> {type.score} / 100 </div> </div> <div class="tf-pointer" riot-style="left: {this.pointerPosition}px; background-color: #{this.pointerColor}"></div> </div> </div> <div class="tf-description"> {this.description} </div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-pointer{ margin-left: 20px; position: absolute; width: 86px; height: 10px; border-radius: 5px; -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; } .tf-types-scroller{ width: 100%; overflow-x: auto; overflow-y: hidden; margin-bottom: 35px; text-align: center; } .tf-types-container{ font-family: "Source Sans Pro", Arial, Verdana, sans-serif; margin-bottom: 50px; } .tf-types-container .tf-score{ border-bottom: 1px solid #fff; font-size: 22px; } .tf-types-container .tf-name{ font-size: 28px; margin-top: 15px; text-align: center; } .tf-types-container .tf-types .tf-name-small{ font-size: 16px; margin-top: 0; } .tf-types-container .tf-badge{ width: 100%; } .tf-badge-score-background{ width: 100%; position: relative; height: 100%; opacity: .1; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; } .tf-types-container .tf-badge-score-container{ border: 1px solid #fff; width: 40px; height: 40px; position: relative; overflow: hidden; border-radius: 50%; padding: 22px; margin: 7px auto 10px; -webkit-backface-visibility: hidden; -moz-backface-visibility: hidden; -webkit-transform: translate3d(0, 0, 0); -moz-transform: translate3d(0, 0, 0) } .tf-types-container .tf-type .tf-badge{ opacity: .9; } .tf-types-container .tf-percent{ -webkit-transition: all .4s ease-in-out; -moz-transition: all .4s ease-in-out; -o-transition: all .4s ease-in-out; transition: all .4s ease-in-out; position: relative; color: #bbb; } .tf-types-container .tf-badge-score-background{ width: 100%; height: 100%; opacity: .1; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=10)"; position: absolute; left: 0; bottom: 0; } .tf-types-container .tf-badge-score{ width: 100%; height: 0%; -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)"; position: absolute; left: 0; bottom: 0; -webkit-transition: all .2s ease-in-out; -moz-transition: all .2s ease-in-out; -o-transition: all .2s ease-in-out; transition: all .2s ease-in-out; opacity: .3; } .tf-types-container .tf-type.tf-active .tf-badge-score{ height: 100%; bottom: 0; } .tf-types-container .tf-type:hover .tf-percent{ color: #333; } .tf-types-container .tf-types{ margin: 0 auto; position: relative; display: inline-block; width:882px; margin-bottom: 10px; } .tf-types-container .tf-type{ text-align: center; cursor: pointer; display: inline-block; position: relative; display: inline-block; padding: 10px; margin: 0 10px; } .tf-types-container .tf-description{ max-width: 600px; margin: 0 auto; text-align: justify; font-size: 16px; }', function(opts) {var that;
-
-this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
-
-that = this;
-
-this.on("mount", function() {
-  this.mounted = true;
-  if (this.initialized) {
-    return opts.trigger("personalityTypes.initialized");
-  }
-});
-
-that.initialize = function() {
-  that.visible = true;
-  that.types = that.personality_types.map(function(i, index) {
-    var score;
-    score = Math.round(i.score);
-    i = i.personality_type;
-    i.score = score;
-    i.position = index;
-    i.height = 0;
-    return i;
-  });
-  that.types[0].active = "tf-active";
-  that.description = that.types[0].description;
-  that.name = that.types[0].name;
-  that.score = that.types[0].score;
-  that.pointerPosition = 0;
-  that.pointerColor = that.types[0].badge.color_1;
-  that.currentTypes = that.types;
-  that.handleClick = function(e) {
-    e.preventDefault();
-    that.description = this.type.description;
-    that.types = that.types.map(function(type) {
-      type.active = "";
-      type.height = 0;
-      return type;
-    });
-    that.pointerPosition = this.type.position * 126.15;
-    that.pointerColor = this.type.badge.color_1;
-    that.name = this.type.name;
-    this.type.active = "tf-active";
-    return that.update();
-  };
-  that.update();
-  this.initialized = true;
-  if (this.mounted) {
-    return opts.trigger("personalityTypes.initialized");
-  }
-};
-
-});
-
-riot.tag('tf-personality-blend', '<div class="tf-blends-container" if="{this.visible}"> <div class="tf-badges"> <div class="tf-badge" riot-style="border-color: {this.type1.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type1.badge.image_medium}"> </div> <div class="tf-badge" riot-style="border-color: {this.type2.border};"> <div class="tf-badge-background"></div> <img riot-src="{this.type2.badge.image_medium}"> </div> </div> <h2 class="tf-blend-title">{this.type1.name} / {this.type2.name}</h2> <div class="tf-blend-description">{this.description}</div> </div>', '@font-face { font-family: "Source Sans Pro"; font-style: normal; font-weight: 400; src: local(\'Source Sans Pro\'), local(\'Source Sans Pro\'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format(\'woff\'); } .tf-blends-container{ width: 100%; font-family: "Source Sans Pro", Arial, Verdana, sans-serif; padding: 20px 20px 10px; box-sizing: border-box; } .tf-blends-container .tf-badge-background{ width: 100%; height: 100%; position: absolute; opacity: .2; top: 0; left: 0; } img{ width: 100%; } .tf-blends-container .tf-badges{ width: 100%; max-width: 330px; margin: 0 auto; text-align:center; } .tf-blends-container .tf-badge{ width: 22%; padding:12%; position: relative; border-radius: 50%; border: 2px solid; display: inline-block; overflow: hidden; } .tf-blends-container .tf-badge:first-child{ margin-right: -4%; z-index: 1; } .tf-blends-container .tf-badge:last-child{ margin-left: -4%; } .tf-blend-title { text-align: center; font-size: 25px; font-weight: 400; } .tf-blend-description{ margin: 0 auto 30px; text-align: justify; font-size: 15px; } @media screen and (min-width: 768px) { .tf-blend-description { font-size: 17px; max-width: 580px; } } @media screen and (min-width: 900px) { .tf-blend-description { font-size: 18px; line-height: 1.35; max-width: 650px; } }', function(opts) {var that;
-
-this.assessmentId = opts.assessmentId || this.root.getAttribute("assessment-id");
-
-that = this;
-
-this.on("mount", function() {
-  this.mounted = true;
-  if (this.initialized) {
-    return opts.trigger("personalityBlend.initialized");
-  }
-});
-
-this.initialize = function() {
-  that.visible = true;
-  that.type1 = that.personality_blend.personality_type_1;
-  that.type2 = that.personality_blend.personality_type_2;
-  that.type1.bg = that.type1.badge.color_1;
-  that.type1.border = that.type1.badge.color_1;
-  that.type2.bg = that.type2.badge.color_1;
-  that.type2.border = that.type2.badge.color_1;
-  that.description = that.personality_blend.description;
-  that.update();
-  that.initialized = true;
-  if (that.mounted) {
-    return opts.trigger("personalityBlend.initialized");
-  }
-};
-
-});
+Traitify.ui.widget("tf-slide-deck", {"data":["slides"],"template":"<div class=\"tf-slides\">\n  <div class=\"tf-slides-container\">\n    <div class=\"tf-progress-bar\">\n      <div class=\"tf-progress-bar-inner\"></div>\n    </div>\n    <div class=\"tf-caption\">\n    </div>\n    <div class=\"tf-slide tf-current\">\n    </div>\n    <div class=\"tf-slide tf-next\">\n    </div>\n  </div>\n  <div class=\"tf-me-not-me-container\">\n    <div class=\"tf-me\">Me</div>\n    <div class=\"tf-not-me\">Not Me</div>\n    <div class=\"tf-loading tf-hidden\">\n      <span class=\"tf-loading-content\">Loading...</span>\n      <span class=\"tf-click-content tf-hidden\">Click to reload!</span>\n    </div>\n  </div>\n</div>\n<style>\n  .tf-slides{\n    font-family: arial;\n    text-align:center;\n  }\n  .tf-progress-bar{\n    position: relative;\n    height: 12px;\n    width: 100%;\n    z-index:1;\n    background-color: rgba(150, 150, 150, .5);\n  }\n  .tf-hidden{\n    display: none;\n  }\n  .tf-progress-bar .tf-progress-bar-inner{\n    height: 100%;\n    width: 0%;\n    background-color: #fff;\n    border-radius: 0px 8px 8px 0px;\n    -webkit-transition: width .6s ease-in-out;\n    -moz-transition: width .6s ease-in-out;\n    -o-transition: width .6s ease-in-out;\n    transition: width .6s ease-in-out;\n  }\n  .tf-caption{\n    position: absolute;\n    color: #fff;\n    width:100%;\n    background-color: rgba(0, 0, 0, .7);\n    height: 48px;\n    line-height: 48px;\n    font-size: 20px;\n    z-index:1;\n  }\n  .tf-slides .tf-slide{\n    width: 100%;\n    height: 100%;\n    background-size: cover;\n    display: inline-block;\n    left: 0%;\n    top: 0px;\n    position: absolute;\n  }\n  .tf-slides .tf-slide.tf-current{\n    left: 0%;\n    -webkit-transition: left .6s ease-in-out;\n    -moz-transition: left .6s ease-in-out;\n    -o-transition: left .6s ease-in-out;\n    transition: left .6s ease-in-out;\n  }\n  .tf-slides .tf-slide.tf-next{\n    left: 100%;\n  }\n  .tf-slides .tf-slides-container{\n    height: 400px;\n    width: 100%;\n    position: relative;\n    overflow: hidden;\n  }\n  .tf-slides.min-width-720 .tf-slides-container {\n    height: 540px;\n  }\n  .tf-slides.min-width-1200 .tf-slides-container {\n    height: 700px;\n  }\n\n  .tf-me-not-me-container{\n    width: 280px;\n    margin: 0px auto;\n    height: 43px;\n    border-radius: 23px;\n    line-height: 43px;\n    text-align: center;\n    position: relative;\n    z-index: 1;\n    margin-top: -80px;\n    overflow: hidden;\n    cursor: pointer;\n  }\n  .tf-me, .tf-not-me{\n    font-size: 20px;\n    height: 100%;\n    display: inline-block;\n    position: relative;\n    width: 50%;\n    float: left;\n    color: #fff;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n  }\n  .tf-me{\n    background-color: #00aeef;\n  }\n  .tf-me:active{\n    background-color: #0B659A;\n  }\n  .tf-not-me{\n    background-color: #ff5e5e;\n  }\n  .tf-not-me:active{\n    background-color: #961111;\n  }\n  .tf-slides.tf-loading .tf-loading{\n    display: block;\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    background-color: #ff5e5e;\n    color: #fff;\n  }\n  .tf-slides.tf-loading .tf-loading .tf-loading-content{\n    -webkit-animation: fade-in-and-out 2s ease-out;\n    -webkit-animation-iteration-count: infinite; \n  }\n  @-webkit-keyframes fade-in-and-out {\n    0% { opacity: 0.0;}\n    50% { opacity: 1.0;}\n    100% { opacity: 0.0;}\n  }\n</style>\n","scripts":["\n    (function(me){\n      me.traitify = Object()\n\n      me.traitify.deferred = function(){\n        return {\n          thenCalls: Array(),\n          catchCalls: Array(),\n          then: function(callback){\n            if(this.triggered){\n              callback(this.args);\n            }else{\n              this.thenCalls.push(callback);\n            }\n          },\n          catch: function(callback){\n            if(this.triggered){\n              callback(this.args);\n            }else{\n              this.catchCalls.push(callback);\n            }\n          },\n          resolve: function(args){\n            if(this.thenCalls && this.thenCalls.length != 0){\n              for(i=0; i < this.thenCalls.length; i++){\n                this.thenCalls[i](args);\n              }\n            }else{\n              this.args = args;\n              this.triggered = true;\n            }\n          },\n          reject: function(args){\n            if(this.catchCalls.length != 0){\n              for(i=0; i < this.catchCalls.length; i++){\n                this.catchCalls[i](args);\n              }\n            }else{\n              this.args = args;\n              this.triggered = true;\n            }\n          }\n        }\n      }\n      me.traitify.Observable = function(item){\n        item.ons = Object()\n        item.on = function(key, callback){\n          if(!item.ons[key]){\n            item.ons[key] = Array();\n          }\n          item.ons[key].push(callback);\n        }\n        item.trigger = function(key, opts){\n          if(item.ons[key] && typeof item.ons[key].length != 0){\n            il = item.ons[key].length\n            for(i=0; i < il; i++){\n              item.ons[key][i](opts); \n            }\n          }\n        }\n        item.off = function(key){\n          item.ons[key] = Array();\n        }\n      }\n      me.traitify.Observable(me.traitify);\n      var i, undefined, el = document.createElement('div'),\n      transitions = {\n        'transition':'transitionend',\n        'OTransition':'otransitionend',  // oTransitionEnd in very old Opera\n        'MozTransition':'transitionend',\n        'WebkitTransition':'webkitTransitionEnd'\n      };\n\n      for (i in transitions) {\n        if (transitions.hasOwnProperty(i) && el.style[i] !== undefined) {\n            transitionEnd = transitions[i];\n        }\n      }\n      var $TF = function(item){\n        if(typeof item == \"string\"){\n          item = me.querySelector(item);\n        }\n        if(Traitify.oldIE){\n          item.addEventListener = item.attachEvent;\n        }\n        item.hide = function(){\n          if(!this.className.match(/tf-hidden/)){\n            this.className = this.className + \" tf-hidden\";\n          }\n        }\n        item.show = function(){\n          this.className = this.className.replace(/ tf-hidden/, \"\");\n        }\n        return item;\n      }\n      me.traitify.slideResponses = Object();\n      me.traitify.lastResponse = new Date();\n      me.traitify.db = Object();\n      me.traitify.db.set = function(key, value){\n        key = me.traitify.assessmentId + \"-\" + key\n        return sessionStorage.setItem(key, JSON.stringify(value));\n      }\n      me.traitify.db.get = function(key){\n        key = me.traitify.assessmentId + \"-\" + key\n        return JSON.parse(sessionStorage.getItem(key));\n      }\n      me.traitify.initialize = function(){\n        self = $TF(this);\n        /*\n         * Set Available Nodes\n         */\n        this.nodes = Object()\n        this.nodes.currentSlide = $TF(\".tf-slide.tf-current\");\n        this.nodes.nextSlide = $TF(\".tf-slide.tf-next\");\n        this.nodes.caption = $TF(\".tf-caption\");\n        this.nodes.me = $TF(\".tf-me\");\n        this.nodes.notMe = $TF(\".tf-not-me\");\n        this.nodes.progressBarInner = $TF(\".tf-progress-bar-inner\");\n        this.nodes.slides = $TF(\".tf-slides\");\n        this.nodes.loading = $TF(\".tf-loading .tf-loading-content\");\n        this.nodes.clickToReload = $TF(\".tf-loading .tf-click-content\");\n\n\n        /*\n         * Set Data\n         */\n        this.data.unPlayedSlides = this.data.slides.filter(function(slide){\n          return !slide.completed_at && Object.keys(self.db.get(\"slideResponses\") || Object()).indexOf(slide.id) == -1\n        })\n        this.data.playedSlides = this.data.slides.filter(function(slide){\n          return slide.completed_at || Object.keys(self.db.get(\"slideResponses\") || Object()).indexOf(slide.id) != -1\n        })\n        this.data.slides = this.data.playedSlides.concat(this.data.unPlayedSlides)\n        this.index = this.data.playedSlides.length || 0\n\n        /*\n         * Resize\n         */\n        self.resizeTimer =  false;\n        window.addEventListener(\"resize\", function(){\n          if(self.resizeTimeout){\n            clearTimeout(self.resizeTimeout);\n          }\n\n          self.resizeTimeout = setTimeout(function(){\n            self.trigger(\"resize\");\n            self.resizeTimeout = false;\n          }, 300);\n        });\n\n        self.on(\"resize\", function(){\n          width = me.offsetWidth;\n          className = self.nodes.slides.className;\n          className = className.replace(/ min-width-1200/g, \"\");\n          className = className.replace(/ min-width-720/g, \"\");\n          className = className.replace(/ min-width-480/g, \"\");\n \n          if(width > 1200){\n            className += \" min-width-1200\";\n          } else if (width > 720){\n            className += \" min-width-720\";\n          } else{\n            className += \" min-width-480\";\n          }\n          self.nodes.slides.className = className;\n        })\n        self.trigger(\"resize\");\n\n        /*\n         * Transition\n         */\n        this.slideLock = false;\n        this.events = Object();\n        self.nodes.nextSlide.transitionend = function(){\n\n        }\n        self.nodes.nextSlide.addEventListener(transitionEnd, function(){\n          self.nodes.nextSlide.transitionend();\n        })\n\n        this.events.animate = function(){\n          if(!self.slideLock){\n            promise = self.deferred();\n            self.slideLock = true;\n            self.nodes.nextSlide.transitionend = function(){\n              self.slideLock = false;\n              promise.resolve();\n            }\n            self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace(\"tf-next\", \"\") + \" tf-current\";\n            self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + \"%\";\n            return promise;\n          }\n        }\n        self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + \"%\";\n\n        /*\n         * Set Current Slide\n         */\n        this.events.setCurrentSlideData = function(){\n          if( self.data.slides.length - self.index == 0){\n            return true;\n          }\n\n          self.currentSlide = self.data.slides[self.index];\n          /*\n           * Set Caption\n           */\n          self.nodes.caption.innerHTML = self.currentSlide.caption;\n            \n          /*\n           * Set Image\n           */\n          self.nodes.currentSlide.style.backgroundImage = \"url(\" + self.currentSlide.image_desktop_retina + \")\";\n\n          /*\n           * Set Focus\n           */\n          backgroundPosition = self.currentSlide.focus_x + \"% \" + self.currentSlide.focus_y + \"%\";\n          self.nodes.currentSlide.style.backgroundPosition = backgroundPosition;            \n        }\n\n        /*\n         * Set Next Slide\n         */\n        this.events.setNextSlideData = function(){\n          if( self.data.slides.length - self.index <= 1){\n            return true;\n          }\n\n          self.nextSlide = self.data.slides[self.index + 1];\n          /*\n           * Set Image\n           */\n          self.nodes.nextSlide.style.backgroundImage = \"url(\" + self.nextSlide.image_desktop_retina + \")\";\n\n          /*\n           * Set Focus\n           */\n          backgroundPosition = self.nextSlide.focus_x + \"% \" + self.nextSlide.focus_y + \"%\";\n          self.nodes.nextSlide.style.backgroundPosition = backgroundPosition;\n        }\n\n        this.events.setNextSlideData();\n        this.events.setCurrentSlideData();\n\n        /*\n         * Advance Slide\n         */\n        this.events.advanceSlide = function(){\n          if(!self.slideLock){\n            if(((self.index - self.data.slides.length) <= 2 && self.index - self.data.slides.length != 0 ) || self.images[self.index + 2]){\n              self.index++\n              self.trigger(\"advanceSlide\", {value: true, slide: slide});\n\n              self.events.animate().then(function(){\n                self.events.setNextSlideData();\n                self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace(\"tf-current\", \"\") + \" tf-next\";\n                self.events.setCurrentSlideData();\n              })\n            } else if(!self.nodes.slides.className.match(/tf-loading/)) {\n              self.nodes.slides.className += \" tf-loading\";\n            } \n          }\n        }\n        this.on(\"advanceSlide\", function(params){\n          slideResponses = self.db.get(\"slideResponses\") || Object();\n\n          slideResponses[params.slide.id] = {\n            value: params.value,\n            responseTime: new Date() - self.lastResponse\n          };\n\n          self.lastResponse = new Date();\n          self.db.set(\"slideResponses\", slideResponses);\n          self.trigger(\"setSlides\");\n        })\n\n        this.on(\"setSlides\", function(){\n          slideResponses = self.db.get(\"slideResponses\") || Object();\n\n          srl = Object.keys(slideResponses).length;\n\n          if(srl == self.data.slides.length){\n            slides = Object.keys(slideResponses).map(function(slideId){\n              return {\n                id: slideId,\n                response: slideResponses[slideId].value,\n                time_taken: slideResponses[slideId].responseTime\n              };\n            })\n            \n            Traitify.addSlides(self.assessmentId, slides).then(function(){\n              me.innerHTML = \"\";\n\n              self.trigger(\"finish\")\n            });\n          }\n        })\n\n        this.trigger(\"setSlides\");\n\n        /*\n         * Me Trigger\n         */\n        this.on(\"me\", function(){\n          slide = self.data.slides[self.index]\n\n          self.events.advanceSlide();\n        })\n\n        /*\n         * Not Me Trigger\n         */\n        this.on(\"notMe\",function(){\n          slide = self.data.slides[self.index]\n\n          self.events.advanceSlide();\n        })\n\n        /*\n         * Me\n         */\n        this.nodes.me.onclick = function(){ \n          self.trigger(\"me\")\n        }\n\n        /*\n         * Not Me\n         */\n        this.nodes.notMe.onclick = function(){\n          self.trigger(\"notMe\")\n        }\n\n        /*\n         * Gui For Preload Images\n         */\n        self.imageSize = \"image_desktop_retina\"\n        this.imageUrls = self.data.slides.map(function(slide){\n          return slide[self.imageSize];\n        })\n\n        this.nodes.clickToReload.onclick = function(){\n          self.trigger(\"clickReload\");\n        }\n        this.on(\"clickReload\", function(){\n          self.imageTries[self.images.lastIndex] = 0;\n          self.nodes.loading.show();\n          self.nodes.clickToReload.hide();\n          self.loadImage(self.images.lastIndex);\n        })\n\n        /*\n         * NASTY IMAGE PRELOADING\n         */\n        this.imageTries = Object()\n        this.images = Array();\n        self.images.lastIndex = this.index;\n\n        this.loadImage = function(i){\n          if(self.imageUrls[i]){\n            if(!self.imageTries[i]){\n              self.imageTries[i]= 0;\n            }\n            self.images[i] = new Image();\n            self.images[i].src = self.imageUrls[i];\n            self.images[i].onerror = function(){\n              self.imageTries[i]++;\n              if(self.imageTries[i] < 30){\n                setTimeout(function(){\n                  self.loadImage(i);\n                }, 1000)\n              }else{\n                self.images.lastIndex = i;\n                self.nodes.loading.hide();\n                self.nodes.clickToReload.show();\n              }\n            }\n            self.images[i].onload = function(){\n              setTimeout(function(){\n                self.loadImage(i + 1);\n              }, 300)\n              self.trigger(\"imageLoaded\");\n              self.nodes.clickToReload.hide();\n              self.images.lastIndex = i;\n\n              self.nodes.slides.className = self.nodes.slides.className.replace(\" tf-loading\", \"\");\n            }\n          }\n        }\n        this.loadImage(self.index);\n      }\n    })(document.currentScript.parentNode);\n"]})

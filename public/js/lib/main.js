@@ -1,11 +1,15 @@
 Traitify.ui = {
   deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
+  widgets: Object(),
+  widget: function(name, args) {
+    return this.widgets[name] = args;
+  },
   init: function(options) {
-    var base, base1, base2, base3, base4, dataName, i, item, len, ref;
+    var base, base1;
     if (options == null) {
       options = Object();
     }
-    riot.observable(options);
+    Traitify.ui.observable(options);
     if (options.slideDeck == null) {
       options.slideDeck = Object();
     }
@@ -22,60 +26,82 @@ Traitify.ui = {
       Traitify.setPublicKey(options.publicKey);
     }
     delete options.publicKey;
-    ref = ["personality-blend", "personality-types", "personality-traits", "famous-people", "careers"];
-    for (i = 0, len = ref.length; i < len; i++) {
-      item = ref[i];
-      dataName = item.replace(/-([a-z])/g, function(g) {
-        return g[1].toUpperCase();
-      });
-      if ((base2 = options.results)[dataName] == null) {
-        base2[dataName] = Object();
-      }
-      if ((base3 = options.results[dataName]).tag == null) {
-        base3.tag = "tf-" + item;
-      }
-      if ((base4 = options.results[dataName]).target == null) {
-        base4.target = ".tf-" + item;
-      }
-    }
-    options.load = function() {
-      var args, j, len1, ref1, scopes, slideDeck, that;
+    options.render = function() {
+      var args, i, len, ref, scopes, slideDeck, that;
       that = this;
       scopes = "slides,blend,types,traits,career_matches";
       args = "image_pack=linear&data=" + scopes;
-      ref1 = options.slideDeck;
-      for (j = 0, len1 = ref1.length; j < len1; j++) {
-        slideDeck = ref1[j];
+      ref = options.slideDeck;
+      for (i = 0, len = ref.length; i < len; i++) {
+        slideDeck = ref[i];
         slideDeck.assessmentId = options.assessmentId;
       }
       Traitify.get("/assessments/" + options.assessmentId + "?" + args).then(function(assessment) {
-        var k, key, l, len2, len3, ref2, ref3, resultName, results, widget;
+        var assessmentName, data, innerScript, j, k, l, len1, len2, len3, name, ref1, ref2, ref3, results, script, view, widget;
         if (assessment.completed_at === void 0) {
-          options.slideDeck.mount = riot.mount(options.slideDeck.target, options.slideDeck.tag, options)[0];
-          options.slideDeck.mount.slides = assessment.slides;
-          options.on("slideDeck.finish", function() {
-            return that.load();
-          });
-          return options.slideDeck.mount.initialize();
-        } else {
-          ref2 = Object.keys(that.results);
-          results = [];
-          for (k = 0, len2 = ref2.length; k < len2; k++) {
-            resultName = ref2[k];
-            widget = that.results[resultName];
-            that.results[resultName].mount = riot.mount(widget.target, widget.tag, options)[0];
-            that.results[resultName].mount.assessmentId = that.assessmentId;
-            ref3 = Object.keys(assessment);
-            for (l = 0, len3 = ref3.length; l < len3; l++) {
-              key = ref3[l];
-              that.results[resultName].mount[key] = assessment[key];
+          options.slideDeck.mount = document.querySelector(options.slideDeck.target);
+          widget = Traitify.ui.widgets[options.slideDeck.tag];
+          data = Object();
+          ref1 = Object.keys(assessment);
+          for (j = 0, len1 = ref1.length; j < len1; j++) {
+            assessmentName = ref1[j];
+            if (widget.data.indexOf(assessmentName) !== -1) {
+              data[assessmentName] = assessment[assessmentName];
             }
-            results.push(that.results[resultName].mount.initialize());
+          }
+          view = Mustache.render(widget.template, assessment);
+          options.slideDeck.mount.innerHTML = view;
+          ref2 = widget.scripts;
+          for (k = 0, len2 = ref2.length; k < len2; k++) {
+            innerScript = ref2[k];
+            script = document.createElement("script");
+            script.innerHTML = innerScript;
+            options.slideDeck.mount.appendChild(script);
+          }
+          options.slideDeck.mount.traitify.data = data;
+          options.slideDeck.mount.traitify.assessmentId = assessment.id;
+          options.slideDeck.mount.traitify.initialize();
+          options.slideDeck.mount.traitify.mount = options.slideDeck.mount;
+          return options.slideDeck.mount.traitify.on("finish", function() {
+            return that.render();
+          });
+        } else {
+          ref3 = Object.keys(assessment);
+          results = [];
+          for (l = 0, len3 = ref3.length; l < len3; l++) {
+            name = ref3[l];
+            widget = Traitify.ui.widgets[name];
+            console.log("widget");
+            console.log(Traitify.ui.widgets);
+            results.push(console.log("/widget"));
           }
           return results;
         }
       });
       return this;
+    };
+    return options;
+  },
+  observable: function(options) {
+    options.observable = {
+      events: Object()
+    };
+    options.on = function(key, callback) {
+      if (options.observable.events[key] == null) {
+        return options.observable.events[key] = [callback];
+      } else {
+        return options.observable.events[key].push(callback);
+      }
+    };
+    options.trigger = function(key, args) {
+      var i, len, onEvent, ref, results;
+      ref = options.observable.events[key];
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        onEvent = ref[i];
+        results.push(onEvent(args));
+      }
+      return results;
     };
     return options;
   }

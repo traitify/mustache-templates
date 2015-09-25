@@ -1,0 +1,539 @@
+<div class="tf-slides">
+  <div class="tf-slides-container">
+    <div class="tf-progress-bar">
+      <div class="tf-progress-bar-inner"></div>
+    </div>
+    <div class="tf-caption">
+    </div>
+    <div class="tf-slide tf-current">
+    </div>
+    <div class="tf-slide tf-next">
+    </div>
+  </div>
+  <div class="tf-me-not-me-container">
+    <div class="tf-me">Me</div>
+    <div class="tf-not-me">Not Me</div>
+    <div class="tf-loading tf-hidden">
+      <span class="tf-loading-content">Loading...</span>
+      <span class="tf-click-content tf-hidden">Click to reload!</span>
+    </div>
+  </div>
+</div>
+<style>
+  .tf-slides{
+    font-family: arial;
+    text-align:center;
+  }
+  .tf-progress-bar{
+    position: relative;
+    height: 12px;
+    width: 100%;
+    z-index:1;
+    background-color: rgba(150, 150, 150, .5);
+  }
+  .tf-hidden{
+    display: none;
+  }
+  .tf-progress-bar .tf-progress-bar-inner{
+    height: 100%;
+    width: 0%;
+    background-color: #fff;
+    border-radius: 0px 8px 8px 0px;
+    -webkit-transition: width .6s ease-in-out;
+    -moz-transition: width .6s ease-in-out;
+    -o-transition: width .6s ease-in-out;
+    transition: width .6s ease-in-out;
+  }
+  .tf-caption{
+    position: absolute;
+    color: #fff;
+    width:100%;
+    background-color: rgba(0, 0, 0, .7);
+    height: 48px;
+    line-height: 48px;
+    font-size: 20px;
+    z-index:1;
+  }
+  .tf-slides .tf-slide{
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    display: inline-block;
+    left: 0%;
+    top: 0px;
+    position: absolute;
+  }
+  .tf-slides .tf-slide.tf-current{
+    left: 0%;
+    -webkit-transition: left .6s ease-in-out;
+    -moz-transition: left .6s ease-in-out;
+    -o-transition: left .6s ease-in-out;
+    transition: left .6s ease-in-out;
+  }
+  .tf-slides .tf-slide.tf-next{
+    left: 100%;
+  }
+  .tf-slides .tf-slides-container{
+    height: 400px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  .tf-slides.min-width-720 .tf-slides-container {
+    height: 540px;
+  }
+  .tf-slides.min-width-1200 .tf-slides-container {
+    height: 700px;
+  }
+
+  .tf-me-not-me-container{
+    width: 280px;
+    margin: 0px auto;
+    height: 43px;
+    border-radius: 23px;
+    line-height: 43px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    margin-top: -80px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .tf-me, .tf-not-me{
+    font-size: 20px;
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    width: 50%;
+    float: left;
+    color: #fff;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  .tf-me{
+    background-color: #00aeef;
+  }
+  .tf-me:active{
+    background-color: #0B659A;
+  }
+  .tf-not-me{
+    background-color: #ff5e5e;
+  }
+  .tf-not-me:active{
+    background-color: #961111;
+  }
+  .tf-slides.tf-loading .tf-loading{
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #ff5e5e;
+    color: #fff;
+  }
+  .tf-slides.tf-loading .tf-loading .tf-loading-content{
+    -webkit-animation: fade-in-and-out 2s ease-out;
+    -webkit-animation-iteration-count: infinite; 
+  }
+  @-webkit-keyframes fade-in-and-out {
+    0% { opacity: 0.0;}
+    50% { opacity: 1.0;}
+    100% { opacity: 0.0;}
+  }
+</style>
+<script>
+    (function(me){
+      me.traitify = Object()
+
+      me.traitify.deferred = function(){
+        return {
+          thenCalls: Array(),
+          catchCalls: Array(),
+          then: function(callback){
+            if(this.triggered){
+              callback(this.args);
+            }else{
+              this.thenCalls.push(callback);
+            }
+          },
+          catch: function(callback){
+            if(this.triggered){
+              callback(this.args);
+            }else{
+              this.catchCalls.push(callback);
+            }
+          },
+          resolve: function(args){
+            if(this.thenCalls && this.thenCalls.length != 0){
+              for(i=0; i < this.thenCalls.length; i++){
+                this.thenCalls[i](args);
+              }
+            }else{
+              this.args = args;
+              this.triggered = true;
+            }
+          },
+          reject: function(args){
+            if(this.catchCalls.length != 0){
+              for(i=0; i < this.catchCalls.length; i++){
+                this.catchCalls[i](args);
+              }
+            }else{
+              this.args = args;
+              this.triggered = true;
+            }
+          }
+        }
+      }
+      me.traitify.Observable = function(item){
+        item.ons = Object()
+        item.on = function(key, callback){
+          if(!item.ons[key]){
+            item.ons[key] = Array();
+          }
+          item.ons[key].push(callback);
+        }
+        item.trigger = function(key, opts){
+          if(item.ons[key] && typeof item.ons[key].length != 0){
+            il = item.ons[key].length
+            for(i=0; i < il; i++){
+              item.ons[key][i](opts); 
+            }
+          }
+        }
+        item.off = function(key){
+          item.ons[key] = Array();
+        }
+      }
+      me.traitify.Observable(me.traitify);
+      var i, undefined, el = document.createElement('div'),
+      transitions = {
+        'transition':'transitionend',
+        'OTransition':'otransitionend',  // oTransitionEnd in very old Opera
+        'MozTransition':'transitionend',
+        'WebkitTransition':'webkitTransitionEnd'
+      };
+
+      for (i in transitions) {
+        if (transitions.hasOwnProperty(i) && el.style[i] !== undefined) {
+            transitionEnd = transitions[i];
+        }
+      }
+      var $TF = function(item){
+        if(typeof item == "string"){
+          item = me.querySelector(item);
+        }
+        if(Traitify.oldIE){
+          item.addEventListener = item.attachEvent;
+        }
+        item.hide = function(){
+          if(!this.className.match(/tf-hidden/)){
+            this.className = this.className + " tf-hidden";
+          }
+        }
+        item.show = function(){
+          this.className = this.className.replace(/ tf-hidden/, "");
+        }
+        return item;
+      }
+      me.traitify.slideResponses = Object();
+      me.traitify.lastResponse = new Date();
+      me.traitify.db = Object();
+      me.traitify.db.set = function(key, value){
+        key = me.traitify.assessmentId + "-" + key
+        return sessionStorage.setItem(key, JSON.stringify(value));
+      }
+      me.traitify.db.get = function(key){
+        key = me.traitify.assessmentId + "-" + key
+        return JSON.parse(sessionStorage.getItem(key));
+      }
+      me.traitify.initialize = function(){
+        self = $TF(this);
+        /*
+         * Set Available Nodes
+         */
+        this.nodes = Object()
+        this.nodes.currentSlide = $TF(".tf-slide.tf-current");
+        this.nodes.nextSlide = $TF(".tf-slide.tf-next");
+        this.nodes.caption = $TF(".tf-caption");
+        this.nodes.me = $TF(".tf-me");
+        this.nodes.notMe = $TF(".tf-not-me");
+        this.nodes.progressBarInner = $TF(".tf-progress-bar-inner");
+        this.nodes.slides = $TF(".tf-slides");
+        this.nodes.loading = $TF(".tf-loading .tf-loading-content");
+        this.nodes.clickToReload = $TF(".tf-loading .tf-click-content");
+
+
+        /*
+         * Set Data
+         */
+        this.data.unPlayedSlides = this.data.slides.filter(function(slide){
+          return !slide.completed_at && Object.keys(self.db.get("slideResponses") || Object()).indexOf(slide.id) == -1
+        })
+        this.data.playedSlides = this.data.slides.filter(function(slide){
+          return slide.completed_at || Object.keys(self.db.get("slideResponses") || Object()).indexOf(slide.id) != -1
+        })
+        this.data.slides = this.data.playedSlides.concat(this.data.unPlayedSlides)
+        this.index = this.data.playedSlides.length || 0
+
+        /*
+         * Resize
+         */
+        self.resizeTimer =  false;
+        window.addEventListener("resize", function(){
+          if(self.resizeTimeout){
+            clearTimeout(self.resizeTimeout);
+          }
+
+          self.resizeTimeout = setTimeout(function(){
+            self.trigger("resize");
+            self.resizeTimeout = false;
+          }, 300);
+        });
+
+        self.on("resize", function(){
+          width = me.offsetWidth;
+          className = self.nodes.slides.className;
+          className = className.replace(/ min-width-1200/g, "");
+          className = className.replace(/ min-width-720/g, "");
+          className = className.replace(/ min-width-480/g, "");
+ 
+          if(width > 1200){
+            className += " min-width-1200";
+          } else if (width > 720){
+            className += " min-width-720";
+          } else{
+            className += " min-width-480";
+          }
+          self.nodes.slides.className = className;
+        })
+        self.trigger("resize");
+
+        /*
+         * Transition
+         */
+        this.slideLock = false;
+        this.events = Object();
+        self.nodes.nextSlide.transitionend = function(){
+
+        }
+        self.nodes.nextSlide.addEventListener(transitionEnd, function(){
+          self.nodes.nextSlide.transitionend();
+        })
+
+        this.events.animate = function(){
+          if(!self.slideLock){
+            promise = self.deferred();
+            self.slideLock = true;
+            self.nodes.nextSlide.transitionend = function(){
+              self.slideLock = false;
+              promise.resolve();
+            }
+            self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace("tf-next", "") + " tf-current";
+            self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + "%";
+            return promise;
+          }
+        }
+        self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + "%";
+
+        /*
+         * Set Current Slide
+         */
+        this.events.setCurrentSlideData = function(){
+          if( self.data.slides.length - self.index == 0){
+            return true;
+          }
+
+          self.currentSlide = self.data.slides[self.index];
+          /*
+           * Set Caption
+           */
+          self.nodes.caption.innerHTML = self.currentSlide.caption;
+            
+          /*
+           * Set Image
+           */
+          self.nodes.currentSlide.style.backgroundImage = "url(" + self.currentSlide.image_desktop_retina + ")";
+
+          /*
+           * Set Focus
+           */
+          backgroundPosition = self.currentSlide.focus_x + "% " + self.currentSlide.focus_y + "%";
+          self.nodes.currentSlide.style.backgroundPosition = backgroundPosition;            
+        }
+
+        /*
+         * Set Next Slide
+         */
+        this.events.setNextSlideData = function(){
+          if( self.data.slides.length - self.index <= 1){
+            return true;
+          }
+
+          self.nextSlide = self.data.slides[self.index + 1];
+          /*
+           * Set Image
+           */
+          self.nodes.nextSlide.style.backgroundImage = "url(" + self.nextSlide.image_desktop_retina + ")";
+
+          /*
+           * Set Focus
+           */
+          backgroundPosition = self.nextSlide.focus_x + "% " + self.nextSlide.focus_y + "%";
+          self.nodes.nextSlide.style.backgroundPosition = backgroundPosition;
+        }
+
+        this.events.setNextSlideData();
+        this.events.setCurrentSlideData();
+
+        /*
+         * Advance Slide
+         */
+        this.events.advanceSlide = function(){
+          if(!self.slideLock){
+            if(((self.index - self.data.slides.length) <= 2 && self.index - self.data.slides.length != 0 ) || self.images[self.index + 2]){
+              self.index++
+              self.trigger("advanceSlide", {value: true, slide: slide});
+
+              self.events.animate().then(function(){
+                self.events.setNextSlideData();
+                self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace("tf-current", "") + " tf-next";
+                self.events.setCurrentSlideData();
+              })
+            } else if(!self.nodes.slides.className.match(/tf-loading/)) {
+              self.nodes.slides.className += " tf-loading";
+            } 
+          }
+        }
+        this.on("advanceSlide", function(params){
+          slideResponses = self.db.get("slideResponses") || Object();
+
+          slideResponses[params.slide.id] = {
+            value: params.value,
+            responseTime: new Date() - self.lastResponse
+          };
+
+          self.lastResponse = new Date();
+          self.db.set("slideResponses", slideResponses);
+          self.trigger("setSlides");
+        })
+
+        this.on("setSlides", function(){
+          slideResponses = self.db.get("slideResponses") || Object();
+
+          srl = Object.keys(slideResponses).length;
+
+          if(srl == self.data.slides.length){
+            slides = Object.keys(slideResponses).map(function(slideId){
+              return {
+                id: slideId,
+                response: slideResponses[slideId].value,
+                time_taken: slideResponses[slideId].responseTime
+              };
+            })
+            
+            Traitify.addSlides(self.assessmentId, slides).then(function(){
+              me.innerHTML = "";
+
+              self.trigger("finish")
+            });
+          }
+        })
+
+        this.trigger("setSlides");
+
+        /*
+         * Me Trigger
+         */
+        this.on("me", function(){
+          slide = self.data.slides[self.index]
+
+          self.events.advanceSlide();
+        })
+
+        /*
+         * Not Me Trigger
+         */
+        this.on("notMe",function(){
+          slide = self.data.slides[self.index]
+
+          self.events.advanceSlide();
+        })
+
+        /*
+         * Me
+         */
+        this.nodes.me.onclick = function(){ 
+          self.trigger("me")
+        }
+
+        /*
+         * Not Me
+         */
+        this.nodes.notMe.onclick = function(){
+          self.trigger("notMe")
+        }
+
+        /*
+         * Gui For Preload Images
+         */
+        self.imageSize = "image_desktop_retina"
+        this.imageUrls = self.data.slides.map(function(slide){
+          return slide[self.imageSize];
+        })
+
+        this.nodes.clickToReload.onclick = function(){
+          self.trigger("clickReload");
+        }
+        this.on("clickReload", function(){
+          self.imageTries[self.images.lastIndex] = 0;
+          self.nodes.loading.show();
+          self.nodes.clickToReload.hide();
+          self.loadImage(self.images.lastIndex);
+        })
+
+        /*
+         * NASTY IMAGE PRELOADING
+         */
+        this.imageTries = Object()
+        this.images = Array();
+        self.images.lastIndex = this.index;
+
+        this.loadImage = function(i){
+          if(self.imageUrls[i]){
+            if(!self.imageTries[i]){
+              self.imageTries[i]= 0;
+            }
+            self.images[i] = new Image();
+            self.images[i].src = self.imageUrls[i];
+            self.images[i].onerror = function(){
+              self.imageTries[i]++;
+              if(self.imageTries[i] < 30){
+                setTimeout(function(){
+                  self.loadImage(i);
+                }, 1000)
+              }else{
+                self.images.lastIndex = i;
+                self.nodes.loading.hide();
+                self.nodes.clickToReload.show();
+              }
+            }
+            self.images[i].onload = function(){
+              setTimeout(function(){
+                self.loadImage(i + 1);
+              }, 300)
+              self.trigger("imageLoaded");
+              self.nodes.clickToReload.hide();
+              self.images.lastIndex = i;
+
+              self.nodes.slides.className = self.nodes.slides.className.replace(" tf-loading", "");
+            }
+          }
+        }
+        this.loadImage(self.index);
+      }
+    })(document.currentScript.parentNode);
+</script>

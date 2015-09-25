@@ -1,20 +1,25 @@
 gulp = require 'gulp'
-riot = require 'gulp-riot'
 webserver = require('gulp-webserver');
 fs = require("fs")
 minify = require("minify")
 path = require('path')
-traitify = require('traitify')
-coffee = require('gulp-coffee')
-gutil = require('gulp-util')
-qunit = require('gulp-qunit')
-concat = require('gulp-concat')
-runSequence = require('gulp-run-sequence')
-yaml = require("js-yaml")
-uglify = require('gulp-uglify')
-rename = require("gulp-rename")
-gzip = require('gulp-gzip')
-notify = require("gulp-notify")
+traitify = require('traitify');
+coffee = require('gulp-coffee');
+gutil = require('gulp-util');
+qunit = require('gulp-qunit');
+concat = require('gulp-concat');
+runSequence = require('gulp-run-sequence');
+yaml = require("js-yaml");
+uglify = require('gulp-uglify');
+rename = require("gulp-rename");
+gzip = require('gulp-gzip');
+notify = require("gulp-notify");
+insert = require("gulp-insert");
+escapeString = require("js-string-escape");
+
+getFolderName = (filename)->
+  fileSlice = filename.path.split("/")
+  fileSlice.slice(0, fileSlice.length - 1).join("/")
 
 gulp.task('coffee', ->
   gulp.src('./src/**/*.coffee')
@@ -22,10 +27,23 @@ gulp.task('coffee', ->
     .pipe(gulp.dest('./public/js'))
 )
 
-gulp.task 'riot', ->
-  gulp.src './src/**/*.tag'
-    .pipe riot({type: "coffee"})
-    .pipe gulp.dest './public/js'
+gulp.task('mustache', ->
+    gulp.src("./src/templates/**/*.mustache")
+      .pipe(insert.transform((data, filename)->
+        folder = getFolderName(filename)
+        details = yaml.safeLoad(fs.readFileSync([folder, "details.yml"].join("/"), "utf8"))
+        scripts = data.match(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi)
+        data = data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+
+        options = {
+          data: details.data, 
+          template: data,
+          scripts: scripts.map((script)-> script.replace(/\<script\>/g, "").replace(/\<\/script\>/g, ""))
+        }
+        data = "Traitify.ui.widget(\"#{details.name}\", #{JSON.stringify(options)})"
+        data
+      )).pipe(rename({extname: ".js"})).pipe(gulp.dest("./public/js/templates"))
+)
 
 gulp.task('webserver', ->
   gulp.src(['public', 'qunit'])
@@ -39,8 +57,8 @@ gulp.task('webserver', ->
 watch = require('gulp-watch');
 
 gulp.task('watch', ->
-  gulp.watch('./src/tags/*.tag', {}, ->
-    gulp.start('riot')
+  gulp.watch('./src/templates/**/*.mustache', {}, ->
+    gulp.start('mustache')
   )
   gulp.watch('./src/**/*.coffee', {}, ->
     gulp.start('coffee')
@@ -81,7 +99,7 @@ gulp.task('bundle:compress', ->
 )
 
 gulp.task('bundle', ->
-  runSequence('coffee', 'riot', "bundle:concat", "bundle:minify", "bundle:compress")
+  runSequence('coffee', 'mustache', "bundle:concat", "bundle:minify", "bundle:compress")
 )
 
 gulp.task('bundles', ->
@@ -91,7 +109,7 @@ gulp.task('bundles', ->
   app.get('/bundle', (req, res)->
     files = req.query.packages.split(",")
     filesContent = Array()
-    filesContent.push(fs.readFileSync("./public/support/riot.js", "utf8"))
+    filesContent.push(fs.readFileSync("./public/support/mustache.js", "utf8"))
     req.headers.accept = 'application/js';
     for file in files
       filesContent.push(fs.readFileSync("./public/js/tags/#{file}.js", "utf8"))
@@ -110,7 +128,7 @@ gulp.task('bundles', ->
   app.listen(3000)
 )
 
-gulp.task("traitify-config", (req, res)->
+gulp.task("assessment", (req, res)->
     traitify.setHost(process.env.TF_HOST)
     traitify.setVersion("v1")
     traitify.setSecretKey(process.env.TF_SECRET_KEY)
@@ -132,4 +150,4 @@ gulp.task("test", ->
 )
 
 
-gulp.task('default', ['coffee', 'webserver', 'watch', 'traitify-config'])
+gulp.task('default', ['coffee', 'webserver', 'assessment', 'watch'])

@@ -1,0 +1,67 @@
+<div class="tf-types">
+  {{#types}} 
+    <div class="tf-type">
+      {{name}}
+    </div>
+  {{/types}}
+</div>
+<script>
+  (function(me){
+      me.traitify = Object()
+
+      me.traitify.Observable = function(item){
+        item.ons = Object()
+        item.on = function(key, callback){
+          if(!item.ons[key]){
+            item.ons[key] = Array();
+          }
+          item.ons[key].push(callback);
+        }
+        item.trigger = function(key, opts){
+          if(item.ons[key] && typeof item.ons[key].length != 0){
+            il = item.ons[key].length
+            for(i=0; i < il; i++){
+              item.ons[key][i](opts); 
+            }
+          }
+        }
+        item.off = function(key){
+          item.ons[key] = Array();
+        }
+      }
+      me.traitify.Observable(me.traitify);
+
+      var $TF = function(item){
+        if(typeof item == "string"){
+          item = me.querySelector(item);
+        }
+        if(Traitify.oldIE){
+          item.addEventListener = item.attachEvent;
+        }
+        item.hide = function(){
+          if(!this.className.match(/tf-hidden/)){
+            this.className = this.className + " tf-hidden";
+          }
+        }
+        item.show = function(){
+          this.className = this.className.replace(/ tf-hidden/, "");
+        }
+        return item;
+      }
+
+      me.traitify.slideResponses = Object();
+      me.traitify.lastResponse = new Date();
+      me.traitify.db = Object();
+      me.traitify.db.set = function(key, value){
+        key = me.traitify.assessmentId + "-" + key
+        return sessionStorage.setItem(key, JSON.stringify(value));
+      }
+      me.traitify.db.get = function(key){
+        key = me.traitify.assessmentId + "-" + key
+        return JSON.parse(sessionStorage.getItem(key));
+      }
+      me.traitify.initialize = function(){
+
+      })
+  })(document.currentScript.parentNode)
+</script>

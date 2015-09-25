@@ -3,8 +3,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
 
-	<script src="./support/riot.min.js"></script>
-	<script src="./bundles/v2.debug.js"></script>
+	<script src="/bundles/v2.debug.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<style>
@@ -33,13 +32,14 @@
 
   <script>
 	      $.get("/assessment.json").then(function(assessment){
-					Traitify.ui.init({
-						publicKey: assessment.publicKey,
-						assessmentId: assessment.id,
-						slideDeck:{
-							progressBarColor: "#0000ff"
-						}
-					}).load()
+						window.sanity = Traitify.ui.init({
+							publicKey: assessment.publicKey,
+							assessmentId: assessment.id,
+							slideDeck:{
+								progressBarColor: "#0000ff"
+							}
+						})
+						window.sanity.render();
 	      })
   </script>
 	<style>
