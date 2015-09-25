@@ -149,5 +149,7 @@ gulp.task("test", ->
   )
 )
 
-
-gulp.task('default', ['coffee', 'webserver', 'assessment', 'watch'])
+if process.env.production
+  gulp.task('default', ['bundle', 'test'])  
+else
+  gulp.task('default', ['bundle', 'webserver', 'assessment', 'watch'])
