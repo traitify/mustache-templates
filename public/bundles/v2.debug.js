@@ -809,7 +809,7 @@ if (needsPolyfill && canDefineProp) {
 }
 
 })();
-;Traitify.ui = {
+Traitify.ui = {
   deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
   widgets: Object(),
   widget: function(name, args) {
@@ -849,9 +849,9 @@ if (needsPolyfill && canDefineProp) {
         if (assessment.completed_at === void 0) {
           var widget = Traitify.ui.widgets[options.slideDeck.tag];
           var data = Object();
-          var ref1 = Object.keys(assessment);
-          for (j = 0, len1 = ref1.length; j < len1; j++) {
-            var assessmentName = ref1[j];
+          var assessmentKeys = Object.keys(assessment);
+          for (j = 0; j < assessmentKeys.length; j++) {
+            var assessmentName = assessmentKeys[j];
             if (widget.data.indexOf(assessmentName) !== -1) {
               data[assessmentName] = assessment[assessmentName];
             }

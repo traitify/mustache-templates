@@ -1,0 +1,80 @@
+<div class="tf-personality-blend">
+  {{blend.first}}
+  there
+</div>
+<script>
+  (function(){
+    this.traitify = Object();
+    var slideDeck = this;
+    var traitify = this.traitify;
+    var $ = function(item){
+      if(typeof item == "string"){
+        var items = slideDeck.querySelectorAll(item);
+      } else {
+        var items = item;
+      }
+      items.each = function(callback){
+        for(i=0; i < this.length; i++){
+          callback(i, this[i])
+        }
+      }
+      items.html = function(html){
+        if(html){
+          return this[0].innerHTML = html;
+        }else{
+          return this[0].innerHTML;
+        }
+      }
+      items.find = function(item){
+        return $(this[0].querySelectorAll(item))
+      }
+      items.click = function(callback){
+        this.each(function(i, item){
+          item.onclick = callback;
+        })
+      }
+      items.addClass = function(className){
+        items.each(function(i, item){
+          item.className = item.className.replace(className, "")
+          item.className += " " + className
+        })
+        return items;
+      }
+      items.removeClass = function(className){
+        items.each(function(i, item){
+          item.className = item.className.replace(" " + className, "").replace(className, "")
+        })
+        return items;
+      }
+      items.hide = function(){
+        items.addClass("tf-hidden");
+      }
+      items.show = function(){
+        items.removeClass("tf-hidden")
+      }
+      items.css = function(options){
+        items.each(function(i,item){
+          $(Object.keys(options)).each(function(i, optionKey){
+            item.style[optionKey] = options[optionKey];
+          })
+        })
+      }
+      return items;
+    }
+    $.db = {
+      get: function(key){
+        return JSON.parse(sessionStorage.getItem(key));
+      },
+      set: function(key, value){
+        return sessionStorage.setItem(key, JSON.stringify(value));
+      }
+    }
+
+    this.traitify.initialize = function(){
+      /**********************************
+       * PREPARE DATA
+       **********************************/
+      alert("here")
+    }
+  }).call(document.currentScript.parentNode);
+</script>
