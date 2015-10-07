@@ -4,7 +4,6 @@ fs = require("fs")
 minify = require("minify")
 path = require('path')
 traitify = require('traitify');
-coffee = require('gulp-coffee');
 gutil = require('gulp-util');
 qunit = require('gulp-qunit');
 concat = require('gulp-concat');
@@ -16,15 +15,20 @@ gzip = require('gulp-gzip');
 notify = require("gulp-notify");
 insert = require("gulp-insert");
 escapeString = require("js-string-escape");
+gulpCopy = require("gulp-copy");
+clean = require('gulp-clean');
+ 
+gulp.task('clean:lib', ->
+  gulp.src('./public/js/lib', {read: false})
+    .pipe(clean())
+)
 
 getFolderName = (filename)->
   fileSlice = filename.path.split("/")
   fileSlice.slice(0, fileSlice.length - 1).join("/")
-
-gulp.task('coffee', ->
-  gulp.src('./src/**/*.coffee')
-    .pipe(coffee({bare: true}).on('error', gutil.log))
-    .pipe(gulp.dest('./public/js'))
+#["clean:lib"], 
+gulp.task('lib', ->
+  gulp.src('src/lib/**/*.js').pipe(gulp.dest("public/js/lib"))
 )
 
 gulp.task('mustache', ->
@@ -32,6 +36,7 @@ gulp.task('mustache', ->
       .pipe(insert.transform((data, filename)->
         folder = getFolderName(filename)
         details = yaml.safeLoad(fs.readFileSync([folder, "details.yml"].join("/"), "utf8"))
+        console.log(details)
         scripts = data.match(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi)
         data = data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
 
@@ -60,8 +65,8 @@ gulp.task('watch', ->
   gulp.watch('./src/templates/**/*.mustache', {}, ->
     gulp.start('mustache')
   )
-  gulp.watch('./src/**/*.coffee', {}, ->
-    gulp.start('coffee')
+  gulp.watch('./src/lib/*.js', {}, ->
+    gulp.start('lib')
   )
   gulp.watch('./public/js/**/*.js', {}, ->
     gulp.start("bundle:concat")
@@ -99,7 +104,7 @@ gulp.task('bundle:compress', ->
 )
 
 gulp.task('bundle', ->
-  runSequence('coffee', 'mustache', "bundle:concat", "bundle:minify", "bundle:compress")
+  runSequence('lib', 'mustache', "bundle:concat", "bundle:minify", "bundle:compress")
 )
 
 gulp.task('bundles', ->

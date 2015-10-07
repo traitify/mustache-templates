@@ -639,7 +639,177 @@ Traitify.version = "v1";
 
 }));
 
-Traitify.ui = {
+/*!
+ * document.currentScript
+ * Polyfill for `document.currentScript`.
+ * Copyright (c) 2015 James M. Greene
+ * Licensed MIT
+ * https://github.com/JamesMGreene/document.currentScript
+ * v1.0.6
+ */
+(function() {
+
+
+// Live NodeList collection
+var scripts = document.getElementsByTagName("script");
+
+// Check if the browser supports the `readyState` property on `script` elements
+var supportsScriptReadyState = "readyState" in (scripts[0] || document.createElement("script"));
+
+// Lousy browser detection for [not] Opera
+var isNotOpera = !window.opera || window.opera.toString() !== "[object Opera]";
+
+// Attempt to retrieve the native `document.currentScript` accessor method
+var nativeCurrentScriptFn = (function(doc) {
+  /*jshint proto:true */
+
+  var hasNativeMethod = "currentScript" in doc;
+  var canGetDescriptor = typeof Object.getOwnPropertyDescriptor === "function";
+  var canGetPrototype = typeof Object.getPrototypeOf === "function";
+  var canUseDunderProto = typeof "test".__proto__ === "object";
+
+
+  function _invokeNativeCurrentScriptMethod() {
+    var des,
+        csFnIsNotOurs = true;
+
+    if (canGetDescriptor) {
+      des = Object.getOwnPropertyDescriptor(doc, "currentScript") || undefined;
+      if (des && typeof des.get === "function" && des.get === _currentEvaluatingScript) {
+        csFnIsNotOurs = false;
+      }
+    }
+
+    // Potentially dangerous hack...
+    return csFnIsNotOurs ? doc.currentScript : null;
+  }
+
+  function _getProto(obj) {
+    var proto;
+    if (obj != null) {
+      proto = (
+        canGetPrototype ? Object.getPrototypeOf(obj) :
+          canUseDunderProto ? obj.__proto__ :
+            obj.constructor != null ? obj.constructor.prototype :
+              undefined
+      );
+    }
+    return proto;
+  }
+
+  var nativeFn = (function _getCurrentScriptDef(docSelfOrAncestor, doc) {
+    var des, cs;
+
+    if (
+      hasNativeMethod && canGetDescriptor &&
+      docSelfOrAncestor && docSelfOrAncestor !== Object.prototype &&
+      doc && doc !== Object.prototype
+    ) {
+      if (canGetDescriptor) {
+        des = Object.getOwnPropertyDescriptor(docSelfOrAncestor, "currentScript") || undefined;
+        if (des && typeof des.get === "function") {
+          cs = des.get;
+        }
+      }
+      if (!cs) {
+        cs = _getCurrentScriptDef(_getProto(docSelfOrAncestor), doc);
+      }
+    }
+
+    if (!cs) {
+      cs = _invokeNativeCurrentScriptMethod;
+    }
+    else if (cs === _currentEvaluatingScript) {
+      cs = undefined;
+    }
+
+    return cs;
+  })(doc, doc);
+
+  return nativeFn;
+})(document);
+
+
+
+// Top-level API (compliant with `document.currentScript` specifications)
+//
+// Get the currently "executing" (i.e. EVALUATING) `script` DOM
+// element, per the spec requirements for `document.currentScript`.
+//
+// IMPORTANT: This polyfill CANNOT achieve 100% accurate results
+//            cross-browser. ;_;
+function _currentEvaluatingScript() {
+  // Yes, this IS possible, i.e. if a script removes other scripts (or itself)
+  if (scripts.length === 0) {
+    return null;
+  }
+
+  // Guaranteed accurate in IE 6-10.
+  // Not supported in any other browsers. =(
+  if (supportsScriptReadyState && isNotOpera) {
+    for (var i = scripts.length; i--; ) {
+      if (scripts[i].readyState === "interactive") {
+        return scripts[i];
+      }
+    }
+  }
+
+  // If the native method exists, defer to that as a last-ditch effort
+  if (
+    typeof nativeCurrentScriptFn === "function" &&
+    _currentEvaluatingScript.doNotDeferToNativeMethod !== true
+  ) {
+    return nativeCurrentScriptFn.call(document);
+  }
+
+  // Any other attempts cannot be guaranteed and, as such, should be left out
+  // from this "Strict Mode" behavior.
+  // Alas, returning `null` here is not necessarily accurate either.
+  // We could return `undefined` instead but that would not comply with the spec
+  // in cases where it should correctly be returning `null`.
+  return null;
+}
+
+// Allow a last-ditch effort to use the native `document.currentScript` accessor
+// method (if it exists and can be retrieved)?
+_currentEvaluatingScript.doNotDeferToNativeMethod = false;
+
+
+
+// Inspect the polyfill-ability of this browser
+var needsPolyfill = !("currentScript" in document);
+var canDefineProp = typeof Object.defineProperty === "function" &&
+  (function() {
+    var result;
+    try {
+      Object.defineProperty(document, "_xyz", {
+        get: function() {
+          return "blah";
+        },
+        configurable: true
+      });
+      result = document._xyz === "blah";
+      delete document._xyz;
+    }
+    catch (e) {
+      result = false;
+    }
+    return result;
+  })();
+
+
+// Add the "private" property for testing, even if the real property can be polyfilled
+document._currentScript = _currentEvaluatingScript;
+
+// Polyfill it!
+if (needsPolyfill && canDefineProp) {
+  Object.defineProperty(document, "currentScript", {
+    get: _currentEvaluatingScript
+  });
+}
+
+})();
+;Traitify.ui = {
   deviceType: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? "Phone" : "desktop"),
   widgets: Object(),
   widget: function(name, args) {
@@ -650,97 +820,95 @@ Traitify.ui = {
     if (options == null) {
       options = Object();
     }
-    Traitify.ui.observable(options);
+    this.Observable(options);
     if (options.slideDeck == null) {
       options.slideDeck = Object();
     }
-    if ((base = options.slideDeck).target == null) {
-      base.target = ".tf-slide-deck";
+    if (options.slideDeck.target == null) {
+      options.slideDeck.target = ".tf-slide-deck";
     }
-    if ((base1 = options.slideDeck).tag == null) {
-      base1.tag = "tf-slide-deck";
-    }
-    if (options.results == null) {
-      options.results = Object();
+    if (options.slideDeck.tag == null) {
+      options.slideDeck.tag = "tf-slide-deck";
     }
     if (options.publicKey) {
       Traitify.setPublicKey(options.publicKey);
     }
     delete options.publicKey;
     options.render = function() {
-      var args, i, len, ref, scopes, slideDeck, that;
-      that = this;
-      scopes = "slides,blend,types,traits,career_matches";
-      args = "image_pack=linear&data=" + scopes;
-      ref = options.slideDeck;
+      var that = this;
+      var scopes = "slides,blend,types,traits,career_matches";
+      var args = "image_pack=linear&data=" + scopes;
+      var ref = options.slideDeck;
       for (i = 0, len = ref.length; i < len; i++) {
         slideDeck = ref[i];
         slideDeck.assessmentId = options.assessmentId;
       }
       Traitify.get("/assessments/" + options.assessmentId + "?" + args).then(function(assessment) {
-        var assessmentName, data, innerScript, j, k, l, len1, len2, len3, name, ref1, ref2, ref3, results, script, view, widget;
+        options.slideDeck.mount = document.querySelector(options.slideDeck.target);
+        options.slideDeck.mount.innerHTML = "";
         if (assessment.completed_at === void 0) {
-          options.slideDeck.mount = document.querySelector(options.slideDeck.target);
-          widget = Traitify.ui.widgets[options.slideDeck.tag];
-          data = Object();
-          ref1 = Object.keys(assessment);
+          var widget = Traitify.ui.widgets[options.slideDeck.tag];
+          var data = Object();
+          var ref1 = Object.keys(assessment);
           for (j = 0, len1 = ref1.length; j < len1; j++) {
-            assessmentName = ref1[j];
+            var assessmentName = ref1[j];
             if (widget.data.indexOf(assessmentName) !== -1) {
               data[assessmentName] = assessment[assessmentName];
             }
           }
-          view = Mustache.render(widget.template, assessment);
+          var view = Mustache.render(widget.template, assessment);
           options.slideDeck.mount.innerHTML = view;
-          ref2 = widget.scripts;
+          var ref2 = widget.scripts;
           for (k = 0, len2 = ref2.length; k < len2; k++) {
-            innerScript = ref2[k];
-            script = document.createElement("script");
-            script.innerHTML = innerScript;
+            var innerScript = ref2[k];
+            var script = document.createElement("script");
+            script.type = 'text/javascript';
+            script.text = innerScript;
             options.slideDeck.mount.appendChild(script);
           }
+          options.slideDeck.mount.traitify.options = options;
           options.slideDeck.mount.traitify.data = data;
           options.slideDeck.mount.traitify.assessmentId = assessment.id;
           options.slideDeck.mount.traitify.initialize();
-          options.slideDeck.mount.traitify.mount = options.slideDeck.mount;
-          return options.slideDeck.mount.traitify.on("finish", function() {
+          options.on("slideDeck.finish", function() {
             return that.render();
           });
         } else {
-          ref3 = Object.keys(assessment);
-          results = [];
-          for (l = 0, len3 = ref3.length; l < len3; l++) {
-            name = ref3[l];
-            widget = Traitify.ui.widgets[name];
-            console.log("widget");
-            console.log(Traitify.ui.widgets);
-            results.push(console.log("/widget"));
-          }
-          return results;
+          alert("hiya");
         }
       });
       return this;
     };
     return options;
   },
-  observable: function(options) {
+  Observable: function(options) {
     options.observable = {
-      events: Object()
+      events: Array()
     };
     options.on = function(key, callback) {
-      if (options.observable.events[key] == null) {
-        return options.observable.events[key] = [callback];
-      } else {
-        return options.observable.events[key].push(callback);
-      }
+      options.observable.events.push({
+        name: key,
+        callback: callback
+      });
+      return options;
     };
-    options.trigger = function(key, args) {
-      var i, len, onEvent, ref, results;
-      ref = options.observable.events[key];
-      results = [];
-      for (i = 0, len = ref.length; i < len; i++) {
-        onEvent = ref[i];
-        results.push(onEvent(args));
+    options.trigger = function(keys, args) {
+      var keys = keys.split(" ");
+      var results = [];
+      for (i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var matcher = new RegExp(key.replace(/\s/g, "|"));
+        var events = options.observable.events.filter(function(e) {
+          return matcher.test(e.name);
+        });
+        results.push((function() {
+          var results1 = [];
+          for (j = 0; j < events.length; j++) {
+            var onEvent = events[j];
+            results1.push(onEvent.callback(args));
+          }
+          return results1;
+        })());
       }
       return results;
     };
@@ -748,4 +916,5 @@ Traitify.ui = {
   }
 };
 
-Traitify.ui.widget("tf-slide-deck", {"data":["slides"],"template":"<div class=\"tf-slides\">\n  <div class=\"tf-slides-container\">\n    <div class=\"tf-progress-bar\">\n      <div class=\"tf-progress-bar-inner\"></div>\n    </div>\n    <div class=\"tf-caption\">\n    </div>\n    <div class=\"tf-slide tf-current\">\n    </div>\n    <div class=\"tf-slide tf-next\">\n    </div>\n  </div>\n  <div class=\"tf-me-not-me-container\">\n    <div class=\"tf-me\">Me</div>\n    <div class=\"tf-not-me\">Not Me</div>\n    <div class=\"tf-loading tf-hidden\">\n      <span class=\"tf-loading-content\">Loading...</span>\n      <span class=\"tf-click-content tf-hidden\">Click to reload!</span>\n    </div>\n  </div>\n</div>\n<style>\n  .tf-slides{\n    font-family: arial;\n    text-align:center;\n  }\n  .tf-progress-bar{\n    position: relative;\n    height: 12px;\n    width: 100%;\n    z-index:1;\n    background-color: rgba(150, 150, 150, .5);\n  }\n  .tf-hidden{\n    display: none;\n  }\n  .tf-progress-bar .tf-progress-bar-inner{\n    height: 100%;\n    width: 0%;\n    background-color: #fff;\n    border-radius: 0px 8px 8px 0px;\n    -webkit-transition: width .6s ease-in-out;\n    -moz-transition: width .6s ease-in-out;\n    -o-transition: width .6s ease-in-out;\n    transition: width .6s ease-in-out;\n  }\n  .tf-caption{\n    position: absolute;\n    color: #fff;\n    width:100%;\n    background-color: rgba(0, 0, 0, .7);\n    height: 48px;\n    line-height: 48px;\n    font-size: 20px;\n    z-index:1;\n  }\n  .tf-slides .tf-slide{\n    width: 100%;\n    height: 100%;\n    background-size: cover;\n    display: inline-block;\n    left: 0%;\n    top: 0px;\n    position: absolute;\n  }\n  .tf-slides .tf-slide.tf-current{\n    left: 0%;\n    -webkit-transition: left .6s ease-in-out;\n    -moz-transition: left .6s ease-in-out;\n    -o-transition: left .6s ease-in-out;\n    transition: left .6s ease-in-out;\n  }\n  .tf-slides .tf-slide.tf-next{\n    left: 100%;\n  }\n  .tf-slides .tf-slides-container{\n    height: 400px;\n    width: 100%;\n    position: relative;\n    overflow: hidden;\n  }\n  .tf-slides.min-width-720 .tf-slides-container {\n    height: 540px;\n  }\n  .tf-slides.min-width-1200 .tf-slides-container {\n    height: 700px;\n  }\n\n  .tf-me-not-me-container{\n    width: 280px;\n    margin: 0px auto;\n    height: 43px;\n    border-radius: 23px;\n    line-height: 43px;\n    text-align: center;\n    position: relative;\n    z-index: 1;\n    margin-top: -80px;\n    overflow: hidden;\n    cursor: pointer;\n  }\n  .tf-me, .tf-not-me{\n    font-size: 20px;\n    height: 100%;\n    display: inline-block;\n    position: relative;\n    width: 50%;\n    float: left;\n    color: #fff;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n  }\n  .tf-me{\n    background-color: #00aeef;\n  }\n  .tf-me:active{\n    background-color: #0B659A;\n  }\n  .tf-not-me{\n    background-color: #ff5e5e;\n  }\n  .tf-not-me:active{\n    background-color: #961111;\n  }\n  .tf-slides.tf-loading .tf-loading{\n    display: block;\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    background-color: #ff5e5e;\n    color: #fff;\n  }\n  .tf-slides.tf-loading .tf-loading .tf-loading-content{\n    -webkit-animation: fade-in-and-out 2s ease-out;\n    -webkit-animation-iteration-count: infinite; \n  }\n  @-webkit-keyframes fade-in-and-out {\n    0% { opacity: 0.0;}\n    50% { opacity: 1.0;}\n    100% { opacity: 0.0;}\n  }\n</style>\n","scripts":["\n    (function(me){\n      me.traitify = Object()\n\n      me.traitify.deferred = function(){\n        return {\n          thenCalls: Array(),\n          catchCalls: Array(),\n          then: function(callback){\n            if(this.triggered){\n              callback(this.args);\n            }else{\n              this.thenCalls.push(callback);\n            }\n          },\n          catch: function(callback){\n            if(this.triggered){\n              callback(this.args);\n            }else{\n              this.catchCalls.push(callback);\n            }\n          },\n          resolve: function(args){\n            if(this.thenCalls && this.thenCalls.length != 0){\n              for(i=0; i < this.thenCalls.length; i++){\n                this.thenCalls[i](args);\n              }\n            }else{\n              this.args = args;\n              this.triggered = true;\n            }\n          },\n          reject: function(args){\n            if(this.catchCalls.length != 0){\n              for(i=0; i < this.catchCalls.length; i++){\n                this.catchCalls[i](args);\n              }\n            }else{\n              this.args = args;\n              this.triggered = true;\n            }\n          }\n        }\n      }\n      me.traitify.Observable = function(item){\n        item.ons = Object()\n        item.on = function(key, callback){\n          if(!item.ons[key]){\n            item.ons[key] = Array();\n          }\n          item.ons[key].push(callback);\n        }\n        item.trigger = function(key, opts){\n          if(item.ons[key] && typeof item.ons[key].length != 0){\n            il = item.ons[key].length\n            for(i=0; i < il; i++){\n              item.ons[key][i](opts); \n            }\n          }\n        }\n        item.off = function(key){\n          item.ons[key] = Array();\n        }\n      }\n      me.traitify.Observable(me.traitify);\n      var i, undefined, el = document.createElement('div'),\n      transitions = {\n        'transition':'transitionend',\n        'OTransition':'otransitionend',  // oTransitionEnd in very old Opera\n        'MozTransition':'transitionend',\n        'WebkitTransition':'webkitTransitionEnd'\n      };\n\n      for (i in transitions) {\n        if (transitions.hasOwnProperty(i) && el.style[i] !== undefined) {\n            transitionEnd = transitions[i];\n        }\n      }\n      var $TF = function(item){\n        if(typeof item == \"string\"){\n          item = me.querySelector(item);\n        }\n        if(Traitify.oldIE){\n          item.addEventListener = item.attachEvent;\n        }\n        item.hide = function(){\n          if(!this.className.match(/tf-hidden/)){\n            this.className = this.className + \" tf-hidden\";\n          }\n        }\n        item.show = function(){\n          this.className = this.className.replace(/ tf-hidden/, \"\");\n        }\n        return item;\n      }\n      me.traitify.slideResponses = Object();\n      me.traitify.lastResponse = new Date();\n      me.traitify.db = Object();\n      me.traitify.db.set = function(key, value){\n        key = me.traitify.assessmentId + \"-\" + key\n        return sessionStorage.setItem(key, JSON.stringify(value));\n      }\n      me.traitify.db.get = function(key){\n        key = me.traitify.assessmentId + \"-\" + key\n        return JSON.parse(sessionStorage.getItem(key));\n      }\n      me.traitify.initialize = function(){\n        self = $TF(this);\n        /*\n         * Set Available Nodes\n         */\n        this.nodes = Object()\n        this.nodes.currentSlide = $TF(\".tf-slide.tf-current\");\n        this.nodes.nextSlide = $TF(\".tf-slide.tf-next\");\n        this.nodes.caption = $TF(\".tf-caption\");\n        this.nodes.me = $TF(\".tf-me\");\n        this.nodes.notMe = $TF(\".tf-not-me\");\n        this.nodes.progressBarInner = $TF(\".tf-progress-bar-inner\");\n        this.nodes.slides = $TF(\".tf-slides\");\n        this.nodes.loading = $TF(\".tf-loading .tf-loading-content\");\n        this.nodes.clickToReload = $TF(\".tf-loading .tf-click-content\");\n\n\n        /*\n         * Set Data\n         */\n        this.data.unPlayedSlides = this.data.slides.filter(function(slide){\n          return !slide.completed_at && Object.keys(self.db.get(\"slideResponses\") || Object()).indexOf(slide.id) == -1\n        })\n        this.data.playedSlides = this.data.slides.filter(function(slide){\n          return slide.completed_at || Object.keys(self.db.get(\"slideResponses\") || Object()).indexOf(slide.id) != -1\n        })\n        this.data.slides = this.data.playedSlides.concat(this.data.unPlayedSlides)\n        this.index = this.data.playedSlides.length || 0\n\n        /*\n         * Resize\n         */\n        self.resizeTimer =  false;\n        window.addEventListener(\"resize\", function(){\n          if(self.resizeTimeout){\n            clearTimeout(self.resizeTimeout);\n          }\n\n          self.resizeTimeout = setTimeout(function(){\n            self.trigger(\"resize\");\n            self.resizeTimeout = false;\n          }, 300);\n        });\n\n        self.on(\"resize\", function(){\n          width = me.offsetWidth;\n          className = self.nodes.slides.className;\n          className = className.replace(/ min-width-1200/g, \"\");\n          className = className.replace(/ min-width-720/g, \"\");\n          className = className.replace(/ min-width-480/g, \"\");\n \n          if(width > 1200){\n            className += \" min-width-1200\";\n          } else if (width > 720){\n            className += \" min-width-720\";\n          } else{\n            className += \" min-width-480\";\n          }\n          self.nodes.slides.className = className;\n        })\n        self.trigger(\"resize\");\n\n        /*\n         * Transition\n         */\n        this.slideLock = false;\n        this.events = Object();\n        self.nodes.nextSlide.transitionend = function(){\n\n        }\n        self.nodes.nextSlide.addEventListener(transitionEnd, function(){\n          self.nodes.nextSlide.transitionend();\n        })\n\n        this.events.animate = function(){\n          if(!self.slideLock){\n            promise = self.deferred();\n            self.slideLock = true;\n            self.nodes.nextSlide.transitionend = function(){\n              self.slideLock = false;\n              promise.resolve();\n            }\n            self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace(\"tf-next\", \"\") + \" tf-current\";\n            self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + \"%\";\n            return promise;\n          }\n        }\n        self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + \"%\";\n\n        /*\n         * Set Current Slide\n         */\n        this.events.setCurrentSlideData = function(){\n          if( self.data.slides.length - self.index == 0){\n            return true;\n          }\n\n          self.currentSlide = self.data.slides[self.index];\n          /*\n           * Set Caption\n           */\n          self.nodes.caption.innerHTML = self.currentSlide.caption;\n            \n          /*\n           * Set Image\n           */\n          self.nodes.currentSlide.style.backgroundImage = \"url(\" + self.currentSlide.image_desktop_retina + \")\";\n\n          /*\n           * Set Focus\n           */\n          backgroundPosition = self.currentSlide.focus_x + \"% \" + self.currentSlide.focus_y + \"%\";\n          self.nodes.currentSlide.style.backgroundPosition = backgroundPosition;            \n        }\n\n        /*\n         * Set Next Slide\n         */\n        this.events.setNextSlideData = function(){\n          if( self.data.slides.length - self.index <= 1){\n            return true;\n          }\n\n          self.nextSlide = self.data.slides[self.index + 1];\n          /*\n           * Set Image\n           */\n          self.nodes.nextSlide.style.backgroundImage = \"url(\" + self.nextSlide.image_desktop_retina + \")\";\n\n          /*\n           * Set Focus\n           */\n          backgroundPosition = self.nextSlide.focus_x + \"% \" + self.nextSlide.focus_y + \"%\";\n          self.nodes.nextSlide.style.backgroundPosition = backgroundPosition;\n        }\n\n        this.events.setNextSlideData();\n        this.events.setCurrentSlideData();\n\n        /*\n         * Advance Slide\n         */\n        this.events.advanceSlide = function(){\n          if(!self.slideLock){\n            if(((self.index - self.data.slides.length) <= 2 && self.index - self.data.slides.length != 0 ) || self.images[self.index + 2]){\n              self.index++\n              self.trigger(\"advanceSlide\", {value: true, slide: slide});\n\n              self.events.animate().then(function(){\n                self.events.setNextSlideData();\n                self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace(\"tf-current\", \"\") + \" tf-next\";\n                self.events.setCurrentSlideData();\n              })\n            } else if(!self.nodes.slides.className.match(/tf-loading/)) {\n              self.nodes.slides.className += \" tf-loading\";\n            } \n          }\n        }\n        this.on(\"advanceSlide\", function(params){\n          slideResponses = self.db.get(\"slideResponses\") || Object();\n\n          slideResponses[params.slide.id] = {\n            value: params.value,\n            responseTime: new Date() - self.lastResponse\n          };\n\n          self.lastResponse = new Date();\n          self.db.set(\"slideResponses\", slideResponses);\n          self.trigger(\"setSlides\");\n        })\n\n        this.on(\"setSlides\", function(){\n          slideResponses = self.db.get(\"slideResponses\") || Object();\n\n          srl = Object.keys(slideResponses).length;\n\n          if(srl == self.data.slides.length){\n            slides = Object.keys(slideResponses).map(function(slideId){\n              return {\n                id: slideId,\n                response: slideResponses[slideId].value,\n                time_taken: slideResponses[slideId].responseTime\n              };\n            })\n            \n            Traitify.addSlides(self.assessmentId, slides).then(function(){\n              me.innerHTML = \"\";\n\n              self.trigger(\"finish\")\n            });\n          }\n        })\n\n        this.trigger(\"setSlides\");\n\n        /*\n         * Me Trigger\n         */\n        this.on(\"me\", function(){\n          slide = self.data.slides[self.index]\n\n          self.events.advanceSlide();\n        })\n\n        /*\n         * Not Me Trigger\n         */\n        this.on(\"notMe\",function(){\n          slide = self.data.slides[self.index]\n\n          self.events.advanceSlide();\n        })\n\n        /*\n         * Me\n         */\n        this.nodes.me.onclick = function(){ \n          self.trigger(\"me\")\n        }\n\n        /*\n         * Not Me\n         */\n        this.nodes.notMe.onclick = function(){\n          self.trigger(\"notMe\")\n        }\n\n        /*\n         * Gui For Preload Images\n         */\n        self.imageSize = \"image_desktop_retina\"\n        this.imageUrls = self.data.slides.map(function(slide){\n          return slide[self.imageSize];\n        })\n\n        this.nodes.clickToReload.onclick = function(){\n          self.trigger(\"clickReload\");\n        }\n        this.on(\"clickReload\", function(){\n          self.imageTries[self.images.lastIndex] = 0;\n          self.nodes.loading.show();\n          self.nodes.clickToReload.hide();\n          self.loadImage(self.images.lastIndex);\n        })\n\n        /*\n         * NASTY IMAGE PRELOADING\n         */\n        this.imageTries = Object()\n        this.images = Array();\n        self.images.lastIndex = this.index;\n\n        this.loadImage = function(i){\n          if(self.imageUrls[i]){\n            if(!self.imageTries[i]){\n              self.imageTries[i]= 0;\n            }\n            self.images[i] = new Image();\n            self.images[i].src = self.imageUrls[i];\n            self.images[i].onerror = function(){\n              self.imageTries[i]++;\n              if(self.imageTries[i] < 30){\n                setTimeout(function(){\n                  self.loadImage(i);\n                }, 1000)\n              }else{\n                self.images.lastIndex = i;\n                self.nodes.loading.hide();\n                self.nodes.clickToReload.show();\n              }\n            }\n            self.images[i].onload = function(){\n              setTimeout(function(){\n                self.loadImage(i + 1);\n              }, 300)\n              self.trigger(\"imageLoaded\");\n              self.nodes.clickToReload.hide();\n              self.images.lastIndex = i;\n\n              self.nodes.slides.className = self.nodes.slides.className.replace(\" tf-loading\", \"\");\n            }\n          }\n        }\n        this.loadImage(self.index);\n      }\n    })(document.currentScript.parentNode);\n"]})
+Traitify.ui.widget("tf-slide-deck", {"data":["slides"],"template":"<div class=\"tf-slides\">\n  <div class=\"tf-slides-container\">\n    <div class=\"tf-progress-bar\">\n      <div class=\"tf-progress-bar-inner\"></div>\n    </div>\n    <div class=\"tf-caption\">\n    </div>\n    <div class=\"tf-slide tf-current\">\n    </div>\n    <div class=\"tf-slide tf-next\">\n    </div>\n  </div>\n  <div class=\"tf-me-not-me-container\">\n    <div class=\"tf-me\">Me</div>\n    <div class=\"tf-not-me\">Not Me</div>\n    <div class=\"tf-loading tf-hidden\">\n      <span class=\"tf-loading-content\">Loading...</span>\n      <span class=\"tf-click-content tf-hidden\">Click to reload!</span>\n    </div>\n  </div>\n</div>\n<style>\n  .tf-slides{\n    font-family: arial;\n    text-align:center;\n  }\n  .tf-progress-bar{\n    position: relative;\n    height: 12px;\n    width: 100%;\n    z-index:1;\n    background-color: #aaa;\n    background-color: rgba(150, 150, 150, .5);\n  }\n  .tf-hidden{\n    display: none;\n  }\n  .tf-progress-bar .tf-progress-bar-inner{\n    height: 100%;\n    width: 0%;\n    background-color: #fff;\n    border-radius: 0px 8px 8px 0px;\n    -webkit-transition: width .8s ease-in-out;\n    -moz-transition: width .8s ease-in-out;\n    -o-transition: width .8s ease-in-out;\n    transition: width .8s ease-in-out;\n  }\n  .tf-caption{\n    position: absolute;\n    color: #fff;\n    width:100%;\n    background-color: #333;\n    background-color: rgba(0, 0, 0, .7);\n    height: 48px;\n    line-height: 48px;\n    font-size: 20px;\n    z-index:1;\n  }\n  .tf-slides .tf-slide{\n    width: 100%;\n    height: 100%;\n    background-size: cover;\n    display: inline-block;\n    left: 0%;\n    top: 0px;\n    position: absolute;\n  }\n  .tf-slides .tf-slide.tf-current{\n    left: 0%;\n    transform: scale(1,1);\n    zoom: 0.4\\9;\n    background-repeat: no-repeat;\n    -webkit-transition: left .6s ease;\n    -moz-transition: left .6s ease;\n    -o-transition: left .6s ease;\n    transition: left .6s ease;\n  }\n  .tf-slides .tf-slide.tf-next{\n    left: 100%;\n  }\n  .tf-slides .tf-slides-container{\n    height: 400px;\n    width: 100%;\n    position: relative;\n    overflow: hidden;\n  }\n  .tf-slides.min-width-720 .tf-slides-container {\n    height: 540px;\n  }\n  .tf-slides.min-width-720 .tf-slides-container .tf-slide.tf-current{\n    transform: scale(1,1);\n    zoom: 0.7\\9;\n  }\n  .tf-slides.min-width-1200 .tf-slides-container {\n    height: 700px;\n  }\n  .tf-slides.min-width-1200 .tf-slides-container .tf-slide.tf-current{\n    transform: scale(1,1);\n    zoom: 0.67\\9;\n  }\n\n  .tf-me-not-me-container{\n    width: 280px;\n    margin: 0px auto;\n    height: 43px;\n    border-radius: 23px;\n    line-height: 43px;\n    text-align: center;\n    position: relative;\n    z-index: 1;\n    margin-top: -80px;\n    overflow: hidden;\n    cursor: pointer;\n  }\n  .tf-me, .tf-not-me{\n    font-size: 20px;\n    height: 100%;\n    display: inline-block;\n    position: relative;\n    width: 50%;\n    float: left;\n    color: #fff;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n  }\n  .tf-me{\n    background-color: #00aeef;\n  }\n  .tf-me:active{\n    background-color: #0B659A;\n  }\n  .tf-not-me{\n    background-color: #ff5e5e;\n  }\n  .tf-not-me:active{\n    background-color: #961111;\n  }\n  .tf-slides.tf-loading .tf-loading{\n    display: block;\n    position: absolute;\n    width: 100%;\n    height: 100%;\n    background-color: #ff5e5e;\n    color: #fff;\n  }\n  .tf-slides.tf-loading .tf-loading .tf-loading-content{\n    -webkit-animation: fade-in-and-out 2s ease-out;\n    -webkit-animation-iteration-count: infinite; \n  }\n  @-webkit-keyframes fade-in-and-out {\n    0% { opacity: 0.0;}\n    50% { opacity: 1.0;}\n    100% { opacity: 0.0;}\n  }\n</style>\n","scripts":["\n  (function(){\n    this.traitify = Object();\n    var slideDeck = this;\n    var traitify = this.traitify;\n    var $ = function(item){\n      if(typeof item == \"string\"){\n        var items = slideDeck.querySelectorAll(item);\n      } else {\n        var items = item;\n      }\n      items.each = function(callback){\n        for(i=0; i < this.length; i++){\n          callback(i, this[i])\n        }\n      }\n      items.html = function(html){\n        if(html){\n          return this[0].innerHTML = html;\n        }else{\n          return this[0].innerHTML;\n        }\n      }\n      items.find = function(item){\n        return $(this[0].querySelectorAll(item))\n      }\n      items.click = function(callback){\n        this.each(function(i, item){\n          item.onclick = callback;\n        })\n      }\n      items.addClass = function(className){\n        items.each(function(i, item){\n          item.className = item.className.replace(className, \"\")\n          item.className += \" \" + className\n        })\n        return items;\n      }\n      items.removeClass = function(className){\n        items.each(function(i, item){\n          item.className = item.className.replace(\" \" + className, \"\").replace(className, \"\")\n        })\n        return items;\n      }\n      items.hide = function(){\n        items.addClass(\"tf-hidden\");\n      }\n      items.show = function(){\n        items.removeClass(\"tf-hidden\")\n      }\n      items.css = function(options){\n        items.each(function(i,item){\n          $(Object.keys(options)).each(function(i, optionKey){\n            item.style[optionKey] = options[optionKey];\n          })\n        })\n      }\n      return items;\n    }\n    $.db = {\n      get: function(key){\n        return JSON.parse(sessionStorage.getItem(key));\n      },\n      set: function(key, value){\n        return sessionStorage.setItem(key, JSON.stringify(value));\n      }\n    }\n\n    this.traitify.initialize = function(){\n      /**********************************\n       * PREPARE DATA\n       **********************************/\n      this.nodes = Object();\n      this.nodes.slides = $(\".tf-slides\");\n      this.nodes.me = this.nodes.slides.find(\".tf-me\");\n      this.nodes.notMe = this.nodes.slides.find(\".tf-not-me\");\n      this.nodes.slidesContainer = this.nodes.slides.find(\".tf-slides-container\");\n      this.nodes.progressBar = this.nodes.slidesContainer.find(\".tf-progress-bar\");\n      this.nodes.progressBarInner = this.nodes.slidesContainer.find(\".tf-progress-bar-inner\");\n      this.nodes.currentSlide = $(\".tf-slide.tf-current\");\n      this.nodes.nextSlide = $(\".tf-slide.tf-next\");\n      this.nodes.caption = $(\".tf-caption\");\n      this.nodes.loading = $(\".tf-loading .tf-loading-content\");\n      this.nodes.clickToReload = $(\".tf-loading .tf-click-content\");\n\n      this.imageSize = \"image_desktop_retina\";\n\n      this.imageUrls = this.data.slides.map(function(slide){\n        return slide[traitify.imageSize];\n      })\n\n      traitify.slideLock = false;\n      this.db = Object();\n\n      this.db.set = function(key, data){\n        return $.db.set(traitify.assessmentId + key, data);\n      }\n\n      this.db.get = function(key){\n        return $.db.get(traitify.assessmentId + key);\n      }\n\n      traitify.data.slideResponses = traitify.db.get(\"slides\");\n\n      if(!traitify.data.slideResponses){\n        traitify.data.slideResponses = Object();\n      }\n\n      var slideIds = Object.keys(traitify.data.slideResponses)\n      var playedSlides = traitify.data.slides.filter(function(slide, i){\n        if(slideIds.indexOf(slide.id) != -1){\n          return true;\n        }else{\n          return false;\n        }\n      })\n      var unplayedSlides = traitify.data.slides.filter(function(slide, i){\n        if(slideIds.indexOf(slide.id) == -1){\n          return true;\n        }else{\n          return false;\n        }\n      })\n      this.data.slides = playedSlides.concat(unplayedSlides);\n\n      this.index = Object.keys(traitify.data.slideResponses).length ||  0;\n\n      this.lastClick = new Date();\n\n      /************************************\n       * HANDLE TRANSITION \n       ************************************/\n      var i, undefined, el = document.createElement('div'),\n      transitions = [\n        {key: 'transition', css: 'transitionend'},\n        {key: 'OTransition', css: 'otransitionend'},  // oTransitionEnd in very old Opera\n        {key: 'MozTransition', css: 'transitionend'},\n        {key: 'WebkitTransition', css: 'webkitTransitionEnd'}\n      ];\n      $(transitions).each(function(i, transition){\n        if (el.style[transition.key] !== undefined) {\n            traitify.transitionEnd = transition.css;\n        }\n      })\n\n      /*************************************\n       * RESIZE\n       *************************************/\n      this.resizeTimer = false;\n      var eventListener = function(item, eventListener, callback){\n        if(item.addEventListener){\n          item.addEventListener(eventListener, callback)\n        } else if (item.attachEvent){\n          item.attachEvent(\"on\" + eventListener, callback)\n        }\n      }\n\n      eventListener(window, \"resize\", function(){\n          if(traitify.resizeTimeout){\n            clearTimeout(traitify.resizeTimeout);\n          }\n          traitify.resizeTimeout = setTimeout(function(){\n            traitify.options.trigger(\"resize\");\n            traitify.resizeTimeout = false;\n          }, 100);\n      });\n\n      this.options.on(\"slideDeck.resize\", function(){\n        width = slideDeck.offsetWidth;\n        traitify.nodes.slides.removeClass(\"min-width-1200\");\n        traitify.nodes.slides.removeClass(\"min-width-720\");\n        traitify.nodes.slides.removeClass(\"min-width-480\");\n\n        if(width > 1200){\n          traitify.nodes.slides.addClass(\"min-width-1200\");\n        } else if (width > 720){\n          traitify.nodes.slides.addClass(\"min-width-720\");\n        } else{\n          traitify.nodes.slides.addClass(\"min-width-480\");\n        }\n      })\n      this.options.trigger(\"slideDeck.resize\");\n\n      this.options.on(\"slideDeck.transitionEnd\", function(){\n        traitify.options.trigger(\"slideDeck.setView\");\n        traitify.slideLock = false;\n      })\n\n      /************************************\n       * SET SLIDES\n       ************************************/\n      this.options.on(\"slideDeck.addSlides\", function(){\n        var slideResponses = traitify.data.slideResponses;\n        responses = Object.keys(slideResponses).map(function(slide){\n          return slideResponses[slide];\n        })\n        Traitify.addSlides(traitify.options.assessmentId, responses).then(function(){\n          traitify.options.trigger(\"slideDeck.finish\");\n        })\n      })\n      if(slideIds.length == this.data.slides.length){\n        this.options.trigger(\"slideDeck.addSlides\");\n        return true;\n      }\n      this.options.on(\"slideDeck.setProgressBar\", function(){\n        percent = Math.round(((traitify.index + 1) / traitify.data.slides.length) * 100);\n        traitify.nodes.progressBarInner.css({\n          width:  percent + \"%\"\n        });\n      })\n\n      this.options.trigger(\"slideDeck.setProgressBar\");\n       \n      /************************************\n       * SET VIEW\n       ************************************/\n      this.options.on(\"slideDeck.setView\", function(){\n        currentSlide = traitify.data.slides[traitify.index];\n        nextSlide = traitify.data.slides[traitify.index + 1];\n        traitify.nodes.caption.html(currentSlide.caption);\n        \n        traitify.nodes.currentSlide.css({\n          backgroundImage: \"url(\" + currentSlide[traitify.imageSize] + \")\",\n          backgroundPosition: currentSlide.focus_x + \"% \" + currentSlide.focus_y + \"%\",\n          \"background-position-x\": currentSlide.focus_x + \"%\",\n          \"background-position-y\": currentSlide.focus_y + \"%\"\n        });\n        if(nextSlide && nextSlide[traitify.imageSize]){\n          traitify.nodes.nextSlide.addClass(\"tf-next\").removeClass(\"tf-current\");\n          traitify.nodes.nextSlide.css({\n            backgroundImage: \"url(\" + nextSlide[traitify.imageSize] + \")\",\n            backgroundPosition: nextSlide.focus_x + \"% \" + nextSlide.focus_y + \"%\"\n          });\n        }\n      })\n\n      /************************************\n       * HANDLE ACTIONS\n       ************************************/\n      this.options.on(\"slideDeck.animate\", function(){\n        if(!traitify.slideLock){\n          traitify.slideLock = true;\n          traitify.index++;\n          traitify.options.trigger(\"slideDeck.setProgressBar\");\n\n          if(traitify.nodes.nextSlide){\n            traitify.nodes.nextSlide.removeClass(\"tf-next\").addClass(\"tf-current\");\n          }\n\n          if(!traitify.transitionEnd){\n            traitify.options.trigger(\"slideDeck.transitionEnd\")\n          }\n        }\n      })\n\n      this.options.on(\"slideDeck.notMe slideDeck.me\", function(data){\n        currentSlide = traitify.data.slides[traitify.index];\n        lastClick = traitify.lastClick;\n        traitify.lastClick = new Date();\n        traitify.data.slideResponses[currentSlide.id] = {\n          id: currentSlide.id,\n          response: data.value,\n          time_taken: traitify.lastClick - lastClick\n        }\n        traitify.db.set(\"slides\", traitify.data.slideResponses)\n\n        var slideIds = Object.keys(traitify.data.slideResponses)\n        if(slideIds.length == traitify.data.slides.length){\n          traitify.options.trigger(\"slideDeck.addSlides\");\n        }\n        traitify.options.trigger(\"slideDeck.animate\");\n      })\n\n\n      /*********************************\n       * HOOKS\n       *********************************/\n      this.nodes.me.click(function(){\n        traitify.options.trigger(\"slideDeck.me\", {value: true})\n      })\n\n      this.nodes.notMe.click(function(){\n        traitify.options.trigger(\"slideDeck.notMe\", {value: false})\n      })\n\n      this.nodes.clickToReload.click(function(){\n        traitify.options.trigger(\"slideDeck.clickReload\");\n      })\n\n      if(traitify.transitionEnd && window.addEventListener){\n        traitify.nodes.nextSlide[0].addEventListener( traitify.transitionEnd, function( event ) { \n          traitify.options.trigger(\"slideDeck.transitionEnd\") \n        }, false );\n      }\n\n      /********************************\n       * NASTY IMAGE PRELOADING\n       ********************************/\n      this.imageTries = Object()\n      this.images = Array();\n      this.images.lastIndex = this.index;\n      this.loadImage = function(i){\n        if(traitify.imageUrls[i]){\n          if(!traitify.imageTries[i]){\n            traitify.imageTries[i]= 0;\n          }\n          traitify.images[i] = new Image();\n          traitify.images[i].src = traitify.imageUrls[i];\n          traitify.images[i].onerror = function(){\n            traitify.imageTries[i]++;\n            if(traitify.imageTries[i] < 30){\n              setTimeout(function(){\n                traitify.loadImage(i);\n              }, 1000)\n            }else{\n              traitify.images.lastIndex = i;\n              traitify.nodes.loading.hide();\n              traitify.nodes.clickToReload.show();\n            }\n          }\n          traitify.images[i].onload = function(){\n            setTimeout(function(){\n              traitify.loadImage(i + 1);\n            }, 300)\n            traitify.options.trigger(\"slideDeck.imageLoaded\", this);\n            traitify.nodes.clickToReload.hide();\n            traitify.images.lastIndex = i;\n            traitify.nodes.slides.removeClass(\"tf-loading\");\n          }\n        }\n      }\n      \n      traitify.options.trigger(\"slideDeck.setView\");\n      this.loadImage(traitify.index);\n      \n    }\n  }).call(document.currentScript.parentNode);\n"]})
+Traitify.ui.widget("tf-personality-blend", {"data":["blend"],"template":"<div class=\"tf-personality-blend\">\n  {{blend.first}}\n  there\n</div>\n","scripts":["\n  (function(){\n    this.traitify = Object();\n    var slideDeck = this;\n    var traitify = this.traitify;\n    var $ = function(item){\n      if(typeof item == \"string\"){\n        var items = slideDeck.querySelectorAll(item);\n      } else {\n        var items = item;\n      }\n      items.each = function(callback){\n        for(i=0; i < this.length; i++){\n          callback(i, this[i])\n        }\n      }\n      items.html = function(html){\n        if(html){\n          return this[0].innerHTML = html;\n        }else{\n          return this[0].innerHTML;\n        }\n      }\n      items.find = function(item){\n        return $(this[0].querySelectorAll(item))\n      }\n      items.click = function(callback){\n        this.each(function(i, item){\n          item.onclick = callback;\n        })\n      }\n      items.addClass = function(className){\n        items.each(function(i, item){\n          item.className = item.className.replace(className, \"\")\n          item.className += \" \" + className\n        })\n        return items;\n      }\n      items.removeClass = function(className){\n        items.each(function(i, item){\n          item.className = item.className.replace(\" \" + className, \"\").replace(className, \"\")\n        })\n        return items;\n      }\n      items.hide = function(){\n        items.addClass(\"tf-hidden\");\n      }\n      items.show = function(){\n        items.removeClass(\"tf-hidden\")\n      }\n      items.css = function(options){\n        items.each(function(i,item){\n          $(Object.keys(options)).each(function(i, optionKey){\n            item.style[optionKey] = options[optionKey];\n          })\n        })\n      }\n      return items;\n    }\n    $.db = {\n      get: function(key){\n        return JSON.parse(sessionStorage.getItem(key));\n      },\n      set: function(key, value){\n        return sessionStorage.setItem(key, JSON.stringify(value));\n      }\n    }\n\n    this.traitify.initialize = function(){\n      /**********************************\n       * PREPARE DATA\n       **********************************/\n      alert(\"here\")\n    }\n  }).call(document.currentScript.parentNode);\n"]})
