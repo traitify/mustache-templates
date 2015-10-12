@@ -1,3 +1,4 @@
 name: tf-personality-types
+target: .tf-personality-types
 data:
   - personality-types

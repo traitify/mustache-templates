@@ -14,6 +14,7 @@
 	</style>
 </head>
 <body>
+
   <div class="tf-slide-deck">
   </div>
 	<div class="tf-personality-blend">
@@ -29,14 +30,12 @@
 	<div class="tf-careers">
 	</div>
 
+
   <script>
   	$.get("/assessment.json").then(function(assessment){
 			traitify = Traitify.ui.init({
 				publicKey: assessment.publicKey,
-				assessmentId: assessment.id,
-				slideDeck:{
-					progressBarColor: "#0000ff"
-				}
+				assessmentId: assessment.id
 			}).render();
 		})
   </script>

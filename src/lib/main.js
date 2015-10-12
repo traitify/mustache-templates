@@ -4,70 +4,73 @@ Traitify.ui = {
   widget: function(name, args) {
     return this.widgets[name] = args;
   },
-  init: function(options) {
-    var base, base1;
-    if (options == null) {
-      options = Object();
+  init: function(opts) {
+    var widgets = Traitify.ui.widgets;
+    var widgetNames = Object.keys(Traitify.ui.widgets);
+    options = Object();
+    for(i=0; i < widgetNames.length; i++){
+      widget = widgets[widgetNames[i]];
+      options[widget.name] = widget;
     }
-    this.Observable(options);
-    if (options.slideDeck == null) {
-      options.slideDeck = Object();
-    }
-    if (options.slideDeck.target == null) {
-      options.slideDeck.target = ".tf-slide-deck";
-    }
-    if (options.slideDeck.tag == null) {
-      options.slideDeck.tag = "tf-slide-deck";
-    }
-    if (options.publicKey) {
-      Traitify.setPublicKey(options.publicKey);
-    }
-    delete options.publicKey;
-    options.render = function() {
-      var that = this;
-      var scopes = "slides,blend,types,traits,career_matches";
-      var args = "image_pack=linear&data=" + scopes;
-      var ref = options.slideDeck;
-      for (i = 0, len = ref.length; i < len; i++) {
-        slideDeck = ref[i];
-        slideDeck.assessmentId = options.assessmentId;
+    Object.keys(opts).forEach(function(option){
+      if(typeof option == "string"){
+        options[option] = opts[option];
+      }else{
+        options[option] = opts[option];
       }
-      Traitify.get("/assessments/" + options.assessmentId + "?" + args).then(function(assessment) {
-        options.slideDeck.mount = document.querySelector(options.slideDeck.target);
-        options.slideDeck.mount.innerHTML = "";
-        if (assessment.completed_at === void 0) {
-          var widget = Traitify.ui.widgets[options.slideDeck.tag];
-          var data = Object();
-          var assessmentKeys = Object.keys(assessment);
-          for (j = 0; j < assessmentKeys.length; j++) {
-            var assessmentName = assessmentKeys[j];
-            if (widget.data.indexOf(assessmentName) !== -1) {
-              data[assessmentName] = assessment[assessmentName];
-            }
+    })
+    this.Observable(options);
+
+    if(opts.publicKey){
+      Traitify.setPublicKey(opts.publicKey);
+    }
+    options.on("slideDeck.finish", function(){
+      options.render();
+    })
+    options.render = function(){
+      options.datas = Object();
+      widgetNames.forEach(function(widgetName){
+        widget = widgets[widgetName];
+        widget.data.forEach(function(data){
+          options.datas[data] = null;
+        })
+      })
+      var scopes = Object.keys(options.datas).join(",");
+      Traitify.get("/assessments/"+options.assessmentId+"?image_pack=linear&data="+ scopes).then(function(assessment){
+        widgetNames.forEach(function(widgetName){
+          widget = options[widgetName];
+          widget.mount = document.querySelector(widget.target);
+          widget.mount.innerHTML = "";
+          var widgetAssessmentDatas = widget.data.filter(function(data){
+            return assessment[data];
+          })
+
+
+          if(widgetAssessmentDatas.length == widget.data.length){
+            assessment.raw = JSON.stringify(assessment);
+            view = Mustache.render(widget.template, assessment);
+            widget.mount.innerHTML = view;
+            widget.scripts.forEach(function(innerScript){ 
+              script = document.createElement("script");
+              script.text = innerScript;
+              widget.mount.appendChild(script);
+            });
+            widget.mount.traitify.options = options;
+
+            widget.data.forEach(function(dataName){
+              if(!widget.mount.traitify.data){
+                widget.mount.traitify.data = Object();
+              }
+              widget.mount.traitify.data[dataName] = assessment[dataName];
+            })
+            widget.mount.traitify.assessmentId = assessment.id;
+            widget.mount.traitify.initialize();
           }
-          var view = Mustache.render(widget.template, assessment);
-          options.slideDeck.mount.innerHTML = view;
-          var ref2 = widget.scripts;
-          for (k = 0, len2 = ref2.length; k < len2; k++) {
-            var innerScript = ref2[k];
-            var script = document.createElement("script");
-            script.type = 'text/javascript';
-            script.text = innerScript;
-            options.slideDeck.mount.appendChild(script);
-          }
-          options.slideDeck.mount.traitify.options = options;
-          options.slideDeck.mount.traitify.data = data;
-          options.slideDeck.mount.traitify.assessmentId = assessment.id;
-          options.slideDeck.mount.traitify.initialize();
-          options.on("slideDeck.finish", function() {
-            return that.render();
-          });
-        } else {
-          alert("hiya");
-        }
-      });
-      return this;
-    };
+        })
+      })
+      
+    }
+    
     return options;
   },
   Observable: function(options) {

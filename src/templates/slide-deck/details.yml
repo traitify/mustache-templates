@@ -1,3 +1,4 @@
-name: tf-slide-deck
+name: slideDeck
+target: .tf-slide-deck
 data:
   - slides

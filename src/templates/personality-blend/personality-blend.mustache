@@ -1,7 +1,69 @@
 <div class="tf-personality-blend">
-  {{blend.first}}
-  there
+  <div class="tf-personality-blend-container">
+    <div class="tf-badges">
+      <div class="tf-badge tf-left" style="border-color:#{{personality_blend.personality_type_1.badge.color_1}}">
+        <img src="{{personality_blend.personality_type_1.badge.image_large}}"  />
+      </div>
+      <div class="tf-badge tf-right" style="border-color:#{{personality_blend.personality_type_2.badge.color_1}}">
+        <img src="{{personality_blend.personality_type_2.badge.image_large}}" />
+      </div>
+    </div>
+    <div class="tf-name">
+      {{personality_blend.name}}
+    </div> 
+    <div class="tf-description">
+      {{personality_blend.description}}
+    </div>
+  </div>
 </div>
+<style>
+  @font-face {
+    font-family: "Source Sans Pro";
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
+  }
+  .tf-personality-blend{
+    font-family: "Source Sans Pro", arial, verdana;
+    text-align: center;
+  }
+  .tf-personality-blend .tf-personality-blend .tf-badges{
+    padding: 0px 14px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-badge{
+    border-width: 2px;
+    border-style: solid;
+    display: inline-block;
+    border-radius: 50%;
+    padding: 30px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-badge.tf-right{
+    margin: 0px -14px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-badge.tf-left{
+    margin: 0px -14px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-badge img{
+    width: 70px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-name{
+    font-size:23px;
+    margin: 18px 0px;
+  }
+  .tf-personality-blend .tf-personality-blend-container .tf-description{
+    text-align:justify;
+    width:100%;
+    max-width: 800px;
+    margin:0px auto;
+  }
+</style>
+<!--[if lt IE 9]>
+  <style>
+    .tf-personality-blend .tf-personality-blend-container .tf-badge{
+      border: 0px;
+    }
+  </style>
+<![endif]-->
 <script>
   (function(){
     this.traitify = Object();
@@ -74,7 +136,7 @@
       /**********************************
        * PREPARE DATA
        **********************************/
-      alert("here")
+      console.log(this.data)
     }
   }).call(document.currentScript.parentNode);
 </script>

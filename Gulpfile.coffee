@@ -36,15 +36,17 @@ gulp.task('mustache', ->
       .pipe(insert.transform((data, filename)->
         folder = getFolderName(filename)
         details = yaml.safeLoad(fs.readFileSync([folder, "details.yml"].join("/"), "utf8"))
-        console.log(details)
         scripts = data.match(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi)
         data = data.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
 
         options = {
+          name: details.name,
           data: details.data, 
           template: data,
+          target: details.target,
           scripts: scripts.map((script)-> script.replace(/\<script\>/g, "").replace(/\<\/script\>/g, ""))
         }
+
         data = "Traitify.ui.widget(\"#{details.name}\", #{JSON.stringify(options)})"
         data
       )).pipe(rename({extname: ".js"})).pipe(gulp.dest("./public/js/templates"))

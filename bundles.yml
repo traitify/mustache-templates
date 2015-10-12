@@ -1,8 +1,10 @@
 v2:
+  - "public/support/polyfill"
   - "traitify-js-client/compiled/bundles/v1"
   - "public/js/lib/v2-client-patch"
   - "public/support/mustache"
   - "public/support/currentscript_polyfill"
+  - "public/js/lib/polyfill"
   - "public/js/lib/main"
   - "public/js/templates/slide-deck/slide-deck"
   - "public/js/templates/personality-blend/personality-blend"
