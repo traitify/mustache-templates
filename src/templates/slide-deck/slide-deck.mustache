@@ -20,6 +20,12 @@
   </div>
 </div>
 <style>
+  @font-face {
+    font-family: "Source Sans Pro";
+    font-style: normal;
+    font-weight: 400;
+    src: local('Source Sans Pro'), local('Source Sans Pro'), url("https://s3.amazonaws.com/traitify-cdn/assets/fonts/source-sans-pro.woff") format('woff');
+  }
   .tf-slides{
     font-family: arial;
     text-align:center;
@@ -29,6 +35,7 @@
     height: 12px;
     width: 100%;
     z-index:1;
+    background-color: #aaa;
     background-color: rgba(150, 150, 150, .5);
   }
   .tf-hidden{
@@ -39,15 +46,16 @@
     width: 0%;
     background-color: #fff;
     border-radius: 0px 8px 8px 0px;
-    -webkit-transition: width .6s ease-in-out;
-    -moz-transition: width .6s ease-in-out;
-    -o-transition: width .6s ease-in-out;
-    transition: width .6s ease-in-out;
+    -webkit-transition: width .8s ease-in-out;
+    -moz-transition: width .8s ease-in-out;
+    -o-transition: width .8s ease-in-out;
+    transition: width .8s ease-in-out;
   }
   .tf-caption{
     position: absolute;
     color: #fff;
     width:100%;
+    background-color: #333;
     background-color: rgba(0, 0, 0, .7);
     height: 48px;
     line-height: 48px;
@@ -65,10 +73,13 @@
   }
   .tf-slides .tf-slide.tf-current{
     left: 0%;
-    -webkit-transition: left .6s ease-in-out;
-    -moz-transition: left .6s ease-in-out;
-    -o-transition: left .6s ease-in-out;
-    transition: left .6s ease-in-out;
+    transform: scale(1,1);
+    zoom: 0.4\9;
+    background-repeat: no-repeat;
+    -webkit-transition: left .6s ease;
+    -moz-transition: left .6s ease;
+    -o-transition: left .6s ease;
+    transition: left .6s ease;
   }
   .tf-slides .tf-slide.tf-next{
     left: 100%;
@@ -82,8 +93,16 @@
   .tf-slides.min-width-720 .tf-slides-container {
     height: 540px;
   }
+  .tf-slides.min-width-720 .tf-slides-container .tf-slide.tf-current{
+    transform: scale(1,1);
+    zoom: 0.7\9;
+  }
   .tf-slides.min-width-1200 .tf-slides-container {
     height: 700px;
+  }
+  .tf-slides.min-width-1200 .tf-slides-container .tf-slide.tf-current{
+    transform: scale(1,1);
+    zoom: 0.67\9;
   }
 
   .tf-me-not-me-container{
@@ -145,395 +164,340 @@
   }
 </style>
 <script>
-    (function(me){
-      me.traitify = Object()
-
-      me.traitify.deferred = function(){
-        return {
-          thenCalls: Array(),
-          catchCalls: Array(),
-          then: function(callback){
-            if(this.triggered){
-              callback(this.args);
-            }else{
-              this.thenCalls.push(callback);
-            }
-          },
-          catch: function(callback){
-            if(this.triggered){
-              callback(this.args);
-            }else{
-              this.catchCalls.push(callback);
-            }
-          },
-          resolve: function(args){
-            if(this.thenCalls && this.thenCalls.length != 0){
-              for(i=0; i < this.thenCalls.length; i++){
-                this.thenCalls[i](args);
-              }
-            }else{
-              this.args = args;
-              this.triggered = true;
-            }
-          },
-          reject: function(args){
-            if(this.catchCalls.length != 0){
-              for(i=0; i < this.catchCalls.length; i++){
-                this.catchCalls[i](args);
-              }
-            }else{
-              this.args = args;
-              this.triggered = true;
-            }
-          }
+  (function(){
+    this.traitify = Object();
+    var slideDeck = this;
+    var traitify = this.traitify;
+    var $ = function(item){
+      if(typeof item == "string"){
+        var items = slideDeck.querySelectorAll(item);
+      } else {
+        var items = item;
+      }
+      items.each = function(callback){
+        for(i=0; i < this.length; i++){
+          callback(i, this[i])
         }
       }
-      me.traitify.Observable = function(item){
-        item.ons = Object()
-        item.on = function(key, callback){
-          if(!item.ons[key]){
-            item.ons[key] = Array();
-          }
-          item.ons[key].push(callback);
-        }
-        item.trigger = function(key, opts){
-          if(item.ons[key] && typeof item.ons[key].length != 0){
-            il = item.ons[key].length
-            for(i=0; i < il; i++){
-              item.ons[key][i](opts); 
-            }
-          }
-        }
-        item.off = function(key){
-          item.ons[key] = Array();
+      items.html = function(html){
+        if(html){
+          return this[0].innerHTML = html;
+        }else{
+          return this[0].innerHTML;
         }
       }
-      me.traitify.Observable(me.traitify);
-      var i, undefined, el = document.createElement('div'),
-      transitions = {
-        'transition':'transitionend',
-        'OTransition':'otransitionend',  // oTransitionEnd in very old Opera
-        'MozTransition':'transitionend',
-        'WebkitTransition':'webkitTransitionEnd'
-      };
-
-      for (i in transitions) {
-        if (transitions.hasOwnProperty(i) && el.style[i] !== undefined) {
-            transitionEnd = transitions[i];
-        }
+      items.find = function(item){
+        return $(this[0].querySelectorAll(item))
       }
-      var $TF = function(item){
-        if(typeof item == "string"){
-          item = me.querySelector(item);
-        }
-        if(Traitify.oldIE){
-          item.addEventListener = item.attachEvent;
-        }
-        item.hide = function(){
-          if(!this.className.match(/tf-hidden/)){
-            this.className = this.className + " tf-hidden";
-          }
-        }
-        item.show = function(){
-          this.className = this.className.replace(/ tf-hidden/, "");
-        }
-        return item;
+      items.click = function(callback){
+        this.each(function(i, item){
+          item.onclick = callback;
+        })
       }
-      me.traitify.slideResponses = Object();
-      me.traitify.lastResponse = new Date();
-      me.traitify.db = Object();
-      me.traitify.db.set = function(key, value){
-        key = me.traitify.assessmentId + "-" + key
+      items.addClass = function(className){
+        items.each(function(i, item){
+          item.className = item.className.replace(className, "")
+          item.className += " " + className
+        })
+        return items;
+      }
+      items.removeClass = function(className){
+        items.each(function(i, item){
+          item.className = item.className.replace(" " + className, "").replace(className, "")
+        })
+        return items;
+      }
+      items.hide = function(){
+        items.addClass("tf-hidden");
+      }
+      items.show = function(){
+        items.removeClass("tf-hidden")
+      }
+      items.css = function(options){
+        items.each(function(i,item){
+          $(Object.keys(options)).each(function(i, optionKey){
+            item.style[optionKey] = options[optionKey];
+          })
+        })
+      }
+      return items;
+    }
+    $.db = {
+      get: function(key){
+        return JSON.parse(sessionStorage.getItem(key));
+      },
+      set: function(key, value){
         return sessionStorage.setItem(key, JSON.stringify(value));
       }
-      me.traitify.db.get = function(key){
-        key = me.traitify.assessmentId + "-" + key
-        return JSON.parse(sessionStorage.getItem(key));
+    }
+
+    this.traitify.initialize = function(){
+      /**********************************
+       * PREPARE DATA
+       **********************************/
+      this.nodes = Object();
+      this.nodes.slides = $(".tf-slides");
+      this.nodes.me = this.nodes.slides.find(".tf-me");
+      this.nodes.notMe = this.nodes.slides.find(".tf-not-me");
+      this.nodes.slidesContainer = this.nodes.slides.find(".tf-slides-container");
+      this.nodes.progressBar = this.nodes.slidesContainer.find(".tf-progress-bar");
+      this.nodes.progressBarInner = this.nodes.slidesContainer.find(".tf-progress-bar-inner");
+      this.nodes.currentSlide = $(".tf-slide.tf-current");
+      this.nodes.nextSlide = $(".tf-slide.tf-next");
+      this.nodes.caption = $(".tf-caption");
+      this.nodes.loading = $(".tf-loading .tf-loading-content");
+      this.nodes.clickToReload = $(".tf-loading .tf-click-content");
+
+      this.imageSize = "image_desktop_retina";
+
+      this.imageUrls = this.data.slides.map(function(slide){
+        return slide[traitify.imageSize];
+      })
+
+      traitify.slideLock = false;
+      this.db = Object();
+
+      this.db.set = function(key, data){
+        return $.db.set(traitify.assessmentId + key, data);
       }
-      me.traitify.initialize = function(){
-        self = $TF(this);
-        /*
-         * Set Available Nodes
-         */
-        this.nodes = Object()
-        this.nodes.currentSlide = $TF(".tf-slide.tf-current");
-        this.nodes.nextSlide = $TF(".tf-slide.tf-next");
-        this.nodes.caption = $TF(".tf-caption");
-        this.nodes.me = $TF(".tf-me");
-        this.nodes.notMe = $TF(".tf-not-me");
-        this.nodes.progressBarInner = $TF(".tf-progress-bar-inner");
-        this.nodes.slides = $TF(".tf-slides");
-        this.nodes.loading = $TF(".tf-loading .tf-loading-content");
-        this.nodes.clickToReload = $TF(".tf-loading .tf-click-content");
 
+      this.db.get = function(key){
+        return $.db.get(traitify.assessmentId + key);
+      }
 
-        /*
-         * Set Data
-         */
-        this.data.unPlayedSlides = this.data.slides.filter(function(slide){
-          return !slide.completed_at && Object.keys(self.db.get("slideResponses") || Object()).indexOf(slide.id) == -1
-        })
-        this.data.playedSlides = this.data.slides.filter(function(slide){
-          return slide.completed_at || Object.keys(self.db.get("slideResponses") || Object()).indexOf(slide.id) != -1
-        })
-        this.data.slides = this.data.playedSlides.concat(this.data.unPlayedSlides)
-        this.index = this.data.playedSlides.length || 0
+      traitify.data.slideResponses = traitify.db.get("slides");
 
-        /*
-         * Resize
-         */
-        self.resizeTimer =  false;
-        window.addEventListener("resize", function(){
-          if(self.resizeTimeout){
-            clearTimeout(self.resizeTimeout);
+      if(!traitify.data.slideResponses){
+        traitify.data.slideResponses = Object();
+      }
+
+      var slideIds = Object.keys(traitify.data.slideResponses)
+      var playedSlides = traitify.data.slides.filter(function(slide, i){
+        if(slideIds.indexOf(slide.id) != -1){
+          return true;
+        }else{
+          return false;
+        }
+      })
+      var unplayedSlides = traitify.data.slides.filter(function(slide, i){
+        if(slideIds.indexOf(slide.id) == -1){
+          return true;
+        }else{
+          return false;
+        }
+      })
+      this.data.slides = playedSlides.concat(unplayedSlides);
+
+      this.index = Object.keys(traitify.data.slideResponses).length ||  0;
+
+      this.lastClick = new Date();
+
+      /************************************
+       * HANDLE TRANSITION 
+       ************************************/
+      var i, undefined, el = document.createElement('div'),
+      transitions = [
+        {key: 'transition', css: 'transitionend'},
+        {key: 'OTransition', css: 'otransitionend'},  // oTransitionEnd in very old Opera
+        {key: 'MozTransition', css: 'transitionend'},
+        {key: 'WebkitTransition', css: 'webkitTransitionEnd'}
+      ];
+      $(transitions).each(function(i, transition){
+        if (el.style[transition.key] !== undefined) {
+            traitify.transitionEnd = transition.css;
+        }
+      })
+
+      /*************************************
+       * RESIZE
+       *************************************/
+      this.resizeTimer = false;
+      var eventListener = function(item, eventListener, callback){
+        if(item.addEventListener){
+          item.addEventListener(eventListener, callback)
+        } else if (item.attachEvent){
+          item.attachEvent("on" + eventListener, callback)
+        }
+      }
+
+      eventListener(window, "resize", function(){
+          if(traitify.resizeTimeout){
+            clearTimeout(traitify.resizeTimeout);
           }
+          traitify.resizeTimeout = setTimeout(function(){
+            traitify.options.trigger("resize");
+            traitify.resizeTimeout = false;
+          }, 100);
+      });
 
-          self.resizeTimeout = setTimeout(function(){
-            self.trigger("resize");
-            self.resizeTimeout = false;
-          }, 300);
+      this.options.on("slideDeck.resize", function(){
+        width = slideDeck.offsetWidth;
+        traitify.nodes.slides.removeClass("min-width-1200");
+        traitify.nodes.slides.removeClass("min-width-720");
+        traitify.nodes.slides.removeClass("min-width-480");
+
+        if(width > 1200){
+          traitify.nodes.slides.addClass("min-width-1200");
+        } else if (width > 720){
+          traitify.nodes.slides.addClass("min-width-720");
+        } else{
+          traitify.nodes.slides.addClass("min-width-480");
+        }
+      })
+      this.options.trigger("slideDeck.resize");
+
+      this.options.on("slideDeck.transitionEnd", function(){
+        traitify.options.trigger("slideDeck.setView");
+        traitify.slideLock = false;
+      })
+
+      /************************************
+       * SET SLIDES
+       ************************************/
+      this.options.on("slideDeck.addSlides", function(){
+        var slideResponses = traitify.data.slideResponses;
+        responses = Object.keys(slideResponses).map(function(slide){
+          return slideResponses[slide];
+        })
+        Traitify.addSlides(traitify.options.assessmentId, responses).then(function(){
+          traitify.options.trigger("slideDeck.finish");
+        })
+      })
+      if(slideIds.length == this.data.slides.length){
+        this.options.trigger("slideDeck.addSlides");
+        return true;
+      }
+      this.options.on("slideDeck.setProgressBar", function(){
+        percent = Math.round(((traitify.index + 1) / traitify.data.slides.length) * 100);
+        traitify.nodes.progressBarInner.css({
+          width:  percent + "%"
         });
+      })
 
-        self.on("resize", function(){
-          width = me.offsetWidth;
-          className = self.nodes.slides.className;
-          className = className.replace(/ min-width-1200/g, "");
-          className = className.replace(/ min-width-720/g, "");
-          className = className.replace(/ min-width-480/g, "");
- 
-          if(width > 1200){
-            className += " min-width-1200";
-          } else if (width > 720){
-            className += " min-width-720";
-          } else{
-            className += " min-width-480";
-          }
-          self.nodes.slides.className = className;
-        })
-        self.trigger("resize");
-
-        /*
-         * Transition
-         */
-        this.slideLock = false;
-        this.events = Object();
-        self.nodes.nextSlide.transitionend = function(){
-
+      this.options.trigger("slideDeck.setProgressBar");
+       
+      /************************************
+       * SET VIEW
+       ************************************/
+      this.options.on("slideDeck.setView", function(){
+        currentSlide = traitify.data.slides[traitify.index];
+        nextSlide = traitify.data.slides[traitify.index + 1];
+        traitify.nodes.caption.html(currentSlide.caption);
+        
+        traitify.nodes.currentSlide.css({
+          backgroundImage: "url(" + currentSlide[traitify.imageSize] + ")",
+          backgroundPosition: currentSlide.focus_x + "% " + currentSlide.focus_y + "%",
+          "background-position-x": currentSlide.focus_x + "%",
+          "background-position-y": currentSlide.focus_y + "%"
+        });
+        if(nextSlide && nextSlide[traitify.imageSize]){
+          traitify.nodes.nextSlide.addClass("tf-next").removeClass("tf-current");
+          traitify.nodes.nextSlide.css({
+            backgroundImage: "url(" + nextSlide[traitify.imageSize] + ")",
+            backgroundPosition: nextSlide.focus_x + "% " + nextSlide.focus_y + "%"
+          });
         }
-        self.nodes.nextSlide.addEventListener(transitionEnd, function(){
-          self.nodes.nextSlide.transitionend();
-        })
+      })
 
-        this.events.animate = function(){
-          if(!self.slideLock){
-            promise = self.deferred();
-            self.slideLock = true;
-            self.nodes.nextSlide.transitionend = function(){
-              self.slideLock = false;
-              promise.resolve();
-            }
-            self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace("tf-next", "") + " tf-current";
-            self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + "%";
-            return promise;
-          }
-        }
-        self.nodes.progressBarInner.style.width = Math.round((self.index / self.data.slides.length) * 100) + "%";
+      /************************************
+       * HANDLE ACTIONS
+       ************************************/
+      this.options.on("slideDeck.animate", function(){
+        if(!traitify.slideLock){
+          traitify.slideLock = true;
+          traitify.index++;
+          traitify.options.trigger("slideDeck.setProgressBar");
 
-        /*
-         * Set Current Slide
-         */
-        this.events.setCurrentSlideData = function(){
-          if( self.data.slides.length - self.index == 0){
-            return true;
+          if(traitify.nodes.nextSlide){
+            traitify.nodes.nextSlide.removeClass("tf-next").addClass("tf-current");
           }
 
-          self.currentSlide = self.data.slides[self.index];
-          /*
-           * Set Caption
-           */
-          self.nodes.caption.innerHTML = self.currentSlide.caption;
-            
-          /*
-           * Set Image
-           */
-          self.nodes.currentSlide.style.backgroundImage = "url(" + self.currentSlide.image_desktop_retina + ")";
-
-          /*
-           * Set Focus
-           */
-          backgroundPosition = self.currentSlide.focus_x + "% " + self.currentSlide.focus_y + "%";
-          self.nodes.currentSlide.style.backgroundPosition = backgroundPosition;            
-        }
-
-        /*
-         * Set Next Slide
-         */
-        this.events.setNextSlideData = function(){
-          if( self.data.slides.length - self.index <= 1){
-            return true;
-          }
-
-          self.nextSlide = self.data.slides[self.index + 1];
-          /*
-           * Set Image
-           */
-          self.nodes.nextSlide.style.backgroundImage = "url(" + self.nextSlide.image_desktop_retina + ")";
-
-          /*
-           * Set Focus
-           */
-          backgroundPosition = self.nextSlide.focus_x + "% " + self.nextSlide.focus_y + "%";
-          self.nodes.nextSlide.style.backgroundPosition = backgroundPosition;
-        }
-
-        this.events.setNextSlideData();
-        this.events.setCurrentSlideData();
-
-        /*
-         * Advance Slide
-         */
-        this.events.advanceSlide = function(){
-          if(!self.slideLock){
-            if(((self.index - self.data.slides.length) <= 2 && self.index - self.data.slides.length != 0 ) || self.images[self.index + 2]){
-              self.index++
-              self.trigger("advanceSlide", {value: true, slide: slide});
-
-              self.events.animate().then(function(){
-                self.events.setNextSlideData();
-                self.nodes.nextSlide.className = self.nodes.nextSlide.className.replace("tf-current", "") + " tf-next";
-                self.events.setCurrentSlideData();
-              })
-            } else if(!self.nodes.slides.className.match(/tf-loading/)) {
-              self.nodes.slides.className += " tf-loading";
-            } 
+          if(!traitify.transitionEnd){
+            traitify.options.trigger("slideDeck.transitionEnd")
           }
         }
-        this.on("advanceSlide", function(params){
-          slideResponses = self.db.get("slideResponses") || Object();
+      })
 
-          slideResponses[params.slide.id] = {
-            value: params.value,
-            responseTime: new Date() - self.lastResponse
-          };
-
-          self.lastResponse = new Date();
-          self.db.set("slideResponses", slideResponses);
-          self.trigger("setSlides");
-        })
-
-        this.on("setSlides", function(){
-          slideResponses = self.db.get("slideResponses") || Object();
-
-          srl = Object.keys(slideResponses).length;
-
-          if(srl == self.data.slides.length){
-            slides = Object.keys(slideResponses).map(function(slideId){
-              return {
-                id: slideId,
-                response: slideResponses[slideId].value,
-                time_taken: slideResponses[slideId].responseTime
-              };
-            })
-            
-            Traitify.addSlides(self.assessmentId, slides).then(function(){
-              me.innerHTML = "";
-
-              self.trigger("finish")
-            });
-          }
-        })
-
-        this.trigger("setSlides");
-
-        /*
-         * Me Trigger
-         */
-        this.on("me", function(){
-          slide = self.data.slides[self.index]
-
-          self.events.advanceSlide();
-        })
-
-        /*
-         * Not Me Trigger
-         */
-        this.on("notMe",function(){
-          slide = self.data.slides[self.index]
-
-          self.events.advanceSlide();
-        })
-
-        /*
-         * Me
-         */
-        this.nodes.me.onclick = function(){ 
-          self.trigger("me")
+      this.options.on("slideDeck.notMe slideDeck.me", function(data){
+        currentSlide = traitify.data.slides[traitify.index];
+        lastClick = traitify.lastClick;
+        traitify.lastClick = new Date();
+        traitify.data.slideResponses[currentSlide.id] = {
+          id: currentSlide.id,
+          response: data.value,
+          time_taken: traitify.lastClick - lastClick
         }
+        traitify.db.set("slides", traitify.data.slideResponses)
 
-        /*
-         * Not Me
-         */
-        this.nodes.notMe.onclick = function(){
-          self.trigger("notMe")
+        var slideIds = Object.keys(traitify.data.slideResponses)
+        if(slideIds.length == traitify.data.slides.length){
+          traitify.options.trigger("slideDeck.addSlides");
         }
+        traitify.options.trigger("slideDeck.animate");
+      })
 
-        /*
-         * Gui For Preload Images
-         */
-        self.imageSize = "image_desktop_retina"
-        this.imageUrls = self.data.slides.map(function(slide){
-          return slide[self.imageSize];
-        })
 
-        this.nodes.clickToReload.onclick = function(){
-          self.trigger("clickReload");
-        }
-        this.on("clickReload", function(){
-          self.imageTries[self.images.lastIndex] = 0;
-          self.nodes.loading.show();
-          self.nodes.clickToReload.hide();
-          self.loadImage(self.images.lastIndex);
-        })
+      /*********************************
+       * HOOKS
+       *********************************/
+      this.nodes.me.click(function(){
+        traitify.options.trigger("slideDeck.me", {value: true})
+      })
 
-        /*
-         * NASTY IMAGE PRELOADING
-         */
-        this.imageTries = Object()
-        this.images = Array();
-        self.images.lastIndex = this.index;
+      this.nodes.notMe.click(function(){
+        traitify.options.trigger("slideDeck.notMe", {value: false})
+      })
 
-        this.loadImage = function(i){
-          if(self.imageUrls[i]){
-            if(!self.imageTries[i]){
-              self.imageTries[i]= 0;
-            }
-            self.images[i] = new Image();
-            self.images[i].src = self.imageUrls[i];
-            self.images[i].onerror = function(){
-              self.imageTries[i]++;
-              if(self.imageTries[i] < 30){
-                setTimeout(function(){
-                  self.loadImage(i);
-                }, 1000)
-              }else{
-                self.images.lastIndex = i;
-                self.nodes.loading.hide();
-                self.nodes.clickToReload.show();
-              }
-            }
-            self.images[i].onload = function(){
-              setTimeout(function(){
-                self.loadImage(i + 1);
-              }, 300)
-              self.trigger("imageLoaded");
-              self.nodes.clickToReload.hide();
-              self.images.lastIndex = i;
+      this.nodes.clickToReload.click(function(){
+        traitify.options.trigger("slideDeck.clickReload");
+      })
 
-              self.nodes.slides.className = self.nodes.slides.className.replace(" tf-loading", "");
-            }
-          }
-        }
-        this.loadImage(self.index);
+      if(traitify.transitionEnd && window.addEventListener){
+        traitify.nodes.nextSlide[0].addEventListener( traitify.transitionEnd, function( event ) { 
+          traitify.options.trigger("slideDeck.transitionEnd") 
+        }, false );
       }
-    })(document.currentScript.parentNode);
+
+      /********************************
+       * NASTY IMAGE PRELOADING
+       ********************************/
+      this.imageTries = Object()
+      this.images = Array();
+      this.images.lastIndex = this.index;
+      this.loadImage = function(i){
+        if(traitify.imageUrls[i]){
+          if(!traitify.imageTries[i]){
+            traitify.imageTries[i]= 0;
+          }
+          traitify.images[i] = new Image();
+          traitify.images[i].src = traitify.imageUrls[i];
+          traitify.images[i].onerror = function(){
+            traitify.imageTries[i]++;
+            if(traitify.imageTries[i] < 30){
+              setTimeout(function(){
+                traitify.loadImage(i);
+              }, 1000)
+            }else{
+              traitify.images.lastIndex = i;
+              traitify.nodes.loading.hide();
+              traitify.nodes.clickToReload.show();
+            }
+          }
+          traitify.images[i].onload = function(){
+            setTimeout(function(){
+              traitify.loadImage(i + 1);
+            }, 300)
+            traitify.options.trigger("slideDeck.imageLoaded", this);
+            traitify.nodes.clickToReload.hide();
+            traitify.images.lastIndex = i;
+            traitify.nodes.slides.removeClass("tf-loading");
+          }
+        }
+      }
+      
+      traitify.options.trigger("slideDeck.setView");
+      this.loadImage(traitify.index);
+      
+    }
+  }).call(document.currentScript.parentNode);
 </script>

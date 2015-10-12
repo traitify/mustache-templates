@@ -1,8 +1,7 @@
+<!doctype html>
 <html>
 <head>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-
+	<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
 	<script src="/bundles/v2.debug.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -15,6 +14,7 @@
 	</style>
 </head>
 <body>
+
   <div class="tf-slide-deck">
   </div>
 	<div class="tf-personality-blend">
@@ -30,17 +30,14 @@
 	<div class="tf-careers">
 	</div>
 
+
   <script>
-	      $.get("/assessment.json").then(function(assessment){
-						window.sanity = Traitify.ui.init({
-							publicKey: assessment.publicKey,
-							assessmentId: assessment.id,
-							slideDeck:{
-								progressBarColor: "#0000ff"
-							}
-						})
-						window.sanity.render();
-	      })
+  	$.get("/assessment.json").then(function(assessment){
+			traitify = Traitify.ui.init({
+				publicKey: assessment.publicKey,
+				assessmentId: assessment.id
+			}).render();
+		})
   </script>
 	<style>
 		.tf-progress-bar-inner{

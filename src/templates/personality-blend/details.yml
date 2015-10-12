@@ -1,0 +1,4 @@
+name: personalityBlend
+target: .tf-personality-blend
+data:
+  - personality_blend
